@@ -1,65 +1,262 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import {
+  FolderKanban,
+  FileText,
+  MessageSquare,
+  Users,
+  ArrowRight,
+  GraduationCap,
+  Briefcase,
+  Award,
+  TrendingUp,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 
-export default function Home() {
+export default async function HomePage() {
+  const t = await getTranslations("landing");
+  const tc = await getTranslations("common");
+
+  const features = [
+    {
+      icon: FolderKanban,
+      title: t("featureProjects"),
+      description: t("featureProjectsDesc"),
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-500/10",
+    },
+    {
+      icon: FileText,
+      title: t("featureCV"),
+      description: t("featureCVDesc"),
+      color: "from-emerald-500 to-teal-500",
+      bgColor: "bg-emerald-500/10",
+    },
+    {
+      icon: MessageSquare,
+      title: t("featureCommunity"),
+      description: t("featureCommunityDesc"),
+      color: "from-orange-500 to-amber-500",
+      bgColor: "bg-orange-500/10",
+    },
+    {
+      icon: Users,
+      title: t("featureNetwork"),
+      description: t("featureNetworkDesc"),
+      color: "from-pink-500 to-rose-500",
+      bgColor: "bg-pink-500/10",
+    },
+  ];
+
+  const stats = [
+    { icon: GraduationCap, label: "Öğrenci", value: "500+", suffix: "" },
+    { icon: FolderKanban, label: "Proje", value: "1,200+", suffix: "" },
+    { icon: Briefcase, label: "İşveren", value: "50+", suffix: "" },
+    { icon: Award, label: "Sertifika", value: "300+", suffix: "" },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)]/5 via-transparent to-[var(--color-secondary)]/5" />
+            <div className="absolute right-0 top-0 -z-10 h-[500px] w-[500px] rounded-full bg-[var(--color-primary)]/10 blur-3xl" />
+            <div className="absolute bottom-0 left-0 -z-10 h-[400px] w-[400px] rounded-full bg-[var(--color-secondary)]/10 blur-3xl" />
+          </div>
+
+          <div className="mx-auto max-w-7xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pt-32">
+            <div className="text-center">
+              {/* Badge */}
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 px-4 py-1.5 text-sm font-medium text-[var(--color-primary)]">
+                <Sparkles className="h-4 w-4" />
+                Dokuz Eylül Üniversitesi
+              </div>
+
+              {/* Title */}
+              <h1 className="mx-auto max-w-4xl text-4xl font-bold tracking-tight text-[var(--color-foreground)] sm:text-5xl lg:text-6xl">
+                {t("heroTitle").split(" ").map((word, i) =>
+                  word === "Topluluğu" || word === "Community" ? (
+                    <span key={i} className="gradient-text">
+                      {" "}{word}
+                    </span>
+                  ) : (
+                    <span key={i}> {word}</span>
+                  )
+                )}
+              </h1>
+
+              {/* Subtitle */}
+              <p className="mx-auto mt-6 max-w-2xl text-lg text-[var(--color-muted-foreground)] sm:text-xl">
+                {t("heroSubtitle")}
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Link
+                  href="/register"
+                  className="group inline-flex items-center gap-2 rounded-xl gradient-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5"
+                >
+                  {t("ctaRegister")}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+                <Link
+                  href="/explore"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-8 py-3.5 text-base font-semibold text-[var(--color-foreground)] transition-all hover:bg-[var(--color-muted)] hover:-translate-y-0.5"
+                >
+                  {t("ctaExplore")}
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="mx-auto mt-20 grid max-w-3xl grid-cols-2 gap-6 sm:grid-cols-4">
+              {stats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={index}
+                    className="group flex flex-col items-center gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center shadow-sm transition-all hover:shadow-md hover:-translate-y-1"
+                  >
+                    <Icon className="h-6 w-6 text-[var(--color-primary)]" />
+                    <span className="text-2xl font-bold text-[var(--color-foreground)]">
+                      {stat.value}
+                    </span>
+                    <span className="text-sm text-[var(--color-muted-foreground)]">
+                      {stat.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="border-t border-[var(--color-border)] bg-[var(--color-muted)]/30 py-20 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-[var(--color-foreground)] sm:text-4xl">
+                Neler <span className="gradient-text">Yapabilirsin?</span>
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-muted-foreground)]">
+                Projelerini paylaş, CV&apos;ni oluştur, toplulukla etkileşime geç ve
+                kariyerini şekillendir.
+              </p>
+            </div>
+
+            <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={index}
+                    className="group relative rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1"
+                  >
+                    <div
+                      className={`mb-4 inline-flex rounded-xl ${feature.bgColor} p-3`}
+                    >
+                      <Icon className="h-6 w-6 text-[var(--color-foreground)]" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-[var(--color-foreground)]">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+                      {feature.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="py-20 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-[var(--color-foreground)] sm:text-4xl">
+                Nasıl <span className="gradient-text">Çalışır?</span>
+              </h2>
+            </div>
+
+            <div className="mt-16 grid gap-8 sm:grid-cols-3">
+              {[
+                {
+                  step: "01",
+                  title: "Kayıt Ol",
+                  description:
+                    "DEÜ e-posta adresinle kayıt ol ve profilini oluştur. Bilgilerini doldur ve topluluğa katıl.",
+                },
+                {
+                  step: "02",
+                  title: "Profilini Zenginleştir",
+                  description:
+                    "Projelerini ekle, CV bilgilerini doldur, yeteneklerini listele. Andıç'ında tüm gelişimini sergile.",
+                },
+                {
+                  step: "03",
+                  title: "Bağlan ve Büyü",
+                  description:
+                    "Topluluk forumlarında paylaşım yap, işverenlerle bağlantı kur ve kariyerinde bir adım öne geç.",
+                },
+              ].map((item, index) => (
+                <div key={index} className="relative text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full gradient-primary text-xl font-bold text-white shadow-lg shadow-blue-500/25">
+                    {item.step}
+                  </div>
+                  <h3 className="mb-2 text-xl font-semibold text-[var(--color-foreground)]">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="border-t border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] py-16">
+          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+              DEÜ Topluluğuna Katıl
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-lg text-white/80">
+              Geleceğini bugünden inşa et. Projelerini paylaş, profesyonel ağını
+              genişlet ve fırsatları yakala.
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link
+                href="/register/student"
+                className="group inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-[var(--color-primary)] shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
+              >
+                <GraduationCap className="h-5 w-5" />
+                Öğrenci Olarak Katıl
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="/register/organization"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 px-8 py-3.5 text-base font-semibold text-white transition-all hover:bg-white/10 hover:-translate-y-0.5"
+              >
+                <Briefcase className="h-5 w-5" />
+                İşveren / Kuruluş
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }
