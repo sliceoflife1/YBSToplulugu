@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowBigUp, MessageSquare, Clock, Plus, Pin } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import UpvoteButton from "@/components/community/upvote-button";

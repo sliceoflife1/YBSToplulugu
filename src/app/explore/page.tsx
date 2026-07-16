@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Search, Users, FolderKanban, Star, BookOpen } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import type { Profile } from "@/types/database";

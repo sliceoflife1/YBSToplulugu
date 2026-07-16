@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { MessageSquare, Users, TrendingUp, Plus } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import type { Subreddit } from "@/types/database";
