@@ -7,38 +7,31 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
-  GraduationCap,
+  Building2,
   Mail,
   Lock,
   User,
   Phone,
-  Hash,
+  Globe,
+  FileText,
   ArrowLeft,
-  BookOpen,
   CheckCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  studentRegisterSchema,
-  type StudentRegisterInput,
+  organizationRegisterSchema,
+  type OrganizationRegisterInput,
 } from "@/lib/validations/auth";
 
-const DEPARTMENTS = [
-  "Yönetim Bilişim Sistemleri",
-  "Bilgisayar Mühendisliği",
-  "Elektrik-Elektronik Mühendisliği",
-  "Endüstri Mühendisliği",
-  "İşletme",
-  "İktisat",
-  "Maliye",
-  "Uluslararası İlişkiler",
-  "Hukuk",
-  "Tıp",
-  "Diğer",
+const ORG_TYPES = [
+  { value: "employer", label: "İşveren / Şirket" },
+  { value: "foundation", label: "Vakıf" },
+  { value: "association", label: "Dernek" },
+  { value: "other", label: "Diğer" },
 ];
 
-export default function StudentRegisterPage() {
+export default function OrganizationRegisterPage() {
   const t = useTranslations();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -48,30 +41,32 @@ export default function StudentRegisterPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<StudentRegisterInput>({
-    resolver: zodResolver(studentRegisterSchema),
+  } = useForm<OrganizationRegisterInput>({
+    resolver: zodResolver(organizationRegisterSchema),
     defaultValues: {
       kvkkConsent: false as unknown as true,
+      website: "",
     },
   });
 
-  const onSubmit = async (data: StudentRegisterInput) => {
+  const onSubmit = async (data: OrganizationRegisterInput) => {
     setLoading(true);
     const supabase = createClient();
 
-    // Sign up with Supabase Auth
+    // Signup organization (with role "employer" and user metadata)
     const { error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          student_no: data.studentNo,
-          personal_email: data.personalEmail,
-          phone: data.phone,
-          department: data.department,
-          class_year: data.classYear ? parseInt(data.classYear) : null,
+          first_name: data.orgName, // Profiles expects first_name for org name
+          last_name: "",
+          org_type: data.orgType,
+          contact_name: data.contactName,
+          phone: data.contactPhone,
+          website: data.website,
+          bio: data.description, // We can store description in bio field
+          role: "employer",
         },
       },
     });
@@ -83,21 +78,21 @@ export default function StudentRegisterPage() {
     }
 
     setEmailSent(true);
-    toast.success("Doğrulama e-postası gönderildi!");
+    toast.success("Başvurunuz alındı! E-posta doğrulaması sonrası admin onayı beklenecektir.");
   };
 
   if (emailSent) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-md animate-scale-in rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 text-center shadow-lg">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-            <CheckCircle className="h-8 w-8 text-emerald-500" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/10">
+            <CheckCircle className="h-8 w-8 text-orange-500" />
           </div>
           <h2 className="text-xl font-bold text-[var(--color-foreground)]">
-            {t("auth.verifyEmail")}
+            E-posta Doğrulaması Gerekli
           </h2>
           <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
-            {t("auth.verifyEmailMessage")}
+            Lütfen e-posta adresinizi doğrulayın. Doğrulama sonrası başvurunuz yöneticilerimiz tarafından incelenecek ve onaylandığında bilgilendirileceksiniz.
           </p>
           <Link
             href="/login"
@@ -122,187 +117,162 @@ export default function StudentRegisterPage() {
         </Link>
 
         <div className="animate-fade-in rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 shadow-lg">
-          {/* Header */}
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
-              <GraduationCap className="h-6 w-6 text-blue-500" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10">
+              <Building2 className="h-6 w-6 text-orange-500" />
             </div>
             <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-              {t("auth.studentRegister")}
+              Kuruluş / İşveren Başvurusu
             </h1>
             <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-              DEÜ öğrenci e-posta adresiniz ile kayıt olun
+              YBS Topluluğu platformuna işveren, vakıf veya dernek olarak katılın
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Name fields */}
+            {/* Org Name & Type */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.firstName")} *
+                  Kuruluş Adı *
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
                   <input
-                    {...register("firstName")}
+                    {...register("orgName")}
+                    placeholder="Şirket, Vakıf veya Dernek Adı"
                     className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
                   />
                 </div>
-                {errors.firstName && (
+                {errors.orgName && (
                   <p className="mt-1 text-xs text-[var(--color-error)]">
-                    {errors.firstName.message}
+                    {errors.orgName.message}
                   </p>
                 )}
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.lastName")} *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                  <input
-                    {...register("lastName")}
-                    className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                  />
-                </div>
-                {errors.lastName && (
-                  <p className="mt-1 text-xs text-[var(--color-error)]">
-                    {errors.lastName.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Student number */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                {t("auth.studentNo")} *
-              </label>
-              <div className="relative">
-                <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                <input
-                  {...register("studentNo")}
-                  placeholder="2020123456"
-                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                />
-              </div>
-              {errors.studentNo && (
-                <p className="mt-1 text-xs text-[var(--color-error)]">
-                  {errors.studentNo.message}
-                </p>
-              )}
-            </div>
-
-            {/* DEÜ Email */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                DEÜ {t("auth.email")} *
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                <input
-                  {...register("email")}
-                  type="email"
-                  placeholder="ornek@ogr.deu.edu.tr"
-                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-xs text-[var(--color-error)]">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            {/* Personal Email */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                {t("auth.personalEmail")} *
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                <input
-                  {...register("personalEmail")}
-                  type="email"
-                  placeholder="ornek@gmail.com"
-                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                />
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Mezuniyet sonrası hesap kurtarma için gereklidir
-              </p>
-              {errors.personalEmail && (
-                <p className="mt-1 text-xs text-[var(--color-error)]">
-                  {errors.personalEmail.message}
-                </p>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                {t("auth.phone")}
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                <input
-                  {...register("phone")}
-                  type="tel"
-                  placeholder="+905551234567"
-                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                />
-              </div>
-              {errors.phone && (
-                <p className="mt-1 text-xs text-[var(--color-error)]">
-                  {errors.phone.message}
-                </p>
-              )}
-            </div>
-
-            {/* Department & Class Year */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.department")} *
-                </label>
-                <div className="relative">
-                  <BookOpen className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                  <select
-                    {...register("department")}
-                    className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                  >
-                    <option value="">Seçiniz</option>
-                    {DEPARTMENTS.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {errors.department && (
-                  <p className="mt-1 text-xs text-[var(--color-error)]">
-                    {errors.department.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.classYear")}
+                  Kuruluş Türü *
                 </label>
                 <select
-                  {...register("classYear")}
+                  {...register("orgType")}
                   className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 px-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
                 >
                   <option value="">Seçiniz</option>
-                  <option value="1">1. Sınıf</option>
-                  <option value="2">2. Sınıf</option>
-                  <option value="3">3. Sınıf</option>
-                  <option value="4">4. Sınıf</option>
-                  <option value="5">Yüksek Lisans</option>
-                  <option value="6">Doktora</option>
+                  {ORG_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
                 </select>
+                {errors.orgType && (
+                  <p className="mt-1 text-xs text-[var(--color-error)]">
+                    {errors.orgType.message}
+                  </p>
+                )}
               </div>
+            </div>
+
+            {/* Contact Person Name & Phone */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Yetkili İletişim Kişisi *
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <input
+                    {...register("contactName")}
+                    placeholder="Ad Soyad"
+                    className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                  />
+                </div>
+                {errors.contactName && (
+                  <p className="mt-1 text-xs text-[var(--color-error)]">
+                    {errors.contactName.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  İletişim Telefonu *
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <input
+                    {...register("contactPhone")}
+                    placeholder="+905551234567"
+                    className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                  />
+                </div>
+                {errors.contactPhone && (
+                  <p className="mt-1 text-xs text-[var(--color-error)]">
+                    {errors.contactPhone.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Email & Website */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  E-posta Adresi *
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <input
+                    {...register("email")}
+                    type="email"
+                    placeholder="ik@sirketiniz.com"
+                    className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-[var(--color-error)]">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Web Sitesi
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <input
+                    {...register("website")}
+                    placeholder="https://sirketiniz.com"
+                    className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                  />
+                </div>
+                {errors.website && (
+                  <p className="mt-1 text-xs text-[var(--color-error)]">
+                    {errors.website.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">
+                Kuruluş Hakkında Açıklama *
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 h-4 w-4 text-[var(--color-muted-foreground)]" />
+                <textarea
+                  {...register("description")}
+                  rows={3}
+                  placeholder="Kuruluşunuzun faaliyet alanı, sunduğu kariyer fırsatları vb. hakkında bilgi verin."
+                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                />
+              </div>
+              {errors.description && (
+                <p className="mt-1 text-xs text-[var(--color-error)]">
+                  {errors.description.message}
+                </p>
+              )}
             </div>
 
             {/* Password fields */}
@@ -377,9 +347,9 @@ export default function StudentRegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 transition-all hover:shadow-xl hover:shadow-orange-500/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? t("common.loading") : t("common.register")}
+              {loading ? t("common.loading") : "Başvuruyu Gönder"}
             </button>
           </form>
 

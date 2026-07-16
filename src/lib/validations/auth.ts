@@ -20,9 +20,9 @@ export const studentRegisterSchema = z.object({
     .string()
     .regex(/^\d{9,11}$/, 'Geçerli bir öğrenci numarası giriniz'),
   personalEmail: z.string().email('Geçerli bir e-posta adresi giriniz'),
-  phone: z.string().regex(/^\+?[0-9]{10,13}$/, 'Geçerli bir telefon numarası giriniz').optional(),
+  phone: z.string().regex(/^\+?[0-9]{10,13}$/, 'Geçerli bir telefon numarası giriniz').optional().or(z.literal('')),
   department: z.string().min(1, 'Bölüm seçiniz'),
-  classYear: z.number().min(1).max(6).optional(),
+  classYear: z.string().regex(/^[1-6]$/, 'Geçersiz sınıf').optional().or(z.literal('')),
   kvkkConsent: z.literal(true, { message: 'KVKK onayı zorunludur' }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Şifreler eşleşmiyor',

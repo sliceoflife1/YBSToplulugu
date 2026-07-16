@@ -7,21 +7,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
-  GraduationCap,
+  BookOpen,
   Mail,
   Lock,
   User,
-  Phone,
-  Hash,
   ArrowLeft,
-  BookOpen,
   CheckCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  studentRegisterSchema,
-  type StudentRegisterInput,
+  facultyRegisterSchema,
+  type FacultyRegisterInput,
 } from "@/lib/validations/auth";
 
 const DEPARTMENTS = [
@@ -38,7 +35,17 @@ const DEPARTMENTS = [
   "Diğer",
 ];
 
-export default function StudentRegisterPage() {
+const TITLES = [
+  "Prof. Dr.",
+  "Doç. Dr.",
+  "Dr. Öğr. Üyesi",
+  "Arş. Gör.",
+  "Öğr. Gör.",
+  "Dr.",
+  "Diğer",
+];
+
+export default function FacultyRegisterPage() {
   const t = useTranslations();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -48,18 +55,17 @@ export default function StudentRegisterPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<StudentRegisterInput>({
-    resolver: zodResolver(studentRegisterSchema),
+  } = useForm<FacultyRegisterInput>({
+    resolver: zodResolver(facultyRegisterSchema),
     defaultValues: {
       kvkkConsent: false as unknown as true,
     },
   });
 
-  const onSubmit = async (data: StudentRegisterInput) => {
+  const onSubmit = async (data: FacultyRegisterInput) => {
     setLoading(true);
     const supabase = createClient();
 
-    // Sign up with Supabase Auth
     const { error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -67,11 +73,9 @@ export default function StudentRegisterPage() {
         data: {
           first_name: data.firstName,
           last_name: data.lastName,
-          student_no: data.studentNo,
-          personal_email: data.personalEmail,
-          phone: data.phone,
           department: data.department,
-          class_year: data.classYear ? parseInt(data.classYear) : null,
+          title: data.title,
+          role: "faculty",
         },
       },
     });
@@ -122,16 +126,15 @@ export default function StudentRegisterPage() {
         </Link>
 
         <div className="animate-fade-in rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 shadow-lg">
-          {/* Header */}
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
-              <GraduationCap className="h-6 w-6 text-blue-500" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+              <BookOpen className="h-6 w-6 text-emerald-500" />
             </div>
             <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-              {t("auth.studentRegister")}
+              {t("auth.facultyRegister") || "Akademisyen Kaydı"}
             </h1>
             <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-              DEÜ öğrenci e-posta adresiniz ile kayıt olun
+              DEÜ akademisyen e-posta adresiniz ile kayıt olun
             </p>
           </div>
 
@@ -174,26 +177,6 @@ export default function StudentRegisterPage() {
               </div>
             </div>
 
-            {/* Student number */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                {t("auth.studentNo")} *
-              </label>
-              <div className="relative">
-                <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                <input
-                  {...register("studentNo")}
-                  placeholder="2020123456"
-                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                />
-              </div>
-              {errors.studentNo && (
-                <p className="mt-1 text-xs text-[var(--color-error)]">
-                  {errors.studentNo.message}
-                </p>
-              )}
-            </div>
-
             {/* DEÜ Email */}
             <div>
               <label className="mb-1.5 block text-sm font-medium">
@@ -204,7 +187,7 @@ export default function StudentRegisterPage() {
                 <input
                   {...register("email")}
                   type="email"
-                  placeholder="ornek@ogr.deu.edu.tr"
+                  placeholder="ornek@deu.edu.tr"
                   className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
                 />
               </div>
@@ -215,93 +198,49 @@ export default function StudentRegisterPage() {
               )}
             </div>
 
-            {/* Personal Email */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                {t("auth.personalEmail")} *
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                <input
-                  {...register("personalEmail")}
-                  type="email"
-                  placeholder="ornek@gmail.com"
-                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                />
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Mezuniyet sonrası hesap kurtarma için gereklidir
-              </p>
-              {errors.personalEmail && (
-                <p className="mt-1 text-xs text-[var(--color-error)]">
-                  {errors.personalEmail.message}
-                </p>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                {t("auth.phone")}
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                <input
-                  {...register("phone")}
-                  type="tel"
-                  placeholder="+905551234567"
-                  className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                />
-              </div>
-              {errors.phone && (
-                <p className="mt-1 text-xs text-[var(--color-error)]">
-                  {errors.phone.message}
-                </p>
-              )}
-            </div>
-
-            {/* Department & Class Year */}
+            {/* Title & Department */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.department")} *
+                  Unvan *
                 </label>
-                <div className="relative">
-                  <BookOpen className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-                  <select
-                    {...register("department")}
-                    className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                  >
-                    <option value="">Seçiniz</option>
-                    {DEPARTMENTS.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {errors.department && (
+                <select
+                  {...register("title")}
+                  className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 px-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                >
+                  <option value="">Seçiniz</option>
+                  {TITLES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+                {errors.title && (
                   <p className="mt-1 text-xs text-[var(--color-error)]">
-                    {errors.department.message}
+                    {errors.title.message}
                   </p>
                 )}
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.classYear")}
+                  {t("auth.department")} *
                 </label>
                 <select
-                  {...register("classYear")}
+                  {...register("department")}
                   className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 px-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
                 >
                   <option value="">Seçiniz</option>
-                  <option value="1">1. Sınıf</option>
-                  <option value="2">2. Sınıf</option>
-                  <option value="3">3. Sınıf</option>
-                  <option value="4">4. Sınıf</option>
-                  <option value="5">Yüksek Lisans</option>
-                  <option value="6">Doktora</option>
+                  {DEPARTMENTS.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
                 </select>
+                {errors.department && (
+                  <p className="mt-1 text-xs text-[var(--color-error)]">
+                    {errors.department.message}
+                  </p>
+                )}
               </div>
             </div>
 
