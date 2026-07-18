@@ -93,7 +93,10 @@ const CommentNode = ({
               {comment.profiles?.first_name} {comment.profiles?.last_name}
             </Link>
             <span className="text-[var(--color-muted-foreground)]">•</span>
-            <span className="flex items-center gap-1 text-[var(--color-muted-foreground)]">
+            <span 
+              className="flex items-center gap-1 text-[var(--color-muted-foreground)] cursor-help"
+              title={new Date(comment.created_at).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'long', timeStyle: 'short' }) + ' (Türkiye Saati)'}
+            >
               <Clock className="h-3 w-3" /> {timeAgo(comment.created_at)}
             </span>
           </div>

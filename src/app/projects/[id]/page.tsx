@@ -165,7 +165,10 @@ export default async function ProjectDetailPage({
                     {project.semester === "fall" ? "Güz" : project.semester === "spring" ? "Bahar" : "Yaz"} {project.year}
                   </span>
                   <span>•</span>
-                  <span className="flex items-center gap-1">
+                  <span 
+                    className="flex items-center gap-1 cursor-help"
+                    title={new Date(project.created_at).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'long', timeStyle: 'short' }) + ' (Türkiye Saati)'}
+                  >
                     <Clock className="h-3.5 w-3.5" /> {timeAgo(project.created_at)}
                   </span>
                 </div>

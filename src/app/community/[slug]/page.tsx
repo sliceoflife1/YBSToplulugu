@@ -126,7 +126,10 @@ export default async function SubredditPage({
                           <span>Bilinmeyen Kullanıcı</span>
                         )}
                         <span>•</span>
-                        <span className="flex items-center gap-1">
+                        <span 
+                          className="flex items-center gap-1 cursor-help"
+                          title={new Date(post.created_at).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'long', timeStyle: 'short' }) + ' (Türkiye Saati)'}
+                        >
                           <Clock className="h-3 w-3" /> {timeAgo(post.created_at)}
                         </span>
                       </div>
