@@ -4,6 +4,8 @@ export const postSchema = z.object({
   title: z.string().min(3, 'Başlık en az 3 karakter olmalıdır').max(200, 'Başlık en fazla 200 karakter olabilir'),
   content: z.string().min(10, 'İçerik en az 10 karakter olmalıdır').max(10000, 'İçerik en fazla 10000 karakter olabilir'),
   subredditId: z.string().uuid('Geçersiz topluluk kimliği'),
+  mediaUrls: z.array(z.string()).optional(),
+  youtubeUrl: z.string().url('Geçersiz YouTube URL').or(z.literal('')).optional(),
 });
 
 export const commentSchema = z.object({

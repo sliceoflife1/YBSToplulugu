@@ -32,6 +32,8 @@ export async function createPost(data: PostInput, slug: string) {
     author_id: user.id,
     title: parsed.data.title,
     content: parsed.data.content,
+    media_urls: parsed.data.mediaUrls || [],
+    youtube_url: parsed.data.youtubeUrl || null,
   });
 
   if (error) {
