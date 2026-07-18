@@ -267,7 +267,7 @@ export default function ProfileEditPage() {
       .eq("id", profile.id);
 
     if (profileError) {
-      toast.error("Profil bilgileri güncellenirken hata oluştu");
+      toast.error("Profil bilgileri güncellenirken hata oluştu: " + profileError.message);
       setSaving(false);
       return;
     }
@@ -296,7 +296,7 @@ export default function ProfileEditPage() {
     }
 
     if (cvError) {
-      toast.error("CV verileri kaydedilirken hata oluştu");
+      toast.error("CV verileri kaydedilirken hata oluştu: " + cvError.message);
       setSaving(false);
       return;
     }
