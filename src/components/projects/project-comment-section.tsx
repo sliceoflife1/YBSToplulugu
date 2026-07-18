@@ -240,7 +240,7 @@ const CommentNode = ({
 
       {/* Nested Replies */}
       {commentReplies.length > 0 && (
-        <div className="ml-4 border-l-2 border-[var(--color-border)] pl-4">
+        <div className="ml-2 sm:ml-4 border-l-2 border-[var(--color-border)] pl-2 sm:pl-4">
           {commentReplies.map((reply) => (
             <CommentNode 
               key={reply.id} 

@@ -282,6 +282,20 @@ export default function Navbar() {
                   <Settings className="h-5 w-5" />
                   {t("nav.settings")}
                 </Link>
+                {(isAdmin || isFaculty) && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      pathname.startsWith("/admin")
+                        ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                        : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+                    }`}
+                  >
+                    <Shield className="h-5 w-5" />
+                    {t("nav.admin")}
+                  </Link>
+                )}
               </>
             )}
           </nav>
