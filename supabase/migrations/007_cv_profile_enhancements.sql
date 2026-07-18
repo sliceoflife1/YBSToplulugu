@@ -30,8 +30,8 @@ CREATE INDEX IF NOT EXISTS idx_profiles_location ON public.profiles(location);
 -- (custom_sections zaten mevcuttu, ancak hiçbir arayüzde kullanılmıyordu)
 ALTER TABLE public.cv_data
 ADD COLUMN IF NOT EXISTS projects JSONB DEFAULT '[]'::jsonb,
-ADD COLUMN IF NOT EXISTS references JSONB DEFAULT '[]'::jsonb;
+ADD COLUMN IF NOT EXISTS "references" JSONB DEFAULT '[]'::jsonb;
 
 COMMENT ON COLUMN public.cv_data.projects IS 'CV üzerinde gösterilecek proje listesi: [{ title, description, technologies, url, date }]';
-COMMENT ON COLUMN public.cv_data.references IS 'Referans kişiler listesi: [{ name, position, company, email, phone }]';
+COMMENT ON COLUMN public.cv_data."references" IS 'Referans kişiler listesi: [{ name, position, company, email, phone }]';
 COMMENT ON COLUMN public.cv_data.custom_sections IS 'Kullanıcı tanımlı ek CV bölümleri: [{ title, items: string[] }]';
