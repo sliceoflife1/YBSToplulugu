@@ -11,7 +11,7 @@ export const profileUpdateSchema = z.object({
   linkedinUrl: z.string().url('Geçerli bir LinkedIn URL giriniz').optional().or(z.literal('')),
   githubUrl: z.string().url('Geçerli bir GitHub URL giriniz').optional().or(z.literal('')),
   websiteUrl: z.string().url('Geçerli bir web sitesi URL giriniz').optional().or(z.literal('')),
-  personalEmail: z.string().email('Geçerli bir e-posta adresi giriniz').optional(),
+  personalEmail: z.string().email('Geçerli bir e-posta adresi giriniz').optional().or(z.literal('')),
   isCvPublic: z.boolean().optional(),
   isOpenToWork: z.boolean().optional(),
   meetingUrl: z.string().url('Geçerli bir toplantı URL giriniz').optional().or(z.literal('')),

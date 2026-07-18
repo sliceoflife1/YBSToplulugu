@@ -502,6 +502,7 @@ export default function ProfileEditPage() {
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
                     <input {...register("personalEmail")} type="email" className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20" placeholder="ornek@mail.com" />
                   </div>
+                  {errors.personalEmail && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.personalEmail.message}</p>}
                 </div>
               </div>
 
