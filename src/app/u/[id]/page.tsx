@@ -56,7 +56,8 @@ export default async function UserProfilePage({
             <div className="h-32 bg-gradient-to-r from-[var(--color-primary)]/80 to-purple-600/80"></div>
             
             <div className="px-6 pb-6">
-              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-end mb-4">
+              {/* Üst Satır: Profil Resmi ve İsim Bilgileri */}
+              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-end mb-6">
                 <div className="h-24 w-24 rounded-2xl border-4 border-[var(--color-card)] bg-[var(--color-background)] shadow-md overflow-hidden shrink-0 -mt-12 sm:-mt-16 z-10">
                   {profile.avatar_url ? (
                     <img
@@ -71,7 +72,7 @@ export default async function UserProfilePage({
                   )}
                 </div>
                 
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
                       {profile.first_name} {profile.last_name}
@@ -92,32 +93,33 @@ export default async function UserProfilePage({
                     </p>
                   )}
                 </div>
+              </div>
 
-                <div className="flex gap-3 mt-4 sm:mt-0 flex-wrap items-center">
-                  {yearbookProfile && (
-                    <Link
-                      href={`/yearbook/${profile.id}`}
-                      className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary)]/90 shadow-sm transition-all"
-                    >
-                      <BookOpen className="h-4 w-4" /> Mezuniyet Yıllığına Yaz
-                    </Link>
-                  )}
-                  {profile.linkedin_url && (
-                    <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
-                      <UserCircle className="h-4 w-4 text-blue-600" /> LinkedIn
-                    </a>
-                  )}
-                  {profile.github_url && (
-                    <a href={profile.github_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
-                      <GitBranch className="h-4 w-4" /> GitHub
-                    </a>
-                  )}
-                  {profile.website_url && (
-                    <a href={profile.website_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
-                      <Globe className="h-4 w-4" /> Web Sitesi
-                    </a>
-                  )}
-                </div>
+              {/* Alt Satır: Butonlar */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                {yearbookProfile && (
+                  <Link
+                    href={`/yearbook/${profile.id}`}
+                    className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary)]/90 shadow-sm transition-all"
+                  >
+                    <BookOpen className="h-4 w-4" /> Mezuniyet Yıllığına Yaz
+                  </Link>
+                )}
+                {profile.linkedin_url && (
+                  <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
+                    <UserCircle className="h-4 w-4 text-blue-600" /> LinkedIn
+                  </a>
+                )}
+                {profile.github_url && (
+                  <a href={profile.github_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
+                    <GitBranch className="h-4 w-4" /> GitHub
+                  </a>
+                )}
+                {profile.website_url && (
+                  <a href={profile.website_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
+                    <Globe className="h-4 w-4" /> Web Sitesi
+                  </a>
+                )}
               </div>
 
               {profile.bio && (
