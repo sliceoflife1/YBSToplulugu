@@ -37,14 +37,17 @@ function getStyles(templateName: string = 'modern', primaryColor: string = '#3B8
       fontSize: isBrutalist ? 28 : 22,
       fontWeight: 'bold',
       color: isBrutalist ? '#000000' : '#111111',
-      marginBottom: 5,
+      marginBottom: 6,
+      lineHeight: 1.1,
       textTransform: isBrutalist ? 'uppercase' : 'none',
     },
     title: {
       fontSize: 12,
       color: primaryColor,
       fontWeight: 'bold',
+      marginTop: 4,
       marginBottom: 8,
+      lineHeight: 1.2,
     },
     contactRow: {
       flexDirection: 'row',
@@ -153,7 +156,8 @@ function getStyles(templateName: string = 'modern', primaryColor: string = '#3B8
       backgroundColor: isBrutalist ? '#ffffff' : '#f3f4f6',
       borderWidth: isBrutalist ? 1 : 0,
       borderColor: '#000000',
-      padding: '3 6',
+      paddingVertical: 3,
+      paddingHorizontal: 6,
       borderRadius: isBrutalist ? 0 : 4,
       fontSize: 8.5,
       marginRight: 4,
@@ -217,15 +221,15 @@ function renderHeader(styles: CvStyles, profile: Profile) {
       <Text style={styles.name}>{profile.first_name} {profile.last_name}</Text>
       <Text style={styles.title}>{profile.headline || profile.department || "Yönetim Bilişim Sistemleri Öğrencisi"}</Text>
       <View style={styles.contactRow}>
-        {profile.location && <Text style={styles.contactItem}>📍 {profile.location}</Text>}
-        {profile.edu_email && <Text style={styles.contactItem}>📧 {profile.edu_email}</Text>}
-        {profile.phone && <Text style={styles.contactItem}>📞 {profile.phone}</Text>}
+        {profile.location && <Text style={styles.contactItem}>{profile.location}</Text>}
+        {profile.edu_email && <Text style={styles.contactItem}>{profile.edu_email}</Text>}
+        {profile.phone && <Text style={styles.contactItem}>{profile.phone}</Text>}
         {profile.personal_email && profile.personal_email !== profile.edu_email && (
-          <Text style={styles.contactItem}>✉️ {profile.personal_email}</Text>
+          <Text style={styles.contactItem}>{profile.personal_email}</Text>
         )}
-        {profile.linkedin_url && <Link src={profile.linkedin_url} style={[styles.contactItem, styles.link]}>🔗 LinkedIn</Link>}
-        {profile.github_url && <Link src={profile.github_url} style={[styles.contactItem, styles.link]}>💻 GitHub</Link>}
-        {profile.website_url && <Link src={profile.website_url} style={[styles.contactItem, styles.link]}>🌐 Web Sitesi</Link>}
+        {profile.linkedin_url && <Link src={profile.linkedin_url} style={[styles.contactItem, styles.link]}>LinkedIn</Link>}
+        {profile.github_url && <Link src={profile.github_url} style={[styles.contactItem, styles.link]}>GitHub</Link>}
+        {profile.website_url && <Link src={profile.website_url} style={[styles.contactItem, styles.link]}>Web Sitesi</Link>}
       </View>
     </View>
   );
