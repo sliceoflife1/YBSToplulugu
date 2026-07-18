@@ -32,6 +32,154 @@ interface CommentSectionProps {
   currentUser?: { id: string } | null;
 }
 
+// 1. Recursive Comment Node Component defined OUTSIDE the parent component
+// to prevent unmounting/remounting issues on parent state updates
+interface CommentNodeProps {
+  comment: Comment;
+  depth: number;
+  repliesMap: Record<string, Comment[]>;
+  replyingToId: string | null;
+  setReplyingToId: (id: string | null) => void;
+  isLoggedIn: boolean;
+  replyEditorContent: string;
+  setReplyEditorContent: (content: string) => void;
+  onAddReply: (e: React.FormEvent) => void;
+  loadingId: string | null;
+  timeAgo: (date: string) => string;
+}
+
+const CommentNode = ({
+  comment,
+  depth = 0,
+  repliesMap,
+  replyingToId,
+  setReplyingToId,
+  isLoggedIn,
+  replyEditorContent,
+  setReplyEditorContent,
+  onAddReply,
+  loadingId,
+  timeAgo,
+}: CommentNodeProps) => {
+  const commentReplies = repliesMap[comment.id] || [];
+  const isReplying = replyingToId === comment.id;
+
+  return (
+    <div className="group/node mt-4 animate-fade-in">
+      {/* Comment Card */}
+      <div className="flex gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm transition-all hover:shadow-md">
+        {/* Avatar / Initials */}
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-xs font-semibold text-[var(--color-primary)]">
+          {comment.profiles?.avatar_url ? (
+            <img
+              src={comment.profiles.avatar_url}
+              alt={`${comment.profiles.first_name} ${comment.profiles.last_name}`}
+              className="h-full w-full rounded-full object-cover"
+            />
+          ) : (
+            `${comment.profiles?.first_name?.charAt(0).toUpperCase()}${comment.profiles?.last_name?.charAt(0).toUpperCase()}`
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          {/* Header info */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="font-semibold text-[var(--color-foreground)]">
+              {comment.profiles?.first_name} {comment.profiles?.last_name}
+            </span>
+            <span className="text-[var(--color-muted-foreground)]">•</span>
+            <span className="flex items-center gap-1 text-[var(--color-muted-foreground)]">
+              <Clock className="h-3 w-3" /> {timeAgo(comment.created_at)}
+            </span>
+          </div>
+
+          {/* Content (HTML) */}
+          <div 
+            className="mt-1.5 text-sm text-[var(--color-foreground)] leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words"
+            dangerouslySetInnerHTML={{ __html: comment.content }}
+          />
+
+          {/* Actions */}
+          {isLoggedIn && (
+            <div className="mt-2.5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyingToId(isReplying ? null : comment.id);
+                  setReplyEditorContent("");
+                }}
+                className="inline-flex items-center gap-1 text-xs text-[var(--color-muted-foreground)] hover:text-indigo-500 transition-colors font-medium"
+              >
+                <Reply className="h-3.5 w-3.5" />
+                Cevapla
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Inline Reply Form */}
+      {isReplying && (
+        <div className="ml-6 mt-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 animate-slide-down">
+          <form onSubmit={onAddReply}>
+            <div className="w-full">
+              <RichTextEditor
+                content={replyEditorContent}
+                onChange={setReplyEditorContent}
+                minHeight="min-h-[80px]"
+              />
+            </div>
+            <div className="mt-2.5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setReplyingToId(null)}
+                className="rounded-lg px-3.5 py-1.5 text-xs font-semibold text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                type="submit"
+                disabled={loadingId === comment.id}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50"
+              >
+                {loadingId === comment.id ? (
+                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
+                Gönder
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Nested Replies */}
+      {commentReplies.length > 0 && (
+        <div className="ml-4 border-l-2 border-[var(--color-border)] pl-4">
+          {commentReplies.map((reply) => (
+            <CommentNode 
+              key={reply.id} 
+              comment={reply} 
+              depth={depth + 1}
+              repliesMap={repliesMap}
+              replyingToId={replyingToId}
+              setReplyingToId={setReplyingToId}
+              isLoggedIn={isLoggedIn}
+              replyEditorContent={replyEditorContent}
+              setReplyEditorContent={setReplyEditorContent}
+              onAddReply={onAddReply}
+              loadingId={loadingId}
+              timeAgo={timeAgo}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// 2. Main Comment Section Component
 export default function CommentSection({
   postId,
   slug,
@@ -42,7 +190,6 @@ export default function CommentSection({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
 
-  // Editör değerleri için state kullanmak en temiz yoldur
   const [rootEditorContent, setRootEditorContent] = useState("");
   const [replyEditorContent, setReplyEditorContent] = useState("");
 
@@ -53,7 +200,6 @@ export default function CommentSection({
       return;
     }
 
-    // Boş içerik kontrolü (HTML taglerini temizleyip kontrol et)
     const cleanText = rootEditorContent.replace(/<[^>]*>/g, "").trim();
     if (!cleanText) {
       toast.error("Yorum içeriği boş olamaz.");
@@ -128,7 +274,6 @@ export default function CommentSection({
     return `${Math.floor(seconds / 86400)}g`;
   };
 
-  // Yorum ağacını oluştur
   const rootComments = comments.filter((c) => !c.parent_id);
   const repliesMap = comments.reduce((acc, c) => {
     if (c.parent_id) {
@@ -137,113 +282,6 @@ export default function CommentSection({
     }
     return acc;
   }, {} as Record<string, Comment[]>);
-
-  // Recursive Yorum Düğümü Component'i
-  const CommentNode = ({ comment, depth = 0 }: { comment: Comment; depth: number }) => {
-    const commentReplies = repliesMap[comment.id] || [];
-    const isReplying = replyingToId === comment.id;
-
-    return (
-      <div className="group/node mt-4">
-        {/* Comment Card */}
-        <div className="flex gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm transition-all hover:shadow-md">
-          {/* Avatar / Initials */}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-xs font-semibold text-[var(--color-primary)]">
-            {comment.profiles?.avatar_url ? (
-              <img
-                src={comment.profiles.avatar_url}
-                alt={`${comment.profiles.first_name} ${comment.profiles.last_name}`}
-                className="h-full w-full rounded-full object-cover"
-              />
-            ) : (
-              `${comment.profiles?.first_name?.charAt(0).toUpperCase()}${comment.profiles?.last_name?.charAt(0).toUpperCase()}`
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            {/* Header info */}
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-semibold text-[var(--color-foreground)]">
-                {comment.profiles?.first_name} {comment.profiles?.last_name}
-              </span>
-              <span className="text-[var(--color-muted-foreground)]">•</span>
-              <span className="flex items-center gap-1 text-[var(--color-muted-foreground)]">
-                <Clock className="h-3 w-3" /> {timeAgo(comment.created_at)}
-              </span>
-            </div>
-
-            {/* Content (HTML) */}
-            <div 
-              className="mt-1.5 text-sm text-[var(--color-foreground)] leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words"
-              dangerouslySetInnerHTML={{ __html: comment.content }}
-            />
-
-            {/* Actions */}
-            {isLoggedIn && (
-              <div className="mt-2.5 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReplyingToId(isReplying ? null : comment.id);
-                    setReplyEditorContent("");
-                  }}
-                  className="inline-flex items-center gap-1 text-xs text-[var(--color-muted-foreground)] hover:text-indigo-500 transition-colors"
-                >
-                  <Reply className="h-3.5 w-3.5" />
-                  Cevapla
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Inline Reply Form */}
-        {isReplying && (
-          <div className="ml-6 mt-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 animate-slide-down">
-            <form onSubmit={onAddReply}>
-              <div className="w-full">
-                <RichTextEditor
-                  content={replyEditorContent}
-                  onChange={setReplyEditorContent}
-                  minHeight="min-h-[80px]"
-                />
-              </div>
-              <div className="mt-2.5 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReplyingToId(null)}
-                  className="rounded-lg px-3.5 py-1.5 text-xs font-semibold text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] transition-colors"
-                >
-                  İptal
-                </button>
-                <button
-                  type="submit"
-                  disabled={loadingId === comment.id}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-all disabled:opacity-50"
-                >
-                  {loadingId === comment.id ? (
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <Send className="h-3.5 w-3.5" />
-                  )}
-                  Gönder
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Nested Replies */}
-        {commentReplies.length > 0 && (
-          <div className="ml-4 border-l-2 border-[var(--color-border)] pl-4">
-            {commentReplies.map((reply) => (
-              <CommentNode key={reply.id} comment={reply} depth={depth + 1} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
@@ -293,7 +331,20 @@ export default function CommentSection({
       <div className="mt-6 divide-y divide-[var(--color-border)]/50">
         {rootComments.length > 0 ? (
           rootComments.map((comment) => (
-            <CommentNode key={comment.id} comment={comment} depth={0} />
+            <CommentNode 
+              key={comment.id} 
+              comment={comment} 
+              depth={0}
+              repliesMap={repliesMap}
+              replyingToId={replyingToId}
+              setReplyingToId={setReplyingToId}
+              isLoggedIn={isLoggedIn}
+              replyEditorContent={replyEditorContent}
+              setReplyEditorContent={setReplyEditorContent}
+              onAddReply={onAddReply}
+              loadingId={loadingId}
+              timeAgo={timeAgo}
+            />
           ))
         ) : (
           <div className="py-8 text-center">
