@@ -54,7 +54,7 @@ export default function YearbookDetailPage({ params }: Props) {
         .from("yearbook_profiles")
         .select(`
           *,
-          profiles:user_id (id, first_name, last_name, avatar_url, headline, bio, student_no),
+          profiles:profiles!yearbook_profiles_user_id_fkey (id, first_name, last_name, avatar_url, headline, bio, student_no),
           yearbook_departments:department_id (id, name, yearbook_faculties(id, name))
         `)
         .eq("user_id", userId)
@@ -97,7 +97,7 @@ export default function YearbookDetailPage({ params }: Props) {
         .from("yearbook_profiles")
         .select(`
           user_id,
-          profiles:user_id (first_name, last_name)
+          profiles:profiles!yearbook_profiles_user_id_fkey (first_name, last_name)
         `)
         .eq("department_id", ybProfile.department_id)
         .eq("graduation_year", ybProfile.graduation_year)

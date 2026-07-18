@@ -61,7 +61,7 @@ export default function YearbookPage() {
         .from("yearbook_profiles")
         .select(`
           *,
-          profiles:user_id (id, first_name, last_name, avatar_url, headline),
+          profiles:profiles!yearbook_profiles_user_id_fkey (id, first_name, last_name, avatar_url, headline),
           yearbook_departments:department_id (id, name, yearbook_faculties(id, name))
         `)
         .eq("is_visible", true)
