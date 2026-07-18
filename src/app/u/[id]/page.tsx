@@ -57,17 +57,19 @@ export default async function UserProfilePage({
             
             <div className="px-6 pb-6">
               <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-end mb-4">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={`${profile.first_name} ${profile.last_name}`}
-                    className="h-24 w-24 rounded-2xl object-cover border-4 border-[var(--color-card)] bg-[var(--color-background)] shadow-md -mt-12 sm:-mt-16 z-10"
-                  />
-                ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-4 border-[var(--color-card)] bg-[var(--color-background)] text-3xl font-bold text-[var(--color-primary)] shadow-md -mt-12 sm:-mt-16 z-10">
-                    {(profile.first_name || "?").charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <div className="h-24 w-24 rounded-2xl border-4 border-[var(--color-card)] bg-[var(--color-background)] shadow-md overflow-hidden shrink-0 -mt-12 sm:-mt-16 z-10">
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={`${profile.first_name} ${profile.last_name}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-[var(--color-primary)]">
+                      {(profile.first_name || "?").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
                 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
