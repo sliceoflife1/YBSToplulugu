@@ -5,17 +5,19 @@ import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { 
-  ArrowLeft, User, Mail, Phone, BookOpen, Link2, Globe, Eye, EyeOff, 
-  GraduationCap, Briefcase, Award, Languages, Plus, Trash2, Award as CertificateIcon, Save
+import {
+  ArrowLeft, User, Mail, Phone, BookOpen, Link2, Globe, Eye, EyeOff,
+  GraduationCap, Briefcase, Award, Languages, Plus, Trash2, Award as CertificateIcon, Save,
+  MapPin, Briefcase as HeadlineIcon, FolderGit2, Users, FileStack
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { profileUpdateSchema, type ProfileUpdateInput } from "@/lib/validations/profile";
-import type { Profile, CvData } from "@/types/database";
+import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLanguage, CvProject, CvReference, CvCustomSection } from "@/types/database";
 import { DEU_FACULTIES } from "@/constants/deu-departments";
 import { useLocale } from "next-intl";
+import { normalizeEducationList, normalizeExperienceList, parseJsonArray } from "@/lib/cv/normalize";
 
 export default function ProfileEditPage() {
   const t = useTranslations();
@@ -29,19 +31,22 @@ export default function ProfileEditPage() {
   const [selectedFaculty, setSelectedFaculty] = useState<string>("");
 
   // Sekme yönetimi
-  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "mentorship">("personal");
+  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "extra" | "mentorship">("personal");
 
   // Dinamik CV Dizileri ve Mentorlük
   const [mentorTopics, setMentorTopics] = useState<string[]>([]);
   const [mentorTopicInput, setMentorTopicInput] = useState("");
 
   // Dinamik CV Dizileri
-  const [education, setEducation] = useState<any[]>([]);
-  const [experience, setExperience] = useState<any[]>([]);
+  const [education, setEducation] = useState<CvEducation[]>([]);
+  const [experience, setExperience] = useState<CvExperience[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
-  const [certifications, setCertifications] = useState<any[]>([]);
-  const [languages, setLanguages] = useState<any[]>([]);
+  const [certifications, setCertifications] = useState<CvCertification[]>([]);
+  const [languages, setLanguages] = useState<CvLanguage[]>([]);
+  const [projects, setProjects] = useState<CvProject[]>([]);
+  const [references, setReferences] = useState<CvReference[]>([]);
+  const [customSections, setCustomSections] = useState<CvCustomSection[]>([]);
 
   // Dil seviyeleri
   const languageLevels = [
@@ -68,10 +73,10 @@ export default function ProfileEditPage() {
 
       if (profileRes.data) {
         setProfile(profileRes.data);
-        
+
         // Kullanıcının kayıtlı bölümünden fakülteyi bul
         if (profileRes.data.department) {
-          const foundFaculty = DEU_FACULTIES.find(fac => 
+          const foundFaculty = DEU_FACULTIES.find(fac =>
             fac.departments.some(dept => dept.name === profileRes.data.department)
           );
           if (foundFaculty) {
@@ -82,43 +87,34 @@ export default function ProfileEditPage() {
         reset({
           firstName: profileRes.data.first_name,
           lastName: profileRes.data.last_name,
+          headline: profileRes.data.headline || "",
           bio: profileRes.data.bio || "",
           phone: profileRes.data.phone || "",
           department: profileRes.data.department || "",
+          location: profileRes.data.location || "",
           linkedinUrl: profileRes.data.linkedin_url || "",
           githubUrl: profileRes.data.github_url || "",
+          websiteUrl: profileRes.data.website_url || "",
           personalEmail: profileRes.data.personal_email || "",
           isCvPublic: profileRes.data.is_cv_public,
+          isOpenToWork: profileRes.data.is_open_to_work || false,
           meetingUrl: profileRes.data.meeting_url || "",
           isMentor: profileRes.data.is_mentor || false,
         });
-        
+
         setMentorTopics(profileRes.data.mentor_topics || []);
       }
 
       if (cvRes.data) {
         setCvData(cvRes.data);
         setSkills(cvRes.data.skills || []);
-
-        try {
-          const edu = typeof cvRes.data.education === 'string' ? JSON.parse(cvRes.data.education) : cvRes.data.education;
-          setEducation(Array.isArray(edu) ? edu : []);
-        } catch { setEducation([]); }
-
-        try {
-          const exp = typeof cvRes.data.experience === 'string' ? JSON.parse(cvRes.data.experience) : cvRes.data.experience;
-          setExperience(Array.isArray(exp) ? exp : []);
-        } catch { setExperience([]); }
-
-        try {
-          const certs = typeof cvRes.data.certifications === 'string' ? JSON.parse(cvRes.data.certifications) : cvRes.data.certifications;
-          setCertifications(Array.isArray(certs) ? certs : []);
-        } catch { setCertifications([]); }
-
-        try {
-          const langs = typeof cvRes.data.languages === 'string' ? JSON.parse(cvRes.data.languages) : cvRes.data.languages;
-          setLanguages(Array.isArray(langs) ? langs : []);
-        } catch { setLanguages([]); }
+        setEducation(normalizeEducationList(cvRes.data.education));
+        setExperience(normalizeExperienceList(cvRes.data.experience));
+        setCertifications(parseJsonArray<CvCertification>(cvRes.data.certifications));
+        setLanguages(parseJsonArray<CvLanguage>(cvRes.data.languages));
+        setProjects(parseJsonArray<CvProject>(cvRes.data.projects));
+        setReferences(parseJsonArray<CvReference>(cvRes.data.references));
+        setCustomSections(parseJsonArray<CvCustomSection>(cvRes.data.custom_sections));
       }
       setLoading(false);
     }
@@ -127,11 +123,11 @@ export default function ProfileEditPage() {
 
   // Eğitim Yönetimi
   const addEducation = () => {
-    setEducation([...education, { school: "", department: "", startYear: "", endYear: "" }]);
+    setEducation([...education, { school: "", degree: "", field: "", location: "", gpa: "", description: "", startDate: "", endDate: "", current: false }]);
   };
-  const updateEducation = (index: number, field: string, value: string) => {
+  const updateEducation = (index: number, field: string, value: string | boolean) => {
     const newEdu = [...education];
-    newEdu[index] = { ...newEdu[index], [field]: value };
+    newEdu[index] = { ...newEdu[index], [field]: value } as CvEducation;
     setEducation(newEdu);
   };
   const removeEducation = (index: number) => {
@@ -140,11 +136,11 @@ export default function ProfileEditPage() {
 
   // Deneyim Yönetimi
   const addExperience = () => {
-    setExperience([...experience, { company: "", position: "", duration: "", description: "" }]);
+    setExperience([...experience, { company: "", title: "", location: "", description: "", startDate: "", endDate: "", current: false }]);
   };
-  const updateExperience = (index: number, field: string, value: string) => {
+  const updateExperience = (index: number, field: string, value: string | boolean) => {
     const newExp = [...experience];
-    newExp[index] = { ...newExp[index], [field]: value };
+    newExp[index] = { ...newExp[index], [field]: value } as CvExperience;
     setExperience(newExp);
   };
   const removeExperience = (index: number) => {
@@ -175,11 +171,11 @@ export default function ProfileEditPage() {
 
   // Sertifika Yönetimi
   const addCertification = () => {
-    setCertifications([...certifications, { name: "", issuer: "", date: "" }]);
+    setCertifications([...certifications, { name: "", issuer: "", date: "", url: "" }]);
   };
   const updateCertification = (index: number, field: string, value: string) => {
     const newCerts = [...certifications];
-    newCerts[index] = { ...newCerts[index], [field]: value };
+    newCerts[index] = { ...newCerts[index], [field]: value } as CvCertification;
     setCertifications(newCerts);
   };
   const removeCertification = (index: number) => {
@@ -192,12 +188,54 @@ export default function ProfileEditPage() {
   };
   const updateLanguage = (index: number, field: string, value: string) => {
     const newLangs = [...languages];
-    newLangs[index] = { ...newLangs[index], [field]: value };
+    newLangs[index] = { ...newLangs[index], [field]: value } as CvLanguage;
     setLanguages(newLangs);
   };
   const removeLanguage = (index: number) => {
     setLanguages(languages.filter((_, i) => i !== index));
   };
+
+  // Proje Yönetimi
+  const addProject = () => {
+    setProjects([...projects, { title: "", description: "", technologies: [], url: "", date: "" }]);
+  };
+  const updateProject = (index: number, field: string, value: string) => {
+    const newProjects = [...projects];
+    if (field === "technologies") {
+      newProjects[index] = { ...newProjects[index], technologies: value.split(",").map((s) => s.trim()).filter(Boolean) };
+    } else {
+      newProjects[index] = { ...newProjects[index], [field]: value } as CvProject;
+    }
+    setProjects(newProjects);
+  };
+  const removeProject = (index: number) => setProjects(projects.filter((_, i) => i !== index));
+
+  // Referans Yönetimi
+  const addReference = () => {
+    setReferences([...references, { name: "", position: "", company: "", email: "", phone: "" }]);
+  };
+  const updateReference = (index: number, field: string, value: string) => {
+    const newRefs = [...references];
+    newRefs[index] = { ...newRefs[index], [field]: value } as CvReference;
+    setReferences(newRefs);
+  };
+  const removeReference = (index: number) => setReferences(references.filter((_, i) => i !== index));
+
+  // Özel Bölüm Yönetimi
+  const addCustomSection = () => {
+    setCustomSections([...customSections, { title: "", items: [] }]);
+  };
+  const updateCustomSectionTitle = (index: number, value: string) => {
+    const newSections = [...customSections];
+    newSections[index] = { ...newSections[index], title: value };
+    setCustomSections(newSections);
+  };
+  const updateCustomSectionItems = (index: number, value: string) => {
+    const newSections = [...customSections];
+    newSections[index] = { ...newSections[index], items: value.split("\n").map((s) => s.trim()).filter(Boolean) };
+    setCustomSections(newSections);
+  };
+  const removeCustomSection = (index: number) => setCustomSections(customSections.filter((_, i) => i !== index));
 
   const onSubmit = async (data: ProfileUpdateInput) => {
     if (!profile) return;
@@ -210,13 +248,17 @@ export default function ProfileEditPage() {
       .update({
         first_name: data.firstName,
         last_name: data.lastName,
+        headline: data.headline || null,
         bio: data.bio || null,
         phone: data.phone || null,
         department: data.department || null,
+        location: data.location || null,
         linkedin_url: data.linkedinUrl || null,
         github_url: data.githubUrl || null,
+        website_url: data.websiteUrl || null,
         personal_email: data.personalEmail || null,
         is_cv_public: data.isCvPublic ?? false,
+        is_open_to_work: data.isOpenToWork ?? false,
         meeting_url: data.meetingUrl || null,
         is_mentor: data.isMentor ?? false,
         mentor_topics: mentorTopics,
@@ -238,6 +280,9 @@ export default function ProfileEditPage() {
       experience,
       certifications,
       languages,
+      projects,
+      references,
+      custom_sections: customSections,
       updated_at: new Date().toISOString(),
     };
 
@@ -297,7 +342,7 @@ export default function ProfileEditPage() {
         <div className="mb-8 flex gap-2 border-b border-[var(--color-border)] pb-px overflow-x-auto">
           <button
             onClick={() => setActiveTab("personal")}
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === "personal"
                 ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                 : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
@@ -307,7 +352,7 @@ export default function ProfileEditPage() {
           </button>
           <button
             onClick={() => setActiveTab("edu-exp")}
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === "edu-exp"
                 ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                 : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
@@ -317,7 +362,7 @@ export default function ProfileEditPage() {
           </button>
           <button
             onClick={() => setActiveTab("skills-more")}
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === "skills-more"
                 ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                 : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
@@ -325,11 +370,31 @@ export default function ProfileEditPage() {
           >
             <Award className="h-4 w-4" /> {t("profile.skillsMore")}
           </button>
+          <button
+            onClick={() => setActiveTab("extra")}
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === "extra"
+                ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+            }`}
+          >
+            <FolderGit2 className="h-4 w-4" /> {isEn ? "Projects & References" : "Projeler & Referanslar"}
+          </button>
+          <button
+            onClick={() => setActiveTab("mentorship")}
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === "mentorship"
+                ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+            }`}
+          >
+            <Globe className="h-4 w-4" /> {isEn ? "Mentorship" : "Mentörlük"}
+          </button>
         </div>
 
         {/* Form İçeriği */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          
+
           {/* TAB 1: KİŞİSEL BİLGİLER */}
           {activeTab === "personal" && (
             <div className="space-y-5 animate-fade-in">
@@ -353,8 +418,17 @@ export default function ProfileEditPage() {
               </div>
 
               <div>
+                <label className="mb-1.5 block text-sm font-medium">{isEn ? "Professional Headline (shown on your CV)" : "Profesyonel Unvan / Başlık (CV'nizde görünür)"}</label>
+                <div className="relative">
+                  <HeadlineIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <input {...register("headline")} maxLength={120} placeholder={isEn ? "e.g. Frontend Developer Candidate" : "Örn: Frontend Developer Adayı"} className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20" />
+                </div>
+                {errors.headline && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.headline.message}</p>}
+              </div>
+
+              <div>
                 <label className="mb-1.5 block text-sm font-medium">{t("profile.bioTitle")}</label>
-                <textarea {...register("bio")} rows={4} maxLength={500} className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20" placeholder={t("profile.bioPlaceholder")} />
+                <textarea {...register("bio")} rows={4} maxLength={1000} className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20" placeholder={t("profile.bioPlaceholder")} />
                 {errors.bio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.bio.message}</p>}
               </div>
 
@@ -431,6 +505,15 @@ export default function ProfileEditPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">{isEn ? "Location (City, Country)" : "Konum (Şehir, Ülke)"}</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <input {...register("location")} placeholder={isEn ? "e.g. Izmir, Turkey" : "Örn: İzmir, Türkiye"} className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20" />
+                </div>
+                {errors.location && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.location.message}</p>}
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium">LinkedIn URL</label>
@@ -448,6 +531,30 @@ export default function ProfileEditPage() {
                   </div>
                   {errors.githubUrl && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.githubUrl.message}</p>}
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">{t("profile.personalWebsite")}</label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <input {...register("websiteUrl")} placeholder="https://..." className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20" />
+                </div>
+                {errors.websiteUrl && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.websiteUrl.message}</p>}
+              </div>
+
+              {/* İş Arıyorum Durumu */}
+              <div className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/50 p-4">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-5 w-5 text-emerald-500" />
+                  <div>
+                    <p className="text-sm font-medium">{isEn ? "Open to Work" : "Aktif Olarak İş / Staj Arıyorum"}</p>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">{isEn ? "Employers can filter for candidates who are actively looking in the Talent Hub." : "İşverenler Yetenek Havuzu'nda aktif olarak iş arayan adayları filtreleyebilir."}</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input type="checkbox" {...register("isOpenToWork")} className="peer sr-only" />
+                  <div className="h-6 w-11 rounded-full bg-[var(--color-border)] transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-emerald-500 peer-checked:after:translate-x-full" />
+                </label>
               </div>
 
               {/* CV Görünürlük Kontrolü */}
@@ -481,7 +588,7 @@ export default function ProfileEditPage() {
                     <Plus className="h-3 w-3" /> {t("profile.addEdu")}
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   {education.map((edu, index) => (
                     <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-card)] shadow-sm">
@@ -493,17 +600,39 @@ export default function ProfileEditPage() {
                           <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "School / University *" : "Okul / Üniversite *"}</label>
                           <input required value={edu.school} onChange={e => updateEducation(index, 'school', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Dokuz Eylül Üniversitesi" />
                         </div>
-                        <div className="sm:col-span-2">
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Degree" : "Derece"}</label>
+                          <input value={edu.degree || ""} onChange={e => updateEducation(index, 'degree', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder={isEn ? "Bachelor's Degree" : "Lisans"} />
+                        </div>
+                        <div>
                           <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Department / Program *" : "Bölüm / Program *"}</label>
-                          <input required value={edu.department} onChange={e => updateEducation(index, 'department', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Yönetim Bilişim Sistemleri" />
+                          <input required value={edu.field || ""} onChange={e => updateEducation(index, 'field', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Yönetim Bilişim Sistemleri" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Location" : "Konum"}</label>
+                          <input value={edu.location || ""} onChange={e => updateEducation(index, 'location', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="İzmir, Türkiye" />
                         </div>
                         <div>
                           <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{t("profile.startYear")} *</label>
-                          <input required value={edu.startYear} onChange={e => updateEducation(index, 'startYear', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="2022" />
+                          <input required value={edu.startDate} onChange={e => updateEducation(index, 'startDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="2022" />
                         </div>
                         <div>
                           <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{t("profile.endYear")}</label>
-                          <input value={edu.endYear} onChange={e => updateEducation(index, 'endYear', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder={isEn ? "2026 or Present" : "2026 veya Devam Ediyor"} />
+                          <input disabled={edu.current} value={edu.endDate || ""} onChange={e => updateEducation(index, 'endDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none disabled:opacity-50" placeholder="2026" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="flex items-center gap-2 text-xs font-medium text-[var(--color-muted-foreground)]">
+                            <input type="checkbox" checked={Boolean(edu.current)} onChange={e => updateEducation(index, 'current', e.target.checked)} />
+                            {isEn ? "I currently study here" : "Halen bu okulda okuyorum"}
+                          </label>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "GPA (optional)" : "Not Ortalaması (opsiyonel)"}</label>
+                          <input value={edu.gpa || ""} onChange={e => updateEducation(index, 'gpa', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="3.45 / 4.00" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Additional details (optional)" : "Ek Bilgi (opsiyonel)"}</label>
+                          <textarea rows={2} value={edu.description || ""} onChange={e => updateEducation(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none resize-none" placeholder={isEn ? "Honors, relevant coursework, thesis..." : "Onur belgesi, ilgili dersler, tez konusu..."} />
                         </div>
                       </div>
                     </div>
@@ -525,7 +654,7 @@ export default function ProfileEditPage() {
                     <Plus className="h-3 w-3" /> {t("profile.addExp")}
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   {experience.map((exp, index) => (
                     <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-card)] shadow-sm">
@@ -539,15 +668,29 @@ export default function ProfileEditPage() {
                         </div>
                         <div>
                           <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Position / Title *" : "Pozisyon / Unvan *"}</label>
-                          <input required value={exp.position} onChange={e => updateExperience(index, 'position', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Örn: Yazılım Stajyeri" />
+                          <input required value={exp.title} onChange={e => updateExperience(index, 'title', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Örn: Yazılım Stajyeri" />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Working Period / Date *" : "Çalışma Süresi / Tarih *"}</label>
-                          <input required value={exp.duration} onChange={e => updateExperience(index, 'duration', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Örn: Temmuz 2023 - Eylül 2023" />
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Location" : "Konum"}</label>
+                          <input value={exp.location || ""} onChange={e => updateExperience(index, 'location', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder={isEn ? "e.g. Istanbul, Turkey (Hybrid)" : "Örn: İstanbul, Türkiye (Hibrit)"} />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Start Date *" : "Başlangıç Tarihi *"}</label>
+                          <input required value={exp.startDate} onChange={e => updateExperience(index, 'startDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Temmuz 2023" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "End Date" : "Bitiş Tarihi"}</label>
+                          <input disabled={exp.current} value={exp.endDate || ""} onChange={e => updateExperience(index, 'endDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none disabled:opacity-50" placeholder="Eylül 2023" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="flex items-center gap-2 text-xs font-medium text-[var(--color-muted-foreground)]">
+                            <input type="checkbox" checked={Boolean(exp.current)} onChange={e => updateExperience(index, 'current', e.target.checked)} />
+                            {isEn ? "I currently work here" : "Halen bu pozisyonda çalışıyorum"}
+                          </label>
                         </div>
                         <div className="sm:col-span-2">
                           <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Job Description / Explanation" : "Görev Tanımı / Açıklama"}</label>
-                          <textarea rows={3} value={exp.description} onChange={e => updateExperience(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none resize-none" placeholder={isEn ? "Your projects, achievements and technologies..." : "Projeleriniz, başarılarınız ve kullandığınız teknolojiler..."} />
+                          <textarea rows={3} value={exp.description || ""} onChange={e => updateExperience(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none resize-none" placeholder={isEn ? "Your projects, achievements and technologies (one bullet per line)..." : "Projeleriniz, başarılarınız ve kullandığınız teknolojiler (her satır bir madde olur)..."} />
                         </div>
                       </div>
                     </div>
@@ -606,7 +749,7 @@ export default function ProfileEditPage() {
                     <Plus className="h-3 w-3" /> {t("profile.addLanguage")}
                   </button>
                 </div>
-                
+
                 <div className="space-y-3">
                   {languages.map((lang, index) => (
                     <div key={index} className="flex items-center gap-3 bg-[var(--color-card)] p-3 rounded-xl border border-[var(--color-border)]">
@@ -638,7 +781,7 @@ export default function ProfileEditPage() {
                     <Plus className="h-3 w-3" /> {t("profile.addCertificate")}
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   {certifications.map((cert, index) => (
                     <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-card)] shadow-sm">
@@ -656,7 +799,11 @@ export default function ProfileEditPage() {
                         </div>
                         <div>
                           <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Issue Date" : "Alındığı Tarih"}</label>
-                          <input value={cert.date} onChange={e => updateCertification(index, 'date', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Örn: 2023" />
+                          <input value={cert.date || ""} onChange={e => updateCertification(index, 'date', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Örn: 2023" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Verification Link (optional)" : "Doğrulama Bağlantısı (opsiyonel)"}</label>
+                          <input value={cert.url || ""} onChange={e => updateCertification(index, 'url', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="https://..." />
                         </div>
                       </div>
                     </div>
@@ -669,7 +816,145 @@ export default function ProfileEditPage() {
             </div>
           )}
 
-          {/* TAB 4: MENTÖRLÜK */}
+          {/* TAB 4: PROJELER, REFERANSLAR & ÖZEL BÖLÜMLER */}
+          {activeTab === "extra" && (
+            <div className="space-y-6 animate-fade-in">
+              {/* PROJELER BÖLÜMÜ */}
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/20 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="flex items-center gap-2 font-semibold text-[var(--color-foreground)]">
+                    <FolderGit2 className="h-5 w-5 text-sky-500" />
+                    {isEn ? "CV Projects" : "CV Projeleri"}
+                  </h2>
+                  <button type="button" onClick={addProject} className="text-xs flex items-center gap-1 text-[var(--color-primary)] hover:underline font-semibold bg-[var(--color-primary)]/10 px-3 py-1.5 rounded-lg">
+                    <Plus className="h-3 w-3" /> {isEn ? "Add Project" : "Proje Ekle"}
+                  </button>
+                </div>
+                <p className="text-xs text-[var(--color-muted-foreground)] mb-4">
+                  {isEn
+                    ? "These are shown on your CV independently of your public "
+                    : "Bu projeler, "}
+                  <Link href="/projects" className="text-[var(--color-primary)] font-semibold hover:underline">{isEn ? "Projects page" : "Projeler sayfanızdaki"}</Link>
+                  {isEn ? " portfolio; summarize your most relevant work here." : " gönderilerinizden bağımsız olarak CV'nizde gösterilir; en önemli çalışmalarınızı burada özetleyin."}
+                </p>
+                <div className="space-y-4">
+                  {projects.map((proj, index) => (
+                    <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-card)] shadow-sm">
+                      <button type="button" onClick={() => removeProject(index)} className="absolute top-3 right-3 text-[var(--color-muted-foreground)] hover:text-red-500 transition-colors">
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Project Title *" : "Proje Başlığı *"}</label>
+                          <input required value={proj.title} onChange={e => updateProject(index, 'title', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Description" : "Açıklama"}</label>
+                          <textarea rows={2} value={proj.description || ""} onChange={e => updateProject(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none resize-none" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Technologies (comma separated)" : "Teknolojiler (virgülle ayırın)"}</label>
+                          <input value={(proj.technologies || []).join(", ")} onChange={e => updateProject(index, 'technologies', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="React, Node.js, PostgreSQL" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Date" : "Tarih"}</label>
+                          <input value={proj.date || ""} onChange={e => updateProject(index, 'date', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Link (optional)" : "Bağlantı (opsiyonel)"}</label>
+                          <input value={proj.url || ""} onChange={e => updateProject(index, 'url', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="https://..." />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {projects.length === 0 && (
+                    <p className="text-sm text-[var(--color-muted-foreground)] text-center py-6 border border-dashed rounded-xl bg-[var(--color-card)]">{isEn ? "No projects added to your CV yet." : "CV'nize henüz proje eklenmedi."}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* REFERANSLAR BÖLÜMÜ */}
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/20 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="flex items-center gap-2 font-semibold text-[var(--color-foreground)]">
+                    <Users className="h-5 w-5 text-orange-500" />
+                    {isEn ? "References" : "Referanslar"}
+                  </h2>
+                  <button type="button" onClick={addReference} className="text-xs flex items-center gap-1 text-[var(--color-primary)] hover:underline font-semibold bg-[var(--color-primary)]/10 px-3 py-1.5 rounded-lg">
+                    <Plus className="h-3 w-3" /> {isEn ? "Add Reference" : "Referans Ekle"}
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {references.map((ref, index) => (
+                    <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-card)] shadow-sm">
+                      <button type="button" onClick={() => removeReference(index)} className="absolute top-3 right-3 text-[var(--color-muted-foreground)] hover:text-red-500 transition-colors">
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Full Name *" : "Ad Soyad *"}</label>
+                          <input required value={ref.name} onChange={e => updateReference(index, 'name', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Position" : "Pozisyon"}</label>
+                          <input value={ref.position || ""} onChange={e => updateReference(index, 'position', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Company" : "Kurum"}</label>
+                          <input value={ref.company || ""} onChange={e => updateReference(index, 'company', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Email" : "E-posta"}</label>
+                          <input type="email" value={ref.email || ""} onChange={e => updateReference(index, 'email', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">{isEn ? "Phone" : "Telefon"}</label>
+                          <input value={ref.phone || ""} onChange={e => updateReference(index, 'phone', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {references.length === 0 && (
+                    <p className="text-sm text-[var(--color-muted-foreground)] text-center py-6 border border-dashed rounded-xl bg-[var(--color-card)]">{isEn ? "No references added yet." : "Henüz referans eklenmedi."}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* ÖZEL BÖLÜMLER */}
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/20 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="flex items-center gap-2 font-semibold text-[var(--color-foreground)]">
+                    <FileStack className="h-5 w-5 text-teal-500" />
+                    {isEn ? "Custom Sections" : "Özel Bölümler"}
+                  </h2>
+                  <button type="button" onClick={addCustomSection} className="text-xs flex items-center gap-1 text-[var(--color-primary)] hover:underline font-semibold bg-[var(--color-primary)]/10 px-3 py-1.5 rounded-lg">
+                    <Plus className="h-3 w-3" /> {isEn ? "Add Section" : "Bölüm Ekle"}
+                  </button>
+                </div>
+                <p className="text-xs text-[var(--color-muted-foreground)] mb-4">
+                  {isEn ? "Add any extra CV section you need (Volunteering, Publications, Awards, Hobbies...)." : "İhtiyacınıza göre (Gönüllülük, Yayınlar, Ödüller, İlgi Alanları vb.) ek CV bölümleri oluşturabilirsiniz."}
+                </p>
+                <div className="space-y-4">
+                  {customSections.map((section, index) => (
+                    <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-card)] shadow-sm">
+                      <button type="button" onClick={() => removeCustomSection(index)} className="absolute top-3 right-3 text-[var(--color-muted-foreground)] hover:text-red-500 transition-colors">
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                      <div className="space-y-2">
+                        <input value={section.title} onChange={e => updateCustomSectionTitle(index, e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm font-semibold focus:border-[var(--color-primary)] focus:outline-none" placeholder={isEn ? "Section Title (e.g. Volunteering)" : "Bölüm Başlığı (Örn: Gönüllülük Çalışmaları)"} />
+                        <textarea rows={3} value={(section.items || []).join("\n")} onChange={e => updateCustomSectionItems(index, e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none resize-none" placeholder={isEn ? "One item per line" : "Her satıra bir madde yazın"} />
+                      </div>
+                    </div>
+                  ))}
+                  {customSections.length === 0 && (
+                    <p className="text-sm text-[var(--color-muted-foreground)] text-center py-6 border border-dashed rounded-xl bg-[var(--color-card)]">{isEn ? "No custom sections added yet." : "Henüz özel bölüm eklenmedi."}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: MENTÖRLÜK */}
           {activeTab === "mentorship" && (
             <div className="space-y-6 animate-fade-in">
               <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/20 p-5">
@@ -680,8 +965,8 @@ export default function ProfileEditPage() {
                       {isEn ? "Mentorship Settings" : "Mentörlük Ayarları"}
                     </h2>
                     <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-                      {isEn 
-                        ? "Offer guidance to other students by enabling your mentor profile." 
+                      {isEn
+                        ? "Offer guidance to other students by enabling your mentor profile."
                         : "Mentörlük profilinizi aktif ederek diğer öğrencilere deneyimlerinizi aktarın."}
                     </p>
                   </div>

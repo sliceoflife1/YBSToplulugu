@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-import type { Profile, CvData } from "@/types/database";
+import { Document, Page, Text, View, StyleSheet, Font, Link } from '@react-pdf/renderer';
+import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLanguage, CvProject, CvReference, CvCustomSection } from "@/types/database";
+import { formatDateRange } from "@/lib/cv/normalize";
 
 // Türkçe karakter desteği için Roboto yazı tipini kaydet
 Font.register({
@@ -10,10 +11,12 @@ Font.register({
   ]
 });
 
+type CvStyles = ReturnType<typeof getStyles>;
+
 // Dinamik stilleri şablon ve tema rengine göre oluşturan fonksiyon
-const getStyles = (templateName: string = 'modern', primaryColor: string = '#3B82F6') => {
+function getStyles(templateName: string = 'modern', primaryColor: string = '#3B82F6') {
   const isBrutalist = templateName === 'brutalist';
-  
+
   return StyleSheet.create({
     page: {
       padding: isBrutalist ? 30 : 40,
@@ -53,7 +56,11 @@ const getStyles = (templateName: string = 'modern', primaryColor: string = '#3B8
     contactItem: {
       marginRight: 10,
     },
-    
+    link: {
+      color: '#555555',
+      textDecoration: 'none',
+    },
+
     // Düzen Yapısı (Layout)
     mainContainer: {
       flexDirection: 'row',
@@ -85,7 +92,7 @@ const getStyles = (templateName: string = 'modern', primaryColor: string = '#3B8
       marginTop: 15,
       paddingBottom: isBrutalist ? 3 : 0,
     },
-    
+
     // Hakkımda (Bio)
     bioText: {
       fontSize: 10,
@@ -118,10 +125,21 @@ const getStyles = (templateName: string = 'modern', primaryColor: string = '#3B8
       marginBottom: 4,
       fontWeight: 'bold',
     },
+    itemLocation: {
+      fontSize: 8.5,
+      color: '#888888',
+      marginBottom: 3,
+    },
     itemDescription: {
       fontSize: 9,
       color: '#555555',
       lineHeight: 1.3,
+    },
+    itemDescriptionLine: {
+      fontSize: 9,
+      color: '#555555',
+      lineHeight: 1.3,
+      marginBottom: 1,
     },
 
     // Yetenek Rozetleri
@@ -143,7 +161,7 @@ const getStyles = (templateName: string = 'modern', primaryColor: string = '#3B8
       color: '#333333',
     },
 
-    // Diller & Sertifikalar
+    // Diller & Sertifikalar & Referanslar
     simpleItem: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -155,135 +173,154 @@ const getStyles = (templateName: string = 'modern', primaryColor: string = '#3B8
     },
     simpleItemRight: {
       color: '#666666',
-    }
+    },
+    referenceBlock: {
+      marginBottom: 8,
+    },
+    referenceName: {
+      fontSize: 9.5,
+      fontWeight: 'bold',
+      color: '#111111',
+    },
+    referenceMeta: {
+      fontSize: 8.5,
+      color: '#666666',
+    },
+    customSectionItem: {
+      fontSize: 9,
+      color: '#444444',
+      marginBottom: 3,
+    },
   });
-};
-
-interface CvPdfProps {
-  profile: Profile;
-  cvData: CvData | null;
-  skills: string[];
-  education: any[];
-  experience: any[];
-  certifications?: any[];
-  languages?: any[];
-  templateName?: string;
-  primaryColor?: string;
 }
 
-export function CvPdf({ 
-  profile, 
-  cvData, 
-  skills, 
-  education, 
-  experience, 
-  certifications = [], 
-  languages = [],
-  templateName = 'modern', 
-  primaryColor = '#3B82F6' 
-}: CvPdfProps) {
-  const styles = getStyles(templateName, primaryColor);
-  const isModern = templateName === 'modern';
+// Dil seviyelerini Türkçeleştir
+function getLanguageLevelLabel(level: string) {
+  switch (level) {
+    case "beginner": return "Başlangıç";
+    case "intermediate": return "Orta";
+    case "advanced": return "İleri";
+    case "native": return "Anadil";
+    default: return level;
+  }
+}
 
-  // Dil seviyelerini Türkçeleştir
-  const getLanguageLevelLabel = (level: string) => {
-    switch (level) {
-      case "beginner": return "Başlangıç";
-      case "intermediate": return "Orta";
-      case "advanced": return "İleri";
-      case "native": return "Anadil";
-      default: return level;
-    }
-  };
+// Aşağıdaki render* fonksiyonları, @react-pdf/renderer belgesi içinde tekrar
+// kullanılan bölümleri üretir. Bilinçli olarak birer React bileşeni (büyük harfle
+// başlayan fonksiyon component'i) OLARAK KULLANILMAZLAR; render sırasında yeni
+// bileşen tanımlanmasını (ve buna bağlı lint uyarılarını / olası state kaybını)
+// önlemek için düz fonksiyon çağrısı olarak (örn. {renderBio(...)}) kullanılırlar.
 
-  // Header Bölümü
-  const HeaderView = () => (
+function renderHeader(styles: CvStyles, profile: Profile) {
+  return (
     <View style={styles.header}>
       <Text style={styles.name}>{profile.first_name} {profile.last_name}</Text>
-      <Text style={styles.title}>{profile.department || "Yönetim Bilişim Sistemleri Öğrencisi"}</Text>
+      <Text style={styles.title}>{profile.headline || profile.department || "Yönetim Bilişim Sistemleri Öğrencisi"}</Text>
       <View style={styles.contactRow}>
+        {profile.location && <Text style={styles.contactItem}>📍 {profile.location}</Text>}
         {profile.edu_email && <Text style={styles.contactItem}>📧 {profile.edu_email}</Text>}
         {profile.phone && <Text style={styles.contactItem}>📞 {profile.phone}</Text>}
         {profile.personal_email && profile.personal_email !== profile.edu_email && (
           <Text style={styles.contactItem}>✉️ {profile.personal_email}</Text>
         )}
-        {profile.linkedin_url && <Text style={styles.contactItem}>🔗 LinkedIn</Text>}
-        {profile.github_url && <Text style={styles.contactItem}>💻 GitHub</Text>}
+        {profile.linkedin_url && <Link src={profile.linkedin_url} style={[styles.contactItem, styles.link]}>🔗 LinkedIn</Link>}
+        {profile.github_url && <Link src={profile.github_url} style={[styles.contactItem, styles.link]}>💻 GitHub</Link>}
+        {profile.website_url && <Link src={profile.website_url} style={[styles.contactItem, styles.link]}>🌐 Web Sitesi</Link>}
       </View>
     </View>
   );
+}
 
-  // Hakkımda Bölümü
-  const BioView = () => profile.bio ? (
+function renderBio(styles: CvStyles, bio: string | null) {
+  if (!bio) return null;
+  return (
     <View>
       <Text style={styles.sectionTitle}>Hakkımda</Text>
-      <Text style={styles.bioText}>{profile.bio}</Text>
+      <Text style={styles.bioText}>{bio}</Text>
     </View>
-  ) : null;
+  );
+}
 
-  // Deneyim Bölümü
-  const ExperienceView = () => experience && experience.length > 0 ? (
+function renderExperience(styles: CvStyles, experience: CvExperience[]) {
+  if (!experience || experience.length === 0) return null;
+  return (
     <View>
       <Text style={styles.sectionTitle}>Deneyim</Text>
-      {experience.map((exp: any, i: number) => (
+      {experience.map((exp, i) => (
         <View key={i} style={styles.itemGroup}>
           <View style={styles.itemHeader}>
-            <Text style={styles.itemTitle}>{exp.position}</Text>
-            <Text style={styles.itemDate}>{exp.duration}</Text>
+            <Text style={styles.itemTitle}>{exp.title}</Text>
+            <Text style={styles.itemDate}>{formatDateRange(exp.startDate, exp.endDate, exp.current)}</Text>
           </View>
           <Text style={styles.itemSubtitle}>{exp.company}</Text>
-          {exp.description ? <Text style={styles.itemDescription}>{exp.description}</Text> : null}
+          {exp.location ? <Text style={styles.itemLocation}>{exp.location}</Text> : null}
+          {exp.description
+            ? exp.description.split("\n").filter(Boolean).map((line, li) => (
+                <Text key={li} style={styles.itemDescriptionLine}>• {line}</Text>
+              ))
+            : null}
         </View>
       ))}
     </View>
-  ) : null;
+  );
+}
 
-  // Eğitim Bölümü
-  const EducationView = () => education && education.length > 0 ? (
+function renderEducation(styles: CvStyles, education: CvEducation[]) {
+  if (!education || education.length === 0) return null;
+  return (
     <View>
       <Text style={styles.sectionTitle}>Eğitim</Text>
-      {education.map((edu: any, i: number) => (
+      {education.map((edu, i) => (
         <View key={i} style={styles.itemGroup}>
           <View style={styles.itemHeader}>
             <Text style={styles.itemTitle}>{edu.school}</Text>
-            <Text style={styles.itemDate}>{edu.startYear} - {edu.endYear}</Text>
+            <Text style={styles.itemDate}>{formatDateRange(edu.startDate, edu.endDate, edu.current)}</Text>
           </View>
-          <Text style={styles.itemSubtitle}>{edu.department}</Text>
+          <Text style={styles.itemSubtitle}>{[edu.degree, edu.field].filter(Boolean).join(" • ")}</Text>
+          {edu.location ? <Text style={styles.itemLocation}>{edu.location}</Text> : null}
+          {edu.gpa ? <Text style={styles.itemLocation}>Not Ortalaması: {edu.gpa}</Text> : null}
+          {edu.description ? <Text style={styles.itemDescription}>{edu.description}</Text> : null}
         </View>
       ))}
     </View>
-  ) : null;
+  );
+}
 
-  // Yetenekler Bölümü
-  const SkillsView = () => skills && skills.length > 0 ? (
+function renderSkills(styles: CvStyles, skills: string[]) {
+  if (!skills || skills.length === 0) return null;
+  return (
     <View>
       <Text style={styles.sectionTitle}>Yetenekler</Text>
       <View style={styles.skillsContainer}>
-        {skills.map((skill: string, i: number) => (
+        {skills.map((skill, i) => (
           <Text key={i} style={styles.skillBadge}>{skill}</Text>
         ))}
       </View>
     </View>
-  ) : null;
+  );
+}
 
-  // Diller Bölümü
-  const LanguagesView = () => languages && languages.length > 0 ? (
+function renderLanguages(styles: CvStyles, languages: CvLanguage[]) {
+  if (!languages || languages.length === 0) return null;
+  return (
     <View>
       <Text style={styles.sectionTitle}>Yabancı Diller</Text>
-      {languages.map((lang: any, i: number) => (
+      {languages.map((lang, i) => (
         <View key={i} style={styles.simpleItem}>
           <Text style={styles.simpleItemLeft}>{lang.language}</Text>
           <Text style={styles.simpleItemRight}>{getLanguageLevelLabel(lang.level)}</Text>
         </View>
       ))}
     </View>
-  ) : null;
+  );
+}
 
-  // Sertifikalar Bölümü
-  const CertificationsView = () => certifications && certifications.length > 0 ? (
+function renderCertifications(styles: CvStyles, certifications: CvCertification[]) {
+  if (!certifications || certifications.length === 0) return null;
+  return (
     <View>
       <Text style={styles.sectionTitle}>Sertifikalar</Text>
-      {certifications.map((cert: any, i: number) => (
+      {certifications.map((cert, i) => (
         <View key={i} style={styles.itemGroup}>
           <View style={styles.itemHeader}>
             <Text style={styles.itemTitle}>{cert.name}</Text>
@@ -293,40 +330,142 @@ export function CvPdf({
         </View>
       ))}
     </View>
-  ) : null;
+  );
+}
+
+function renderProjects(styles: CvStyles, projects: CvProject[]) {
+  if (!projects || projects.length === 0) return null;
+  return (
+    <View>
+      <Text style={styles.sectionTitle}>Projeler</Text>
+      {projects.map((proj, i) => (
+        <View key={i} style={styles.itemGroup}>
+          <View style={styles.itemHeader}>
+            <Text style={styles.itemTitle}>{proj.title}</Text>
+            <Text style={styles.itemDate}>{proj.date}</Text>
+          </View>
+          {proj.description ? <Text style={styles.itemDescription}>{proj.description}</Text> : null}
+          {proj.technologies && proj.technologies.length > 0 && (
+            <View style={styles.skillsContainer}>
+              {proj.technologies.map((tech, ti) => (
+                <Text key={ti} style={styles.skillBadge}>{tech}</Text>
+              ))}
+            </View>
+          )}
+          {proj.url ? <Link src={proj.url} style={[styles.itemLocation, styles.link]}>{proj.url}</Link> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function renderReferences(styles: CvStyles, references: CvReference[]) {
+  if (!references || references.length === 0) return null;
+  return (
+    <View>
+      <Text style={styles.sectionTitle}>Referanslar</Text>
+      {references.map((ref, i) => (
+        <View key={i} style={styles.referenceBlock}>
+          <Text style={styles.referenceName}>{ref.name}</Text>
+          {(ref.position || ref.company) && (
+            <Text style={styles.referenceMeta}>{[ref.position, ref.company].filter(Boolean).join(" • ")}</Text>
+          )}
+          {(ref.email || ref.phone) && (
+            <Text style={styles.referenceMeta}>{[ref.email, ref.phone].filter(Boolean).join(" • ")}</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function renderCustomSections(styles: CvStyles, customSections: CvCustomSection[]) {
+  if (!customSections || customSections.length === 0) return null;
+  return (
+    <>
+      {customSections.map((section, i) => (
+        section.title && section.items && section.items.length > 0 ? (
+          <View key={i}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            {section.items.map((item, ii) => (
+              <Text key={ii} style={styles.customSectionItem}>• {item}</Text>
+            ))}
+          </View>
+        ) : null
+      ))}
+    </>
+  );
+}
+
+interface CvPdfProps {
+  profile: Profile;
+  cvData: CvData | null;
+  skills: string[];
+  education: CvEducation[];
+  experience: CvExperience[];
+  certifications?: CvCertification[];
+  languages?: CvLanguage[];
+  projects?: CvProject[];
+  references?: CvReference[];
+  customSections?: CvCustomSection[];
+  templateName?: string;
+  primaryColor?: string;
+}
+
+export function CvPdf({
+  profile,
+  skills,
+  education,
+  experience,
+  certifications = [],
+  languages = [],
+  projects = [],
+  references = [],
+  customSections = [],
+  templateName = 'modern',
+  primaryColor = '#3B82F6'
+}: CvPdfProps) {
+  const styles = getStyles(templateName, primaryColor);
+  const isModern = templateName === 'modern';
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <HeaderView />
+        {renderHeader(styles, profile)}
 
         {isModern ? (
           // MODERN ÇİFT SÜTUN DÜZENİ
           <View style={styles.mainContainer}>
             {/* Sol Sütun */}
             <View style={styles.leftColumn}>
-              <SkillsView />
-              <LanguagesView />
+              {renderSkills(styles, skills)}
+              {renderLanguages(styles, languages)}
+              {renderReferences(styles, references)}
             </View>
 
             {/* Sağ Sütun */}
             <View style={styles.rightColumn}>
-              <BioView />
-              <ExperienceView />
-              <EducationView />
-              <CertificationsView />
+              {renderBio(styles, profile.bio)}
+              {renderExperience(styles, experience)}
+              {renderEducation(styles, education)}
+              {renderProjects(styles, projects)}
+              {renderCertifications(styles, certifications)}
+              {renderCustomSections(styles, customSections)}
             </View>
           </View>
         ) : (
           // TEK SÜTUN DÜZENİ (Classic veya Brutalist)
           <View style={styles.mainContainer}>
             <View style={styles.fullWidthColumn}>
-              <BioView />
-              <ExperienceView />
-              <EducationView />
-              <SkillsView />
-              <LanguagesView />
-              <CertificationsView />
+              {renderBio(styles, profile.bio)}
+              {renderExperience(styles, experience)}
+              {renderEducation(styles, education)}
+              {renderProjects(styles, projects)}
+              {renderSkills(styles, skills)}
+              {renderLanguages(styles, languages)}
+              {renderCertifications(styles, certifications)}
+              {renderReferences(styles, references)}
+              {renderCustomSections(styles, customSections)}
             </View>
           </View>
         )}

@@ -28,6 +28,10 @@ export interface Profile {
   is_mentor: boolean;
   mentor_topics: string[];
   karma_points: number;
+  headline: string | null;
+  location: string | null;
+  website_url: string | null;
+  is_open_to_work: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -59,7 +63,11 @@ export interface CvData {
   skills: string[];
   certifications: CvCertification[];
   languages: CvLanguage[];
+  projects: CvProject[];
+  references: CvReference[];
   custom_sections: CvCustomSection[];
+  template_name?: string;
+  primary_color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -68,18 +76,32 @@ export interface CvEducation {
   school: string;
   degree: string;
   field: string;
+  location?: string;
+  gpa?: string;
+  description?: string;
   startDate: string;
   endDate?: string;
   current?: boolean;
+  /** @deprecated eski veri şeması ile uyumluluk için tutulur */
+  department?: string;
+  /** @deprecated eski veri şeması ile uyumluluk için tutulur */
+  startYear?: string;
+  /** @deprecated eski veri şeması ile uyumluluk için tutulur */
+  endYear?: string;
 }
 
 export interface CvExperience {
   company: string;
   title: string;
+  location?: string;
   description?: string;
   startDate: string;
   endDate?: string;
   current?: boolean;
+  /** @deprecated eski veri şeması ile uyumluluk için tutulur */
+  position?: string;
+  /** @deprecated eski veri şeması ile uyumluluk için tutulur */
+  duration?: string;
 }
 
 export interface CvCertification {
@@ -92,6 +114,22 @@ export interface CvCertification {
 export interface CvLanguage {
   language: string;
   level: LanguageLevel;
+}
+
+export interface CvProject {
+  title: string;
+  description?: string;
+  technologies?: string[];
+  url?: string;
+  date?: string;
+}
+
+export interface CvReference {
+  name: string;
+  position?: string;
+  company?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface CvCustomSection {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { GitBranch, UserCircle, Briefcase, GraduationCap, Calendar, FileText, Code2 } from "lucide-react";
+import { GitBranch, UserCircle, Briefcase, GraduationCap, FileText, Code2, MapPin, Globe, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
@@ -34,16 +34,7 @@ export default async function UserProfilePage({
     .order("year", { ascending: false })
     .order("created_at", { ascending: false });
 
-  // 3. Kullanıcının CV verisini Çek
-  let cvData = null;
-  if (profile.is_cv_public) {
-    const { data } = await supabase
-      .from("cv_data")
-      .select("*")
-      .eq("user_id", id)
-      .single();
-    cvData = data;
-  }
+  // 3. Kullanıcının CV özet bilgisi için görünürlük kontrolü (PDF üretimi artık /api/cv/pdf üzerinden sunucu tarafında yapılır)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -63,13 +54,25 @@ export default async function UserProfilePage({
                 </div>
                 
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-                    {profile.first_name} {profile.last_name}
-                  </h1>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
+                      {profile.first_name} {profile.last_name}
+                    </h1>
+                    {profile.is_open_to_work && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                        <Sparkles className="h-3 w-3" /> İŞ ARIYOR
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm font-medium text-[var(--color-primary)] mt-1">
-                    {profile.role === "student" ? "Öğrenci" : profile.role === "faculty" ? "Akademisyen" : profile.role === "alumni" ? "Mezun" : profile.role}
+                    {profile.headline || (profile.role === "student" ? "Öğrenci" : profile.role === "faculty" ? "Akademisyen" : profile.role === "alumni" ? "Mezun" : profile.role)}
                     {profile.department && ` • ${profile.department}`}
                   </p>
+                  {profile.location && (
+                    <p className="text-xs text-[var(--color-muted-foreground)] mt-1 flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5" /> {profile.location}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-3 mt-4 sm:mt-0">
@@ -81,6 +84,11 @@ export default async function UserProfilePage({
                   {profile.github_url && (
                     <a href={profile.github_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
                       <GitBranch className="h-4 w-4" /> GitHub
+                    </a>
+                  )}
+                  {profile.website_url && (
+                    <a href={profile.website_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
+                      <Globe className="h-4 w-4" /> Web Sitesi
                     </a>
                   )}
                 </div>
@@ -188,7 +196,7 @@ export default async function UserProfilePage({
                     </div>
                     <h3 className="font-medium text-[var(--color-foreground)] mb-1">Açık Özgeçmiş</h3>
                     <p className="text-xs text-[var(--color-muted-foreground)] mb-4">Bu kullanıcının detaylı özgeçmişi ve deneyimleri herkese açıktır.</p>
-                    <CvDownloadButton profile={profile} cvData={cvData} />
+                    <CvDownloadButton profile={profile} />
                   </div>
                 ) : (
                   <div className="text-center">

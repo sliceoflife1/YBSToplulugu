@@ -5,22 +5,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { 
-  Plus, X, Download, Eye, Save, GraduationCap, Briefcase, Award, Languages, 
-  Trash2, Award as CertificateIcon, Palette, Layout, Settings, Mail, Phone, Link2, Globe
+import {
+  Plus, X, Download, Eye, Save, GraduationCap, Briefcase, Award, Languages,
+  Trash2, Award as CertificateIcon, Palette, Layout, Settings, Mail, Phone, Link2, Globe,
+  MapPin, FolderGit2, Users, FileStack
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/layout/navbar";
-import type { Profile, CvData } from "@/types/database";
-
-// PDF component
-import { CvPdf } from "@/components/cv/cv-pdf";
-// dynamic import for PDFDownloadLink to prevent SSR hydration errors
-import dynamic from 'next/dynamic';
-const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink),
-  { ssr: false }
-);
+import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLanguage, CvProject, CvReference, CvCustomSection } from "@/types/database";
+import { normalizeEducationList, normalizeExperienceList, parseJsonArray, formatDateRange } from "@/lib/cv/normalize";
 
 export default function CvBuilderPage() {
   const t = useTranslations("cv");
@@ -29,27 +22,33 @@ export default function CvBuilderPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [cvData, setCvData] = useState<CvData | null>(null);
-  
+
   // Şablon ve Tema Renk Durumları
   const [templateName, setTemplateName] = useState<string>("modern");
   const [primaryColor, setPrimaryColor] = useState<string>("#3B82F6");
 
+  // Kişisel / Özet Bilgiler (profile.edit ile senkronize, buradan da hızlıca düzenlenebilir)
+  const [bio, setBio] = useState<string>("");
+  const [headline, setHeadline] = useState<string>("");
+  const [location, setLocation] = useState<string>("");
+  const [websiteUrl, setWebsiteUrl] = useState<string>("");
+
   // Dinamik Diziler
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
-  const [education, setEducation] = useState<any[]>([]);
-  const [experience, setExperience] = useState<any[]>([]);
-  const [certifications, setCertifications] = useState<any[]>([]);
-  const [languages, setLanguages] = useState<any[]>([]);
-  const [bio, setBio] = useState<string>("");
+  const [education, setEducation] = useState<CvEducation[]>([]);
+  const [experience, setExperience] = useState<CvExperience[]>([]);
+  const [certifications, setCertifications] = useState<CvCertification[]>([]);
+  const [languages, setLanguages] = useState<CvLanguage[]>([]);
+  const [projects, setProjects] = useState<CvProject[]>([]);
+  const [references, setReferences] = useState<CvReference[]>([]);
+  const [customSections, setCustomSections] = useState<CvCustomSection[]>([]);
 
   // Editör Sekme Yönetimi
-  const [editorTab, setEditorTab] = useState<"design" | "content">("design");
-
-  // Is Mounted check for PDF
-  const [isMounted, setIsMounted] = useState(false);
+  const [editorTab, setEditorTab] = useState<"design" | "content" | "extra">("design");
 
   // Premium Renk Paletleri
   const colorPalettes = [
@@ -73,7 +72,6 @@ export default function CvBuilderPage() {
   };
 
   useEffect(() => {
-    setIsMounted(true);
     const supabase = createClient();
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -87,35 +85,26 @@ export default function CvBuilderPage() {
       if (profileRes.data) {
         setProfile(profileRes.data);
         setBio(profileRes.data.bio || "");
+        setHeadline(profileRes.data.headline || "");
+        setLocation(profileRes.data.location || "");
+        setWebsiteUrl(profileRes.data.website_url || "");
       }
 
       if (cvRes.data) {
         setCvData(cvRes.data);
         setSkills(cvRes.data.skills || []);
-        
+
         // Veritabanından gelen şablon tercihlerini ata (varsayılan: modern, #3B82F6)
-        setTemplateName((cvRes.data as any).template_name || "modern");
-        setPrimaryColor((cvRes.data as any).primary_color || "#3B82F6");
-        
-        try {
-          const edu = typeof cvRes.data.education === 'string' ? JSON.parse(cvRes.data.education) : cvRes.data.education;
-          setEducation(Array.isArray(edu) ? edu : []);
-        } catch { setEducation([]); }
+        setTemplateName(cvRes.data.template_name || "modern");
+        setPrimaryColor(cvRes.data.primary_color || "#3B82F6");
 
-        try {
-          const exp = typeof cvRes.data.experience === 'string' ? JSON.parse(cvRes.data.experience) : cvRes.data.experience;
-          setExperience(Array.isArray(exp) ? exp : []);
-        } catch { setExperience([]); }
-
-        try {
-          const certs = typeof cvRes.data.certifications === 'string' ? JSON.parse(cvRes.data.certifications) : cvRes.data.certifications;
-          setCertifications(Array.isArray(certs) ? certs : []);
-        } catch { setCertifications([]); }
-
-        try {
-          const langs = typeof cvRes.data.languages === 'string' ? JSON.parse(cvRes.data.languages) : cvRes.data.languages;
-          setLanguages(Array.isArray(langs) ? langs : []);
-        } catch { setLanguages([]); }
+        setEducation(normalizeEducationList(cvRes.data.education));
+        setExperience(normalizeExperienceList(cvRes.data.experience));
+        setCertifications(parseJsonArray<CvCertification>(cvRes.data.certifications));
+        setLanguages(parseJsonArray<CvLanguage>(cvRes.data.languages));
+        setProjects(parseJsonArray<CvProject>(cvRes.data.projects));
+        setReferences(parseJsonArray<CvReference>(cvRes.data.references));
+        setCustomSections(parseJsonArray<CvCustomSection>(cvRes.data.custom_sections));
       }
       setLoading(false);
     }
@@ -134,11 +123,11 @@ export default function CvBuilderPage() {
 
   // Education Handlers
   const addEducation = () => {
-    setEducation([...education, { school: "", department: "", startYear: "", endYear: "" }]);
+    setEducation([...education, { school: "", degree: "", field: "", location: "", gpa: "", description: "", startDate: "", endDate: "", current: false }]);
   };
-  const updateEducation = (index: number, field: string, value: string) => {
+  const updateEducation = (index: number, field: string, value: string | boolean) => {
     const newEdu = [...education];
-    newEdu[index] = { ...newEdu[index], [field]: value };
+    newEdu[index] = { ...newEdu[index], [field]: value } as CvEducation;
     setEducation(newEdu);
   };
   const removeEducation = (index: number) => {
@@ -147,11 +136,11 @@ export default function CvBuilderPage() {
 
   // Experience Handlers
   const addExperience = () => {
-    setExperience([...experience, { company: "", position: "", duration: "", description: "" }]);
+    setExperience([...experience, { company: "", title: "", location: "", description: "", startDate: "", endDate: "", current: false }]);
   };
-  const updateExperience = (index: number, field: string, value: string) => {
+  const updateExperience = (index: number, field: string, value: string | boolean) => {
     const newExp = [...experience];
-    newExp[index] = { ...newExp[index], [field]: value };
+    newExp[index] = { ...newExp[index], [field]: value } as CvExperience;
     setExperience(newExp);
   };
   const removeExperience = (index: number) => {
@@ -164,7 +153,7 @@ export default function CvBuilderPage() {
   };
   const updateLanguage = (index: number, field: string, value: string) => {
     const newLangs = [...languages];
-    newLangs[index] = { ...newLangs[index], [field]: value };
+    newLangs[index] = { ...newLangs[index], [field]: value } as CvLanguage;
     setLanguages(newLangs);
   };
   const removeLanguage = (index: number) => {
@@ -173,16 +162,58 @@ export default function CvBuilderPage() {
 
   // Certification Handlers
   const addCertification = () => {
-    setCertifications([...certifications, { name: "", issuer: "", date: "" }]);
+    setCertifications([...certifications, { name: "", issuer: "", date: "", url: "" }]);
   };
   const updateCertification = (index: number, field: string, value: string) => {
     const newCerts = [...certifications];
-    newCerts[index] = { ...newCerts[index], [field]: value };
+    newCerts[index] = { ...newCerts[index], [field]: value } as CvCertification;
     setCertifications(newCerts);
   };
   const removeCertification = (index: number) => {
     setCertifications(certifications.filter((_, i) => i !== index));
   };
+
+  // Project Handlers
+  const addProject = () => {
+    setProjects([...projects, { title: "", description: "", technologies: [], url: "", date: "" }]);
+  };
+  const updateProject = (index: number, field: string, value: string) => {
+    const newProjects = [...projects];
+    if (field === "technologies") {
+      newProjects[index] = { ...newProjects[index], technologies: value.split(",").map((s) => s.trim()).filter(Boolean) };
+    } else {
+      newProjects[index] = { ...newProjects[index], [field]: value } as CvProject;
+    }
+    setProjects(newProjects);
+  };
+  const removeProject = (index: number) => setProjects(projects.filter((_, i) => i !== index));
+
+  // Reference Handlers
+  const addReference = () => {
+    setReferences([...references, { name: "", position: "", company: "", email: "", phone: "" }]);
+  };
+  const updateReference = (index: number, field: string, value: string) => {
+    const newRefs = [...references];
+    newRefs[index] = { ...newRefs[index], [field]: value } as CvReference;
+    setReferences(newRefs);
+  };
+  const removeReference = (index: number) => setReferences(references.filter((_, i) => i !== index));
+
+  // Custom Section Handlers
+  const addCustomSection = () => {
+    setCustomSections([...customSections, { title: "", items: [] }]);
+  };
+  const updateCustomSectionTitle = (index: number, value: string) => {
+    const newSections = [...customSections];
+    newSections[index] = { ...newSections[index], title: value };
+    setCustomSections(newSections);
+  };
+  const updateCustomSectionItems = (index: number, value: string) => {
+    const newSections = [...customSections];
+    newSections[index] = { ...newSections[index], items: value.split("\n").map((s) => s.trim()).filter(Boolean) };
+    setCustomSections(newSections);
+  };
+  const removeCustomSection = (index: number) => setCustomSections(customSections.filter((_, i) => i !== index));
 
   const handleSave = async () => {
     if (!profile) return;
@@ -196,6 +227,9 @@ export default function CvBuilderPage() {
       experience,
       certifications,
       languages,
+      projects,
+      references,
+      custom_sections: customSections,
       template_name: templateName,
       primary_color: primaryColor,
       updated_at: new Date().toISOString(),
@@ -211,9 +245,16 @@ export default function CvBuilderPage() {
       if (data) setCvData(data);
     }
 
-    // Ayrıca hakkımda (bio) alanını profile tablosuna kaydet
-    if (bio !== profile.bio) {
-      await supabase.from("profiles").update({ bio }).eq("id", profile.id);
+    // Ayrıca kişisel özet bilgilerini (bio, unvan, konum, web sitesi) profile tablosuna kaydet
+    const profileChanges: Record<string, string> = {};
+    if (bio !== (profile.bio || "")) profileChanges.bio = bio;
+    if (headline !== (profile.headline || "")) profileChanges.headline = headline;
+    if (location !== (profile.location || "")) profileChanges.location = location;
+    if (websiteUrl !== (profile.website_url || "")) profileChanges.website_url = websiteUrl;
+
+    if (Object.keys(profileChanges).length > 0) {
+      await supabase.from("profiles").update(profileChanges).eq("id", profile.id);
+      setProfile({ ...profile, ...profileChanges } as Profile);
     }
 
     if (error) {
@@ -222,6 +263,46 @@ export default function CvBuilderPage() {
       toast.success("CV ve şablon tercihleriniz başarıyla kaydedildi!");
     }
     setSaving(false);
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!profile) return;
+    setPdfLoading(true);
+    try {
+      const res = await fetch("/api/cv/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile: { ...profile, bio, headline, location, website_url: websiteUrl },
+          skills,
+          education,
+          experience,
+          certifications,
+          languages,
+          projects,
+          references,
+          customSections,
+          templateName,
+          primaryColor,
+        }),
+      });
+
+      if (!res.ok) throw new Error("PDF oluşturulamadı");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `CV_${profile.first_name}_${profile.last_name}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(isEn ? "An error occurred while preparing the PDF. Please try again." : "PDF hazırlanırken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   if (loading) {
@@ -256,69 +337,61 @@ export default function CvBuilderPage() {
                 <Save className="h-4 w-4" />
                 {saving ? "Kaydediliyor..." : "Ayarları Kaydet"}
               </button>
-              
-              {isMounted && profile && (
-                <PDFDownloadLink
-                  document={
-                    <CvPdf 
-                      profile={{ ...profile, bio }} 
-                      cvData={cvData as any} 
-                      skills={skills} 
-                      education={education} 
-                      experience={experience} 
-                      certifications={certifications}
-                      languages={languages}
-                      templateName={templateName}
-                      primaryColor={primaryColor}
-                    />
-                  }
-                  fileName={`CV_${profile.first_name}_${profile.last_name}.pdf`}
-                  className="flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 shadow-md transition-all"
-                >
-                  {({ loading: pdfLoading }) => (
-                    <>
-                      <Download className="h-4 w-4" />
-                      {pdfLoading ? "PDF Hazırlanıyor..." : "PDF İndir"}
-                    </>
-                  )}
-                </PDFDownloadLink>
-              )}
+
+              <button
+                onClick={handleDownloadPdf}
+                disabled={pdfLoading || !profile}
+                className="flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 shadow-md transition-all disabled:opacity-50"
+              >
+                <Download className="h-4 w-4" />
+                {pdfLoading ? "PDF Hazırlanıyor..." : "PDF İndir"}
+              </button>
             </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-12 items-start">
-            
+
             {/* SOL KOLON: Düzenleyici ve Tasarım Ayarları (5 Column) */}
             <div className="lg:col-span-5 space-y-6">
-              
+
               {/* Sekme Seçici */}
               <div className="flex border-b border-[var(--color-border)] pb-px gap-1">
-                <button 
-                  onClick={() => setEditorTab("design")} 
+                <button
+                  onClick={() => setEditorTab("design")}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium border-b-2 transition-all ${
-                    editorTab === "design" 
-                      ? "border-[var(--color-primary)] text-[var(--color-primary)]" 
+                    editorTab === "design"
+                      ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                       : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                   }`}
                 >
                   <Palette className="h-4 w-4" /> {t("visualTemplate")}
                 </button>
-                <button 
-                  onClick={() => setEditorTab("content")} 
+                <button
+                  onClick={() => setEditorTab("content")}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium border-b-2 transition-all ${
-                    editorTab === "content" 
-                      ? "border-[var(--color-primary)] text-[var(--color-primary)]" 
+                    editorTab === "content"
+                      ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                       : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                   }`}
                 >
                   <Settings className="h-4 w-4" /> {t("quickContent")}
+                </button>
+                <button
+                  onClick={() => setEditorTab("extra")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium border-b-2 transition-all ${
+                    editorTab === "extra"
+                      ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                      : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                  }`}
+                >
+                  <FileStack className="h-4 w-4" /> {isEn ? "Extra Sections" : "Ek Bölümler"}
                 </button>
               </div>
 
               {/* SEKMELİ KISIM 1: GÖRSEL ŞABLON & STİL */}
               {editorTab === "design" && (
                 <div className="space-y-6 animate-fade-in">
-                  
+
                   {/* Şablon Seçici */}
                   <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
                     <h2 className="flex items-center gap-2 font-bold mb-4 text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
@@ -385,16 +458,16 @@ export default function CvBuilderPage() {
                       ))}
                     </div>
                   </div>
- 
+
                   {/* Bilgilendirme */}
                   <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-muted)]/30 p-5 text-center">
                     <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {isEn 
-                        ? "The primary source of your profile and CV information is at " 
+                      {isEn
+                        ? "The primary source of your profile and CV information is at "
                         : "Profil ve CV bilgilerinizin ana kaydı "}
-                      <Link href="/profile/edit" className="text-[var(--color-primary)] font-semibold hover:underline">/profile/edit</Link> 
-                      {isEn 
-                        ? ". You can permanently change your information from that page. The editor here allows quick last-minute adjustments." 
+                      <Link href="/profile/edit" className="text-[var(--color-primary)] font-semibold hover:underline">/profile/edit</Link>
+                      {isEn
+                        ? ". You can permanently change your information from that page. The editor here allows quick last-minute adjustments."
                         : " adresindedir. Bu sayfadan bilgilerinizi kalıcı olarak değiştirebilirsiniz. Buradaki içerik editörü ise hızlı son dakika düzenlemeleri yapmanızı sağlar."}
                     </p>
                   </div>
@@ -404,20 +477,35 @@ export default function CvBuilderPage() {
               {/* SEKMELİ KISIM 2: İÇERİK EDİTÖRÜ (HIZLI EDİT) */}
               {editorTab === "content" && (
                 <div className="space-y-6 animate-fade-in">
-                  
-                  {/* Hakkımda (Bio) */}
-                  <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
-                    <h2 className="flex items-center gap-2 font-bold mb-3 text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
-                      Hakkımda Metni
+
+                  {/* Kişisel Özet Bilgileri */}
+                  <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm space-y-3">
+                    <h2 className="flex items-center gap-2 font-bold mb-1 text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
+                      Kişisel Özet Bilgileri
                     </h2>
-                    <textarea 
-                      value={bio} 
-                      onChange={e => setBio(e.target.value)} 
-                      rows={3} 
-                      maxLength={500} 
-                      className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-[var(--color-primary)] focus:outline-none" 
-                      placeholder="Özgeçmiş özet metni..."
-                    />
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">Unvan / Başlık</label>
+                      <input value={headline} onChange={e => setHeadline(e.target.value)} maxLength={120} className="w-full rounded-lg border border-[var(--color-input)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Örn: Frontend Developer Adayı" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">Konum</label>
+                      <input value={location} onChange={e => setLocation(e.target.value)} maxLength={120} className="w-full rounded-lg border border-[var(--color-input)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="Örn: İzmir, Türkiye" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">Kişisel Web Sitesi</label>
+                      <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="w-full rounded-lg border border-[var(--color-input)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none" placeholder="https://..." />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--color-muted-foreground)]">Hakkımda Metni</label>
+                      <textarea
+                        value={bio}
+                        onChange={e => setBio(e.target.value)}
+                        rows={3}
+                        maxLength={1000}
+                        className="w-full rounded-lg border border-[var(--color-input)] bg-[var(--color-background)] px-3 py-2 text-sm mt-1 focus:border-[var(--color-primary)] focus:outline-none"
+                        placeholder="Özgeçmiş özet metni..."
+                      />
+                    </div>
                   </div>
 
                   {/* Eğitim Editörü */}
@@ -430,7 +518,7 @@ export default function CvBuilderPage() {
                         <Plus className="h-3.5 w-3.5" /> Ekle
                       </button>
                     </div>
-                    
+
                     <div className="space-y-4">
                       {education.map((edu, index) => (
                         <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-background)] shadow-sm">
@@ -439,11 +527,20 @@ export default function CvBuilderPage() {
                           </button>
                           <div className="space-y-2">
                             <input value={edu.school} onChange={e => updateEducation(index, 'school', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Okul / Üniversite" />
-                            <input value={edu.department} onChange={e => updateEducation(index, 'department', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Bölüm / Alan" />
                             <div className="grid grid-cols-2 gap-2">
-                              <input value={edu.startYear} onChange={e => updateEducation(index, 'startYear', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Başlangıç" />
-                              <input value={edu.endYear} onChange={e => updateEducation(index, 'endYear', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Bitiş / Devam" />
+                              <input value={edu.degree || ""} onChange={e => updateEducation(index, 'degree', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Derece (Lisans, Yüksek Lisans...)" />
+                              <input value={edu.field || ""} onChange={e => updateEducation(index, 'field', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Bölüm / Alan" />
                             </div>
+                            <input value={edu.location || ""} onChange={e => updateEducation(index, 'location', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Konum (Şehir)" />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input value={edu.startDate} onChange={e => updateEducation(index, 'startDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Başlangıç (Örn: 2022)" />
+                              <input value={edu.endDate || ""} disabled={edu.current} onChange={e => updateEducation(index, 'endDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50" placeholder="Bitiş (Örn: 2026)" />
+                            </div>
+                            <label className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
+                              <input type="checkbox" checked={Boolean(edu.current)} onChange={e => updateEducation(index, 'current', e.target.checked)} /> Halen devam ediyorum
+                            </label>
+                            <input value={edu.gpa || ""} onChange={e => updateEducation(index, 'gpa', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Not Ortalaması (Opsiyonel)" />
+                            <textarea rows={2} value={edu.description || ""} onChange={e => updateEducation(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)] resize-none" placeholder="Ek açıklama (Opsiyonel)" />
                           </div>
                         </div>
                       ))}
@@ -460,7 +557,7 @@ export default function CvBuilderPage() {
                         <Plus className="h-3.5 w-3.5" /> Ekle
                       </button>
                     </div>
-                    
+
                     <div className="space-y-4">
                       {experience.map((exp, index) => (
                         <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-background)] shadow-sm">
@@ -469,9 +566,16 @@ export default function CvBuilderPage() {
                           </button>
                           <div className="space-y-2">
                             <input value={exp.company} onChange={e => updateExperience(index, 'company', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Şirket / Kurum" />
-                            <input value={exp.position} onChange={e => updateExperience(index, 'position', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Pozisyon" />
-                            <input value={exp.duration} onChange={e => updateExperience(index, 'duration', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Süre (Örn: 2022 - 2023)" />
-                            <textarea rows={2} value={exp.description} onChange={e => updateExperience(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)] resize-none" placeholder="Açıklama" />
+                            <input value={exp.title} onChange={e => updateExperience(index, 'title', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Pozisyon" />
+                            <input value={exp.location || ""} onChange={e => updateExperience(index, 'location', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Konum (Şehir / Uzaktan)" />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input value={exp.startDate} onChange={e => updateExperience(index, 'startDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Başlangıç (Örn: Haz 2023)" />
+                              <input value={exp.endDate || ""} disabled={exp.current} onChange={e => updateExperience(index, 'endDate', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)] disabled:opacity-50" placeholder="Bitiş" />
+                            </div>
+                            <label className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
+                              <input type="checkbox" checked={Boolean(exp.current)} onChange={e => updateExperience(index, 'current', e.target.checked)} /> Halen bu pozisyondayım
+                            </label>
+                            <textarea rows={2} value={exp.description || ""} onChange={e => updateExperience(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)] resize-none" placeholder="Açıklama (her satır bir madde olarak gösterilir)" />
                           </div>
                         </div>
                       ))}
@@ -554,10 +658,116 @@ export default function CvBuilderPage() {
                           <div className="space-y-1.5">
                             <input value={cert.name} onChange={e => updateCertification(index, 'name', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Sertifika Adı" />
                             <input value={cert.issuer} onChange={e => updateCertification(index, 'issuer', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Veren Kurum" />
-                            <input value={cert.date} onChange={e => updateCertification(index, 'date', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Tarih" />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input value={cert.date || ""} onChange={e => updateCertification(index, 'date', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Tarih" />
+                              <input value={cert.url || ""} onChange={e => updateCertification(index, 'url', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Doğrulama Linki" />
+                            </div>
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* SEKMELİ KISIM 3: EK BÖLÜMLER (PROJELER, REFERANSLAR, ÖZEL BÖLÜMLER) */}
+              {editorTab === "extra" && (
+                <div className="space-y-6 animate-fade-in">
+
+                  {/* Projeler */}
+                  <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="flex items-center gap-2 font-bold text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
+                        <FolderGit2 className="h-4.5 w-4.5" /> Projeler
+                      </h2>
+                      <button onClick={addProject} className="text-xs font-semibold text-[var(--color-primary)] flex items-center gap-0.5">
+                        <Plus className="h-3.5 w-3.5" /> Ekle
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {projects.map((proj, index) => (
+                        <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-background)] shadow-sm">
+                          <button onClick={() => removeProject(index)} className="absolute top-2 right-2 text-[var(--color-muted-foreground)] hover:text-red-500">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <div className="space-y-2">
+                            <input value={proj.title} onChange={e => updateProject(index, 'title', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Proje Başlığı" />
+                            <textarea rows={2} value={proj.description || ""} onChange={e => updateProject(index, 'description', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)] resize-none" placeholder="Açıklama" />
+                            <input value={(proj.technologies || []).join(", ")} onChange={e => updateProject(index, 'technologies', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Teknolojiler (virgülle ayırın)" />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input value={proj.date || ""} onChange={e => updateProject(index, 'date', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Tarih" />
+                              <input value={proj.url || ""} onChange={e => updateProject(index, 'url', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Bağlantı" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {projects.length === 0 && (
+                        <p className="text-xs text-[var(--color-muted-foreground)] text-center py-4">Henüz proje eklenmedi. Ayrıca <Link href="/projects" className="text-[var(--color-primary)] font-semibold hover:underline">Projeler</Link> sayfanızdaki çalışmalarınızı buraya özetleyebilirsiniz.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Referanslar */}
+                  <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="flex items-center gap-2 font-bold text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
+                        <Users className="h-4.5 w-4.5" /> Referanslar
+                      </h2>
+                      <button onClick={addReference} className="text-xs font-semibold text-[var(--color-primary)] flex items-center gap-0.5">
+                        <Plus className="h-3.5 w-3.5" /> Ekle
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {references.map((ref, index) => (
+                        <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-background)] shadow-sm">
+                          <button onClick={() => removeReference(index)} className="absolute top-2 right-2 text-[var(--color-muted-foreground)] hover:text-red-500">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <div className="space-y-2">
+                            <input value={ref.name} onChange={e => updateReference(index, 'name', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Ad Soyad" />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input value={ref.position || ""} onChange={e => updateReference(index, 'position', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Pozisyon" />
+                              <input value={ref.company || ""} onChange={e => updateReference(index, 'company', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Kurum" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input value={ref.email || ""} onChange={e => updateReference(index, 'email', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="E-posta" />
+                              <input value={ref.phone || ""} onChange={e => updateReference(index, 'phone', e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)]" placeholder="Telefon" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {references.length === 0 && (
+                        <p className="text-xs text-[var(--color-muted-foreground)] text-center py-4">Henüz referans eklenmedi.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Özel Bölümler */}
+                  <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="flex items-center gap-2 font-bold text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
+                        <FileStack className="h-4.5 w-4.5" /> Özel Bölümler
+                      </h2>
+                      <button onClick={addCustomSection} className="text-xs font-semibold text-[var(--color-primary)] flex items-center gap-0.5">
+                        <Plus className="h-3.5 w-3.5" /> Ekle
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {customSections.map((section, index) => (
+                        <div key={index} className="relative rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-background)] shadow-sm">
+                          <button onClick={() => removeCustomSection(index)} className="absolute top-2 right-2 text-[var(--color-muted-foreground)] hover:text-red-500">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <div className="space-y-2">
+                            <input value={section.title} onChange={e => updateCustomSectionTitle(index, e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-[var(--color-primary)]" placeholder="Bölüm Başlığı (Örn: Gönüllülük Çalışmaları)" />
+                            <textarea rows={3} value={(section.items || []).join("\n")} onChange={e => updateCustomSectionItems(index, e.target.value)} className="w-full rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--color-primary)] resize-none" placeholder={"Her satıra bir madde yazın"} />
+                          </div>
+                        </div>
+                      ))}
+                      {customSections.length === 0 && (
+                        <p className="text-xs text-[var(--color-muted-foreground)] text-center py-4">İstediğiniz herhangi bir başlıkla (Gönüllülük, Yayınlar, Ödüller vb.) özel bölüm ekleyebilirsiniz.</p>
+                      )}
                     </div>
                   </div>
 
@@ -568,7 +778,7 @@ export default function CvBuilderPage() {
 
             {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
             <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm dark:bg-[var(--color-card)] lg:sticky top-6 p-8 overflow-hidden min-h-[600px]">
-              
+
               <div className="mb-6 flex items-center justify-between border-b border-[var(--color-border)] pb-4">
                 <h2 className="flex items-center gap-2 font-bold text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
                   <Eye className="h-4 w-4" /> Canlı Web Önizlemesi
@@ -582,20 +792,22 @@ export default function CvBuilderPage() {
               </div>
 
               {/* DİNAMİK CANLI ŞABLON RENDER ALANI */}
-              
+
               {/* CV Header */}
               <div className="border-b border-[var(--color-border)] pb-6 mb-6">
                 <h3 className={`text-2xl font-bold text-[var(--color-foreground)] ${templateName === 'brutalist' ? 'uppercase tracking-wide font-black' : ''}`}>
                   {profile?.first_name} {profile?.last_name}
                 </h3>
                 <p className="text-sm font-semibold mt-1" style={{ color: primaryColor }}>
-                  {profile?.department || "Yönetim Bilişim Sistemleri Öğrencisi"}
+                  {headline || profile?.department || "Yönetim Bilişim Sistemleri Öğrencisi"}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--color-muted-foreground)]">
+                  {location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {location}</span>}
                   {profile?.edu_email && <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> {profile.edu_email}</span>}
                   {profile?.phone && <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {profile.phone}</span>}
                   {profile?.linkedin_url && <span className="flex items-center gap-1"><Link2 className="h-3.5 w-3.5" /> LinkedIn</span>}
                   {profile?.github_url && <span className="flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> GitHub</span>}
+                  {websiteUrl && <span className="flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> Web Sitesi</span>}
                 </div>
               </div>
 
@@ -603,7 +815,7 @@ export default function CvBuilderPage() {
               {templateName === 'modern' ? (
                 // MODERN: ÇİFT SÜTUNLU DÜZEN
                 <div className="grid gap-6 sm:grid-cols-12">
-                  
+
                   {/* Sol Küçük Sütun */}
                   <div className="sm:col-span-4 space-y-6 border-r border-[var(--color-border)] pr-4">
                     {/* Yetenekler */}
@@ -617,7 +829,7 @@ export default function CvBuilderPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Diller */}
                     {languages.length > 0 && (
                       <div>
@@ -627,6 +839,21 @@ export default function CvBuilderPage() {
                             <div key={i} className="flex justify-between items-center text-xs">
                               <span className="font-semibold">{lang.language}</span>
                               <span className="text-[var(--color-muted-foreground)] text-[10px] bg-[var(--color-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">{getLanguageLevelLabel(lang.level)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Referanslar */}
+                    {references.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Referanslar</h4>
+                        <div className="space-y-3">
+                          {references.map((ref, i) => (
+                            <div key={i} className="text-xs">
+                              <div className="font-bold text-[var(--color-foreground)]">{ref.name}</div>
+                              <div className="text-[11px] text-[var(--color-muted-foreground)]">{[ref.position, ref.company].filter(Boolean).join(" • ")}</div>
                             </div>
                           ))}
                         </div>
@@ -652,11 +879,11 @@ export default function CvBuilderPage() {
                           {experience.map((exp, i) => (
                             <div key={i} className="text-xs">
                               <div className="flex justify-between items-start">
-                                <span className="font-bold text-[var(--color-foreground)]">{exp.position}</span>
-                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{exp.duration}</span>
+                                <span className="font-bold text-[var(--color-foreground)]">{exp.title}</span>
+                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</span>
                               </div>
-                              <div className="text-[11px] font-semibold text-[var(--color-muted-foreground)] mb-1">{exp.company}</div>
-                              {exp.description && <p className="text-[11px] text-[var(--color-muted-foreground)] leading-normal">{exp.description}</p>}
+                              <div className="text-[11px] font-semibold text-[var(--color-muted-foreground)] mb-1">{[exp.company, exp.location].filter(Boolean).join(" • ")}</div>
+                              {exp.description && <p className="text-[11px] text-[var(--color-muted-foreground)] leading-normal whitespace-pre-line">{exp.description}</p>}
                             </div>
                           ))}
                         </div>
@@ -672,9 +899,34 @@ export default function CvBuilderPage() {
                             <div key={i} className="text-xs">
                               <div className="flex justify-between items-start">
                                 <span className="font-bold text-[var(--color-foreground)]">{edu.school}</span>
-                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{edu.startYear} - {edu.endYear}</span>
+                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</span>
                               </div>
-                              <div className="text-[11px] text-[var(--color-muted-foreground)]">{edu.department}</div>
+                              <div className="text-[11px] text-[var(--color-muted-foreground)]">{[edu.degree, edu.field].filter(Boolean).join(" • ")}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Projeler */}
+                    {projects.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Projeler</h4>
+                        <div className="space-y-3">
+                          {projects.map((proj, i) => (
+                            <div key={i} className="text-xs">
+                              <div className="flex justify-between items-start">
+                                <span className="font-bold text-[var(--color-foreground)]">{proj.title}</span>
+                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{proj.date}</span>
+                              </div>
+                              {proj.description && <p className="text-[11px] text-[var(--color-muted-foreground)]">{proj.description}</p>}
+                              {proj.technologies && proj.technologies.length > 0 && (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  {proj.technologies.map((tech) => (
+                                    <span key={tech} className="rounded bg-[var(--color-muted)] px-1.5 py-0.5 text-[10px] border border-[var(--color-border)]">{tech}</span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -698,6 +950,18 @@ export default function CvBuilderPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Özel Bölümler */}
+                    {customSections.filter(s => s.title && s.items?.length > 0).map((section, i) => (
+                      <div key={i}>
+                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>{section.title}</h4>
+                        <ul className="space-y-1 list-disc list-inside">
+                          {section.items.map((item, ii) => (
+                            <li key={ii} className="text-[11px] text-[var(--color-muted-foreground)]">{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
 
                 </div>
@@ -720,11 +984,11 @@ export default function CvBuilderPage() {
                         {experience.map((exp, i) => (
                           <div key={i} className="text-xs">
                             <div className="flex justify-between items-start">
-                              <span className="font-bold text-[var(--color-foreground)]">{exp.position}</span>
-                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{exp.duration}</span>
+                              <span className="font-bold text-[var(--color-foreground)]">{exp.title}</span>
+                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</span>
                             </div>
-                            <div className="text-[11px] font-semibold text-[var(--color-muted-foreground)] mb-1">{exp.company}</div>
-                            {exp.description && <p className="text-[11px] text-[var(--color-muted-foreground)] leading-normal">{exp.description}</p>}
+                            <div className="text-[11px] font-semibold text-[var(--color-muted-foreground)] mb-1">{[exp.company, exp.location].filter(Boolean).join(" • ")}</div>
+                            {exp.description && <p className="text-[11px] text-[var(--color-muted-foreground)] leading-normal whitespace-pre-line">{exp.description}</p>}
                           </div>
                         ))}
                       </div>
@@ -740,9 +1004,27 @@ export default function CvBuilderPage() {
                           <div key={i} className="text-xs">
                             <div className="flex justify-between items-start">
                               <span className="font-bold text-[var(--color-foreground)]">{edu.school}</span>
-                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{edu.startYear} - {edu.endYear}</span>
+                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</span>
                             </div>
-                            <div className="text-[11px] text-[var(--color-muted-foreground)]">{edu.department}</div>
+                            <div className="text-[11px] text-[var(--color-muted-foreground)]">{[edu.degree, edu.field].filter(Boolean).join(" • ")}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Projeler */}
+                  {projects.length > 0 && (
+                    <div>
+                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Projeler</h4>
+                      <div className="space-y-3">
+                        {projects.map((proj, i) => (
+                          <div key={i} className="text-xs">
+                            <div className="flex justify-between items-start">
+                              <span className="font-bold text-[var(--color-foreground)]">{proj.title}</span>
+                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{proj.date}</span>
+                            </div>
+                            {proj.description && <p className="text-[11px] text-[var(--color-muted-foreground)]">{proj.description}</p>}
                           </div>
                         ))}
                       </div>
@@ -793,6 +1075,33 @@ export default function CvBuilderPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Referanslar */}
+                  {references.length > 0 && (
+                    <div>
+                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Referanslar</h4>
+                      <div className="space-y-3">
+                        {references.map((ref, i) => (
+                          <div key={i} className="text-xs">
+                            <div className="font-bold text-[var(--color-foreground)]">{ref.name}</div>
+                            <div className="text-[11px] text-[var(--color-muted-foreground)]">{[ref.position, ref.company].filter(Boolean).join(" • ")}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Özel Bölümler */}
+                  {customSections.filter(s => s.title && s.items?.length > 0).map((section, i) => (
+                    <div key={i}>
+                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>{section.title}</h4>
+                      <ul className="space-y-1 list-disc list-inside">
+                        {section.items.map((item, ii) => (
+                          <li key={ii} className="text-[11px] text-[var(--color-muted-foreground)]">{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -801,7 +1110,7 @@ export default function CvBuilderPage() {
           </div>
         </div>
       </main>
-      
+
       {/* Brutalist şablon için web önizleme stilleri (sadece preview alanı için geçerli) */}
       <style jsx global>{`
         .brutalist-preview {
