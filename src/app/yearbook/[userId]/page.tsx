@@ -31,6 +31,8 @@ export default function YearbookDetailPage({ params }: Props) {
   const [yearbookProfile, setYearbookProfile] = useState<any>(null);
   const [approvedEntries, setApprovedEntries] = useState<any[]>([]);
   const [pendingEntries, setPendingEntries] = useState<any[]>([]);
+  const [prevStudent, setPrevStudent] = useState<any>(null);
+  const [nextStudent, setNextStudent] = useState<any>(null);
 
   // Form State'leri
   const [newEntryContent, setNewEntryContent] = useState("");
@@ -88,6 +90,34 @@ export default function YearbookDetailPage({ params }: Props) {
         const pending = entries.filter((e) => !e.is_approved);
         setApprovedEntries(approved);
         setPendingEntries(pending);
+      }
+
+      // 4. Aynı bölüm ve mezuniyet yılındaki diğer andıç öğrencilerini çek (Sayfalama için)
+      const { data: siblings } = await supabase
+        .from("yearbook_profiles")
+        .select(`
+          user_id,
+          profiles:user_id (first_name, last_name)
+        `)
+        .eq("department_id", ybProfile.department_id)
+        .eq("graduation_year", ybProfile.graduation_year)
+        .eq("is_visible", true)
+        .order("created_at", { ascending: true });
+
+      if (siblings && siblings.length > 1) {
+        const currentIndex = siblings.findIndex((s: any) => s.user_id === userId);
+        if (currentIndex !== -1) {
+          const prevSib = currentIndex > 0 ? siblings[currentIndex - 1] : null;
+          const nextSib = currentIndex < siblings.length - 1 ? siblings[currentIndex + 1] : null;
+          setPrevStudent(prevSib);
+          setNextStudent(nextSib);
+        } else {
+          setPrevStudent(null);
+          setNextStudent(null);
+        }
+      } else {
+        setPrevStudent(null);
+        setNextStudent(null);
       }
 
       setLoading(false);
@@ -275,6 +305,45 @@ export default function YearbookDetailPage({ params }: Props) {
             </div>
           </div>
         </div>
+
+        {/* Sayfalama Navigasyonu (Önceki / Sonraki Öğrenci) */}
+        {(prevStudent || nextStudent) && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-8 bg-[var(--color-card)]/30 border border-[var(--color-border)]/50 p-3 rounded-xl shadow-sm backdrop-blur-sm">
+            {prevStudent ? (
+              <Link
+                href={`/yearbook/${prevStudent.user_id}`}
+                className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 text-sm font-semibold text-indigo-500 hover:text-indigo-600 bg-indigo-500/5 hover:bg-indigo-500/10 px-4 py-2.5 rounded-lg transition-all"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>
+                  {isEn ? "Prev: " : "Önceki: "}
+                  {prevStudent.profiles?.first_name} {prevStudent.profiles?.last_name}
+                </span>
+              </Link>
+            ) : (
+              <div className="text-xs text-[var(--color-muted-foreground)] px-4 py-2 hidden sm:block">
+                {isEn ? "Start of Class" : "Bölümün Başı"}
+              </div>
+            )}
+
+            {nextStudent ? (
+              <Link
+                href={`/yearbook/${nextStudent.user_id}`}
+                className="w-full sm:w-auto flex items-center justify-center sm:justify-end gap-2 text-sm font-semibold text-indigo-500 hover:text-indigo-600 bg-indigo-500/5 hover:bg-indigo-500/10 px-4 py-2.5 rounded-lg transition-all sm:ml-auto"
+              >
+                <span>
+                  {isEn ? "Next: " : "Sonraki: "}
+                  {nextStudent.profiles?.first_name} {nextStudent.profiles?.last_name}
+                </span>
+                <ArrowLeft className="h-4 w-4 rotate-180" />
+              </Link>
+            ) : (
+              <div className="text-xs text-[var(--color-muted-foreground)] px-4 py-2 sm:ml-auto hidden sm:block">
+                {isEn ? "End of Class" : "Bölümün Sonu"}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* -----------------------------------------------------------
             ONAY BEKLEYEN YAZILAR (SADECE PROFİL SAHİBİ GÖRÜR)

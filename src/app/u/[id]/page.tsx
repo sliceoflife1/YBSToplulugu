@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { GitBranch, UserCircle, Briefcase, GraduationCap, FileText, Code2, MapPin, Globe, Sparkles } from "lucide-react";
+import { GitBranch, UserCircle, Briefcase, GraduationCap, FileText, Code2, MapPin, Globe, Sparkles, BookOpen } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
@@ -25,6 +25,14 @@ export default async function UserProfilePage({
   if (!profile) {
     notFound();
   }
+
+  // 1.1. Andıç Kaydını Sorgula (is_visible true olanlar)
+  const { data: yearbookProfile } = await supabase
+    .from("yearbook_profiles")
+    .select("user_id")
+    .eq("user_id", id)
+    .eq("is_visible", true)
+    .maybeSingle();
 
   // 2. Kullanıcının Projelerini Çek (Kronolojik)
   const { data: projects } = await supabase
@@ -83,7 +91,15 @@ export default async function UserProfilePage({
                   )}
                 </div>
 
-                <div className="flex gap-3 mt-4 sm:mt-0">
+                <div className="flex gap-3 mt-4 sm:mt-0 flex-wrap items-center">
+                  {yearbookProfile && (
+                    <Link
+                      href={`/yearbook/${profile.id}`}
+                      className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary)]/90 shadow-sm transition-all"
+                    >
+                      <BookOpen className="h-4 w-4" /> Mezuniyet Yıllığına Yaz
+                    </Link>
+                  )}
                   {profile.linkedin_url && (
                     <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)] transition-colors">
                       <UserCircle className="h-4 w-4 text-blue-600" /> LinkedIn
