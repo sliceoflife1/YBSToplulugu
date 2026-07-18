@@ -158,20 +158,34 @@ export default async function PostDetailPage({
                     </span>
                   )}
                   {/* User info */}
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[9px] font-bold text-[var(--color-primary)]">
-                    {post.profiles.avatar_url ? (
-                      <img
-                        src={post.profiles.avatar_url}
-                        alt={`${post.profiles.first_name}`}
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    ) : (
-                      `${post.profiles.first_name.charAt(0).toUpperCase()}${post.profiles.last_name.charAt(0).toUpperCase()}`
-                    )}
-                  </div>
-                  <span className="font-semibold text-[var(--color-foreground)]">
-                    {post.profiles.first_name} {post.profiles.last_name}
-                  </span>
+                  {post.profiles?.id ? (
+                    <Link 
+                      href={`/u/${post.profiles.id}`}
+                      className="flex items-center gap-2 hover:text-indigo-500 transition-colors font-semibold text-[var(--color-foreground)] group"
+                    >
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[9px] font-bold text-[var(--color-primary)] shadow-sm">
+                        {post.profiles.avatar_url ? (
+                          <img
+                            src={post.profiles.avatar_url}
+                            alt={`${post.profiles.first_name}`}
+                            className="h-full w-full rounded-full object-cover"
+                          />
+                        ) : (
+                          `${post.profiles.first_name.charAt(0).toUpperCase()}${post.profiles.last_name.charAt(0).toUpperCase()}`
+                        )}
+                      </div>
+                      <span>
+                        {post.profiles.first_name} {post.profiles.last_name}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2 font-semibold text-[var(--color-foreground)]">
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[9px] font-bold text-[var(--color-primary)] shadow-sm">
+                        ?
+                      </div>
+                      <span>Bilinmeyen Kullanıcı</span>
+                    </div>
+                  )}
                   <span>•</span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" /> {timeAgo(post.created_at)}

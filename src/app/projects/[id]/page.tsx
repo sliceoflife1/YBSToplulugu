@@ -140,12 +140,26 @@ export default async function ProjectDetailPage({
               <div className="flex-1 min-w-0">
                 {/* Meta Detaylar */}
                 <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[9px] font-bold text-white uppercase">
-                    {(project.profiles?.first_name || "?").charAt(0)}
-                  </div>
-                  <span className="font-semibold text-[var(--color-foreground)]">
-                    {project.profiles?.first_name} {project.profiles?.last_name}
-                  </span>
+                  {project.profiles?.id ? (
+                    <Link 
+                      href={`/u/${project.profiles.id}`}
+                      className="flex items-center gap-2 hover:text-indigo-500 transition-colors font-semibold text-[var(--color-foreground)] group"
+                    >
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[9px] font-bold text-white uppercase shadow-sm">
+                        {(project.profiles?.first_name || "?").charAt(0)}
+                      </div>
+                      <span>
+                        {project.profiles?.first_name} {project.profiles?.last_name}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2 font-semibold text-[var(--color-foreground)]">
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[9px] font-bold text-white uppercase shadow-sm">
+                        ?
+                      </div>
+                      <span>Bilinmeyen Kullanıcı</span>
+                    </div>
+                  )}
                   <span>•</span>
                   <span>
                     {project.semester === "fall" ? "Güz" : project.semester === "spring" ? "Bahar" : "Yaz"} {project.year}

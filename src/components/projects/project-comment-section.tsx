@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { MessageSquare, Send, Reply, Clock } from "lucide-react";
 import { type ProjectCommentInput } from "@/lib/validations/profile";
@@ -67,7 +68,10 @@ const CommentNode = ({
       {/* Comment Card */}
       <div className="flex gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm transition-all hover:shadow-md">
         {/* Avatar / Initials */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-xs font-semibold text-[var(--color-primary)]">
+        <Link 
+          href={`/u/${comment.author_id}`} 
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-xs font-semibold text-[var(--color-primary)] hover:opacity-80 transition-opacity"
+        >
           {comment.profiles?.avatar_url ? (
             <img
               src={comment.profiles.avatar_url}
@@ -77,14 +81,17 @@ const CommentNode = ({
           ) : (
             `${comment.profiles?.first_name?.charAt(0).toUpperCase()}${comment.profiles?.last_name?.charAt(0).toUpperCase()}`
           )}
-        </div>
+        </Link>
 
         <div className="flex-1 min-w-0">
           {/* Header info */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="font-semibold text-[var(--color-foreground)]">
+            <Link 
+              href={`/u/${comment.author_id}`}
+              className="font-semibold text-[var(--color-foreground)] hover:text-indigo-500 transition-colors"
+            >
               {comment.profiles?.first_name} {comment.profiles?.last_name}
-            </span>
+            </Link>
             <span className="text-[var(--color-muted-foreground)]">•</span>
             <span className="flex items-center gap-1 text-[var(--color-muted-foreground)]">
               <Clock className="h-3 w-3" /> {timeAgo(comment.created_at)}

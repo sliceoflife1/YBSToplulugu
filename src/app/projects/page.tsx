@@ -28,6 +28,7 @@ export default async function ProjectsPage() {
       comment_count,
       media_urls,
       profiles (
+        id,
         first_name,
         last_name,
         avatar_url,

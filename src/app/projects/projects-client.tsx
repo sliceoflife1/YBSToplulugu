@@ -21,6 +21,7 @@ type Project = {
   comment_count: number;
   hasUpvoted: boolean;
   profiles: {
+    id: string;
     first_name: string;
     last_name: string;
     avatar_url: string;
@@ -146,12 +147,11 @@ export default function ProjectsClient({ initialProjects, isLoggedIn }: Projects
       {filteredProjects.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in">
           {filteredProjects.map((p) => (
-            <Link
-              href={`/projects/${p.id}`}
+            <div
               key={p.id}
               className="group flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01] overflow-hidden"
             >
-              <div className="p-6 flex-1 flex flex-col justify-between">
+              <Link href={`/projects/${p.id}`} className="p-6 flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-foreground)] group-hover:text-indigo-500 transition-colors leading-snug">
                     {p.title}
@@ -181,18 +181,33 @@ export default function ProjectsClient({ initialProjects, isLoggedIn }: Projects
                     )}
                   </div>
                 )}
-              </div>
+              </Link>
 
               {/* Card Footer */}
               <div className="border-t border-[var(--color-border)] px-6 py-4 flex items-center justify-between bg-[var(--color-muted)]/5 group-hover:bg-[var(--color-muted)]/10 transition-colors">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white uppercase shadow-sm">
-                    {(p.profiles?.first_name || "?").charAt(0)}
+                {p.profiles?.id ? (
+                  <Link 
+                    href={`/u/${p.profiles.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-2 hover:text-indigo-500 transition-colors group/author"
+                  >
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white uppercase shadow-sm">
+                      {(p.profiles?.first_name || "?").charAt(0)}
+                    </div>
+                    <div className="text-xs font-semibold">
+                      {p.profiles?.first_name} {p.profiles?.last_name}
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white uppercase shadow-sm">
+                      ?
+                    </div>
+                    <div className="text-xs font-semibold text-[var(--color-foreground)]">
+                      Bilinmeyen Kullanıcı
+                    </div>
                   </div>
-                  <div className="text-xs font-semibold text-[var(--color-foreground)]">
-                    {p.profiles?.first_name} {p.profiles?.last_name}
-                  </div>
-                </div>
+                )}
 
                 {/* Oy & Yorum & Sosyal Medya İkonları */}
                 <div className="flex items-center gap-3.5">
@@ -257,7 +272,7 @@ export default function ProjectsClient({ initialProjects, isLoggedIn }: Projects
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       ) : (

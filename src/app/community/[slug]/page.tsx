@@ -115,7 +115,16 @@ export default async function SubredditPage({
                             <Pin className="h-3 w-3" /> Sabitlenmiş
                           </span>
                         )}
-                        <span>{post.profiles.first_name} {post.profiles.last_name}</span>
+                        {post.profiles?.id ? (
+                          <Link 
+                            href={`/u/${post.profiles.id}`}
+                            className="font-semibold text-[var(--color-foreground)] hover:text-indigo-500 transition-colors"
+                          >
+                            {post.profiles.first_name} {post.profiles.last_name}
+                          </Link>
+                        ) : (
+                          <span>Bilinmeyen Kullanıcı</span>
+                        )}
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" /> {timeAgo(post.created_at)}
