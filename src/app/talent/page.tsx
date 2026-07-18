@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Search, MapPin, Briefcase, GraduationCap, Award, Mail, ExternalLink, ShieldCheck } from "lucide-react";
+import { Search, MapPin, Briefcase, GraduationCap, Award, Mail, ExternalLink, ShieldCheck, Globe, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 
