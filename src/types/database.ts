@@ -24,6 +24,9 @@ export interface Profile {
   role: UserRole;
   is_active: boolean;
   is_cv_public: boolean;
+  meeting_url: string | null;
+  is_mentor: boolean;
+  mentor_topics: string[];
   karma_points: number;
   created_at: string;
   updated_at: string;

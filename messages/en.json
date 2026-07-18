@@ -31,6 +31,8 @@
     "cv": "CV",
     "community": "Community",
     "explore": "Explore",
+    "opportunities": "Opportunities",
+    "announcements": "Announcements",
     "settings": "Settings",
     "admin": "Admin"
   },
@@ -75,7 +77,31 @@
     "karma": "Community Points",
     "joinDate": "Join Date",
     "viewCV": "View CV",
-    "memberSince": "Member since"
+    "memberSince": "Member since",
+    "personalInfo": "Personal Info",
+    "eduExp": "Education & Experience",
+    "skillsMore": "Skills, Languages & Certificates",
+    "bioTitle": "About Me (Summary)",
+    "bioPlaceholder": "Briefly summarize yourself and your career goals...",
+    "personalWebsite": "Personal Website",
+    "addEdu": "Add Education",
+    "addExp": "Add Experience",
+    "schoolName": "School Name",
+    "department": "Department",
+    "startYear": "Start Year",
+    "endYear": "End Year (or Present)",
+    "companyName": "Company / Organization Name",
+    "position": "Position",
+    "addSkill": "Add Skill",
+    "skillPlaceholder": "Type skill...",
+    "addLanguage": "Add Language",
+    "languageName": "Language Name",
+    "languageLevel": "Language Level",
+    "addCertificate": "Add Certificate",
+    "certificateName": "Certificate Name",
+    "issuer": "Issuing Organization",
+    "date": "Date",
+    "saveChanges": "Save Changes"
   },
   "projects": {
     "title": "Projects",
@@ -103,7 +129,21 @@
     "languages": "Languages",
     "public": "Public",
     "private": "Private",
-    "toggleVisibility": "CV Visibility"
+    "toggleVisibility": "CV Visibility",
+    "visualTemplate": "Visual Template & Style",
+    "quickContent": "Quick Content Settings",
+    "templateChoice": "Template Choice",
+    "themeColor": "Theme Color",
+    "classic": "Classic",
+    "modern": "Modern",
+    "brutalist": "Brutalist",
+    "personalInfo": "Personal Information",
+    "blue": "Blue",
+    "green": "Green",
+    "red": "Red",
+    "purple": "Purple",
+    "dark": "Dark",
+    "yellow": "Yellow"
   },
   "community": {
     "title": "Community",
@@ -128,7 +168,9 @@
     "totalUsers": "Total Users",
     "totalPosts": "Total Posts",
     "totalProjects": "Total Projects",
-    "subredditManagement": "Forum Management"
+    "subredditManagement": "Forum Management",
+    "opportunitiesManagement": "Opportunities Management",
+    "announcementsManagement": "Announcements Management"
   },
   "landing": {
     "heroTitle": "DEÜ Student Community",
@@ -142,6 +184,16 @@
     "featureCommunity": "Community Forum",
     "featureCommunityDesc": "Join discussions in Reddit-like forums, share knowledge",
     "featureNetwork": "Professional Network",
-    "featureNetworkDesc": "Connect with employers and academics"
+    "featureNetworkDesc": "Connect with employers and academics",
+    "student": "Student",
+    "project": "Project",
+    "employer": "Employer",
+    "certificate": "Certificate",
+    "faculty": "Faculty",
+    "organization": "Organization (Vakıf, Dernek etc.)"
+  },
+  "dashboard": {
+    "announcementsTitle": "Events & Announcements"
   }
 }
+

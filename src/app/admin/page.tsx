@@ -12,6 +12,8 @@ import {
   XCircle,
   TrendingUp,
   BarChart3,
+  Tag,
+  Megaphone,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -196,13 +198,13 @@ export default async function AdminPage() {
           </div>
 
           {/* Quick links */}
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <Link
               href="/admin/users"
               className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
             >
               <Users className="h-6 w-6 text-[var(--color-primary)]" />
-              <h3 className="mt-3 font-semibold text-[var(--color-foreground)]">
+              <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
                 {t("users")}
               </h3>
               <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
@@ -214,7 +216,7 @@ export default async function AdminPage() {
               className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
             >
               <MessageSquare className="h-6 w-6 text-[var(--color-primary)]" />
-              <h3 className="mt-3 font-semibold text-[var(--color-foreground)]">
+              <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
                 {t("subredditManagement")}
               </h3>
               <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
@@ -222,15 +224,39 @@ export default async function AdminPage() {
               </p>
             </Link>
             <Link
+              href="/admin/opportunities"
+              className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            >
+              <Tag className="h-6 w-6 text-[var(--color-primary)]" />
+              <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                {t("opportunitiesManagement")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                Öğrenci indirimlerini yönet
+              </p>
+            </Link>
+            <Link
+              href="/admin/announcements"
+              className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            >
+              <Megaphone className="h-6 w-6 text-[var(--color-primary)]" />
+              <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                {t("announcementsManagement")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                Etkinlik ve duyuruları yönet
+              </p>
+            </Link>
+            <Link
               href="/admin/domains"
               className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
             >
               <BarChart3 className="h-6 w-6 text-[var(--color-primary)]" />
-              <h3 className="mt-3 font-semibold text-[var(--color-foreground)]">
+              <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
                 E-posta Domainleri
               </h3>
               <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-                İzin verilen üniversite domainlerini yönet
+                Üniversite domainlerini yönet
               </p>
             </Link>
           </div>

@@ -21,19 +21,8 @@ import {
   type FacultyRegisterInput,
 } from "@/lib/validations/auth";
 
-const DEPARTMENTS = [
-  "Yönetim Bilişim Sistemleri",
-  "Bilgisayar Mühendisliği",
-  "Elektrik-Elektronik Mühendisliği",
-  "Endüstri Mühendisliği",
-  "İşletme",
-  "İktisat",
-  "Maliye",
-  "Uluslararası İlişkiler",
-  "Hukuk",
-  "Tıp",
-  "Diğer",
-];
+import { DEU_FACULTIES } from "@/constants/deu-departments";
+import { useLocale } from "next-intl";
 
 const TITLES = [
   "Prof. Dr.",
@@ -48,8 +37,11 @@ const TITLES = [
 export default function FacultyRegisterPage() {
   const t = useTranslations();
   const router = useRouter();
+  const locale = useLocale();
+  const isEn = locale === "en";
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [selectedFaculty, setSelectedFaculty] = useState<string>("");
 
   const {
     register,
@@ -223,25 +215,46 @@ export default function FacultyRegisterPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.department")} *
+                  {isEn ? "Faculty *" : "Fakülte *"}
                 </label>
                 <select
-                  {...register("department")}
+                  value={selectedFaculty}
+                  onChange={(e) => setSelectedFaculty(e.target.value)}
                   className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 px-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
                 >
-                  <option value="">Seçiniz</option>
-                  {DEPARTMENTS.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
+                  <option value="">{isEn ? "Select Faculty" : "Fakülte Seçiniz"}</option>
+                  {DEU_FACULTIES.map((fac) => (
+                    <option key={fac.name} value={fac.name}>
+                      {isEn ? fac.nameEn : fac.name}
                     </option>
                   ))}
                 </select>
-                {errors.department && (
-                  <p className="mt-1 text-xs text-[var(--color-error)]">
-                    {errors.department.message}
-                  </p>
-                )}
               </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">
+                {t("auth.department")} *
+              </label>
+              <select
+                {...register("department")}
+                disabled={!selectedFaculty}
+                className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 px-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20 disabled:opacity-50"
+              >
+                <option value="">{isEn ? "Select Department" : "Bölüm Seçiniz"}</option>
+                {selectedFaculty &&
+                  DEU_FACULTIES.find((fac) => fac.name === selectedFaculty)
+                    ?.departments.map((dept) => (
+                      <option key={dept.name} value={dept.name}>
+                        {isEn ? dept.nameEn : dept.name}
+                      </option>
+                    ))}
+              </select>
+              {errors.department && (
+                <p className="mt-1 text-xs text-[var(--color-error)]">
+                  {errors.department.message}
+                </p>
+              )}
             </div>
 
             {/* Password fields */}

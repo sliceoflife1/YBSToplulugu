@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowBigUp, MessageSquare, Clock, Plus, Pin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import UpvoteButton from "@/components/community/upvote-button";
 import type { Post, Subreddit } from "@/types/database";
@@ -14,9 +14,10 @@ export default async function SubredditPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const adminSupabase = createAdminClient();
   const supabase = await createClient();
 
-  const { data: subreddit } = await supabase
+  const { data: subreddit } = await adminSupabase
     .from("subreddits")
     .select("*")
     .eq("slug", slug)
@@ -25,9 +26,9 @@ export default async function SubredditPage({
 
   if (!subreddit) notFound();
 
-  const { data: posts } = await supabase
+  const { data: posts } = await adminSupabase
     .from("posts")
-    .select("*, profiles(id, first_name, last_name, avatar_url)")
+    .select("*, profiles!posts_author_id_fkey(id, first_name, last_name, avatar_url)")
     .eq("subreddit_id", subreddit.id)
     .order("is_pinned", { ascending: false })
     .order("created_at", { ascending: false });
@@ -38,7 +39,7 @@ export default async function SubredditPage({
   let userUpvotes: string[] = [];
   if (user && posts) {
     const postIds = posts.map((p: Post) => p.id);
-    const { data: upvotes } = await supabase
+    const { data: upvotes } = await adminSupabase
       .from("upvotes")
       .select("post_id")
       .eq("user_id", user.id)

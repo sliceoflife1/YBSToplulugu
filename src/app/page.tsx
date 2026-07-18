@@ -12,13 +12,54 @@ import {
   TrendingUp,
   ChevronRight,
   Sparkles,
+  Building2,
+  BookOpen,
+  Calendar,
+  Megaphone,
 } from "lucide-react";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
   const t = await getTranslations("landing");
   const tc = await getTranslations("common");
+
+  const supabase = await createClient();
+
+  const [
+    studentsRes,
+    facultyRes,
+    projectsRes,
+    employersRes,
+    organizationsRes,
+    cvsRes,
+    announcementsRes
+  ] = await Promise.all([
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "faculty"),
+    supabase.from("projects").select("id", { count: "exact", head: true }),
+    supabase.from("organizations").select("id", { count: "exact", head: true }).eq("type", "employer").eq("approval_status", "approved"),
+    supabase.from("organizations").select("id", { count: "exact", head: true }).in("type", ["foundation", "association", "other"]).eq("approval_status", "approved"),
+    supabase.from("cv_data").select("certifications"),
+    supabase.from("announcements").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(3),
+  ]);
+
+  const announcements = announcementsRes?.data || [];
+
+  const studentCount = studentsRes.count || 0;
+  const facultyCount = facultyRes.count || 0;
+  const projectCount = projectsRes.count || 0;
+  const employerCount = employersRes.count || 0;
+  const organizationCount = organizationsRes.count || 0;
+
+  const certificateCount = (cvsRes.data || []).reduce((acc, curr) => {
+    const certs = curr.certifications;
+    if (Array.isArray(certs)) {
+      return acc + certs.length;
+    }
+    return acc;
+  }, 0);
 
   const features = [
     {
@@ -52,10 +93,12 @@ export default async function HomePage() {
   ];
 
   const stats = [
-    { icon: GraduationCap, label: "Öğrenci", value: "500+", suffix: "" },
-    { icon: FolderKanban, label: "Proje", value: "1,200+", suffix: "" },
-    { icon: Briefcase, label: "İşveren", value: "50+", suffix: "" },
-    { icon: Award, label: "Sertifika", value: "300+", suffix: "" },
+    { icon: GraduationCap, label: t("student"), value: studentCount, suffix: "" },
+    { icon: BookOpen, label: t("faculty"), value: facultyCount, suffix: "" },
+    { icon: FolderKanban, label: t("project"), value: projectCount, suffix: "" },
+    { icon: Briefcase, label: t("employer"), value: employerCount, suffix: "" },
+    { icon: Building2, label: t("organization"), value: organizationCount, suffix: "" },
+    { icon: Award, label: t("certificate"), value: certificateCount, suffix: "" },
   ];
 
   return (
@@ -118,7 +161,7 @@ export default async function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="mx-auto mt-20 grid max-w-3xl grid-cols-2 gap-6 sm:grid-cols-4">
+            <div className="mx-auto mt-20 grid max-w-5xl grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
@@ -178,6 +221,71 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Events & Announcements Section */}
+        {announcements.length > 0 && (
+          <section className="border-t border-[var(--color-border)] bg-[var(--color-card)] py-20 sm:py-28">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-[var(--color-foreground)] sm:text-4xl">
+                  Etkinlikler & <span className="gradient-text">Duyurular</span>
+                </h2>
+                <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-muted-foreground)]">
+                  Topluluğumuzdaki en güncel etkinliklerden, eğitimlerden ve önemli duyurulardan haberdar olun.
+                </p>
+              </div>
+
+              <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {announcements.map((ann: any) => (
+                  <Link
+                    key={ann.id}
+                    href={`/announcements/${ann.id}`}
+                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-sm transition-all hover:shadow-xl hover:-translate-y-1"
+                  >
+                    {/* Görsel */}
+                    <div className="relative aspect-video w-full overflow-hidden bg-[var(--color-muted)]">
+                      {ann.image_url ? (
+                        <img
+                          src={ann.image_url}
+                          alt={ann.title}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500/5 to-purple-500/10">
+                          <Megaphone className="h-10 w-10 text-[var(--color-primary)] opacity-40" />
+                        </div>
+                      )}
+                      
+                      {ann.event_date && (
+                        <span className="absolute right-4 top-4 rounded-lg bg-amber-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(ann.event_date).toLocaleDateString("tr-TR")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Gövde */}
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-lg font-bold text-[var(--color-foreground)] transition-colors group-hover:text-[var(--color-primary)] line-clamp-1">
+                        {ann.title}
+                      </h3>
+                      <p className="mt-2 flex-1 text-xs text-[var(--color-muted-foreground)] line-clamp-3 whitespace-pre-wrap">
+                        {ann.content}
+                      </p>
+
+                      <span
+                        className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-[var(--color-primary)] hover:opacity-85 transition-opacity"
+                      >
+                        Detayları Gör
+                        <ArrowRight className="h-3 w-3" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* How It Works */}
         <section className="py-20 sm:py-28">

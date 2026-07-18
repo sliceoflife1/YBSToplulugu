@@ -19,6 +19,8 @@ import {
   Settings,
   Shield,
   Globe,
+  Tag,
+  Megaphone,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -97,11 +99,18 @@ export default function Navbar() {
         { href: "/cv", label: t("nav.cv"), icon: FileText },
         { href: "/community", label: t("nav.community"), icon: MessageSquare },
         { href: "/explore", label: t("nav.explore"), icon: Compass },
+        { href: "/opportunities", label: t("nav.opportunities"), icon: Tag },
+        { href: "/announcements", label: t("nav.announcements"), icon: Megaphone },
       ]
     : [];
 
   const isAdmin = user?.role === "admin" || user?.role === "moderator";
   const isFaculty = user?.role === "faculty";
+  const isEmployer = user?.role === "employer";
+
+  if (isAdmin || isEmployer) {
+    navLinks.push({ href: "/talent", label: "Yetenek Havuzu", icon: Compass });
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--color-border)] bg-[var(--color-background)]/80 backdrop-blur-lg">
@@ -190,7 +199,7 @@ export default function Navbar() {
                 {user.first_name || t("nav.profile")}
               </Link>
               <Link
-                href="/settings"
+                href="/profile/edit"
                 className="hidden items-center justify-center rounded-lg px-2 py-2 text-sm text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] sm:flex"
               >
                 <Settings className="h-4 w-4" />
@@ -264,7 +273,7 @@ export default function Navbar() {
                   {t("nav.profile")}
                 </Link>
                 <Link
-                  href="/settings"
+                  href="/profile/edit"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
                 >

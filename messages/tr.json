@@ -31,6 +31,8 @@
     "cv": "CV",
     "community": "Topluluk",
     "explore": "Keşfet",
+    "opportunities": "Fırsatlar",
+    "announcements": "Duyurular",
     "settings": "Ayarlar",
     "admin": "Yönetim"
   },
@@ -75,7 +77,31 @@
     "karma": "Topluluk Puanı",
     "joinDate": "Katılım Tarihi",
     "viewCV": "CV Görüntüle",
-    "memberSince": "Üye tarihi"
+    "memberSince": "Üye tarihi",
+    "personalInfo": "Kişisel Bilgiler",
+    "eduExp": "Eğitim & Deneyim",
+    "skillsMore": "Yetenek, Dil & Sertifikalar",
+    "bioTitle": "Hakkımda (Özgeçmiş Özet Metni)",
+    "bioPlaceholder": "Kendinizi ve kariyer hedeflerinizi kısaca özetleyin...",
+    "personalWebsite": "Kişisel Web Sitesi",
+    "addEdu": "Yeni Eğitim Ekle",
+    "addExp": "Yeni Deneyim Ekle",
+    "schoolName": "Okul Adı",
+    "department": "Bölüm",
+    "startYear": "Başlangıç Yılı",
+    "endYear": "Bitiş Yılı (veya Devam Ediyor)",
+    "companyName": "Şirket / Kurum Adı",
+    "position": "Pozisyon",
+    "addSkill": "Yetenek Ekle",
+    "skillPlaceholder": "Yetenek yazın...",
+    "addLanguage": "Dil Ekle",
+    "languageName": "Dil Adı",
+    "languageLevel": "Dil Seviyesi",
+    "addCertificate": "Sertifika Ekle",
+    "certificateName": "Sertifika Adı",
+    "issuer": "Veren Kurum",
+    "date": "Tarih",
+    "saveChanges": "Değişiklikleri Kaydet"
   },
   "projects": {
     "title": "Projeler",
@@ -103,7 +129,21 @@
     "languages": "Diller",
     "public": "Herkese Açık",
     "private": "Gizli",
-    "toggleVisibility": "CV Görünürlüğü"
+    "toggleVisibility": "CV Görünürlüğü",
+    "visualTemplate": "Görsel Şablon & Stil",
+    "quickContent": "Hızlı İçerik Ayarları",
+    "templateChoice": "Şablon Tercihi",
+    "themeColor": "Tema Rengi",
+    "classic": "Klasik (Classic)",
+    "modern": "Modern (Modern)",
+    "brutalist": "Sert (Brutalist)",
+    "personalInfo": "Kişisel Bilgiler",
+    "blue": "Mavi",
+    "green": "Yeşil",
+    "red": "Kırmızı",
+    "purple": "Mor",
+    "dark": "Koyu",
+    "yellow": "Sarı"
   },
   "community": {
     "title": "Topluluk",
@@ -128,7 +168,9 @@
     "totalUsers": "Toplam Kullanıcı",
     "totalPosts": "Toplam Gönderi",
     "totalProjects": "Toplam Proje",
-    "subredditManagement": "Forum Yönetimi"
+    "subredditManagement": "Forum Yönetimi",
+    "opportunitiesManagement": "Fırsat Yönetimi",
+    "announcementsManagement": "Duyuru Yönetimi"
   },
   "landing": {
     "heroTitle": "DEÜ Öğrenci Topluluğu",
@@ -142,6 +184,16 @@
     "featureCommunity": "Topluluk Forumu",
     "featureCommunityDesc": "Reddit benzeri forumlarda tartışmalara katıl, bilgi paylaş",
     "featureNetwork": "Profesyonel Ağ",
-    "featureNetworkDesc": "İşverenler ve akademisyenlerle bağlantı kur"
+    "featureNetworkDesc": "İşverenler ve akademisyenlerle bağlantı kur",
+    "student": "Öğrenci",
+    "project": "Proje",
+    "employer": "İşveren",
+    "certificate": "Sertifika",
+    "faculty": "Akademisyen",
+    "organization": "Kurum (Dernek, Vakıf)"
+  },
+  "dashboard": {
+    "announcementsTitle": "Etkinlikler ve Duyurular"
   }
 }
+

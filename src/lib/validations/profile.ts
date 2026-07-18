@@ -10,6 +10,9 @@ export const profileUpdateSchema = z.object({
   githubUrl: z.string().url('Geçerli bir GitHub URL giriniz').optional().or(z.literal('')),
   personalEmail: z.string().email('Geçerli bir e-posta adresi giriniz').optional(),
   isCvPublic: z.boolean().optional(),
+  meetingUrl: z.string().url('Geçerli bir toplantı URL giriniz').optional().or(z.literal('')),
+  isMentor: z.boolean().optional(),
+  mentorTopics: z.array(z.string()).optional(),
 });
 
 export const projectSchema = z.object({

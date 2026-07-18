@@ -10,6 +10,8 @@ import {
   Plus,
   ArrowRight,
   Star,
+  Calendar,
+  Megaphone,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -33,14 +35,16 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single<Profile>();
 
-  // Fetch stats
-  const [projectsRes, postsRes] = await Promise.all([
+  // Fetch stats & announcements
+  const [projectsRes, postsRes, announcementsRes] = await Promise.all([
     supabase.from("projects").select("id", { count: "exact" }).eq("user_id", user.id),
     supabase.from("posts").select("id", { count: "exact" }).eq("author_id", user.id),
+    supabase.from("announcements").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(5),
   ]);
 
   const projectCount = projectsRes.count || 0;
   const postCount = postsRes.count || 0;
+  const announcements = announcementsRes?.data || [];
 
   const quickActions = [
     {
@@ -200,6 +204,71 @@ export default async function DashboardPage() {
               })}
             </div>
           </div>
+
+          {/* Duyuru ve Etkinlikler Bölümü */}
+          {announcements.length > 0 && (
+            <div className="mt-8">
+              <h2 className="mb-4 text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
+                <Megaphone className="h-5 w-5 text-[var(--color-primary)]" />
+                {t("dashboard.announcementsTitle")}
+              </h2>
+              
+              <div className="grid gap-6 md:grid-cols-2">
+                {announcements.map((ann: any) => (
+                  <Link
+                    key={ann.id}
+                    href={`/announcements/${ann.id}`}
+                    className="flex flex-col sm:flex-row overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 group"
+                  >
+                    {/* Görsel */}
+                    {ann.image_url ? (
+                      <div className="relative aspect-video sm:aspect-square sm:w-32 shrink-0 bg-[var(--color-muted)]">
+                        <img
+                          src={ann.image_url}
+                          alt={ann.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex aspect-video sm:aspect-square sm:w-32 shrink-0 items-center justify-center bg-gradient-to-br from-indigo-500/5 to-purple-500/10 border-r border-[var(--color-border)]">
+                        <Megaphone className="h-8 w-8 text-[var(--color-primary)] opacity-30" />
+                      </div>
+                    )}
+
+                    {/* İçerik */}
+                    <div className="flex flex-1 flex-col p-4 justify-between min-w-0">
+                      <div>
+                        <h3 className="font-bold text-sm text-[var(--color-foreground)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                          {ann.title}
+                        </h3>
+                        <p className="mt-1 text-xs text-[var(--color-muted-foreground)] line-clamp-2 whitespace-pre-wrap">
+                          {ann.content}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between flex-wrap gap-2 text-[10px] text-[var(--color-muted-foreground)]">
+                        {ann.event_date ? (
+                          <span className="flex items-center gap-1 text-amber-600 font-semibold bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {new Date(ann.event_date).toLocaleDateString("tr-TR")}
+                          </span>
+                        ) : (
+                          <span />
+                        )}
+
+                        <span
+                          className="inline-flex items-center gap-1 rounded bg-[var(--color-primary)]/10 px-2.5 py-1 text-xs font-semibold text-[var(--color-primary)] group-hover:bg-[var(--color-primary)]/20 transition-colors"
+                        >
+                          Detaylar
+                          <ArrowRight className="h-3 w-3" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

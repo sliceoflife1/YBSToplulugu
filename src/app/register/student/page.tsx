@@ -24,25 +24,17 @@ import {
   type StudentRegisterInput,
 } from "@/lib/validations/auth";
 
-const DEPARTMENTS = [
-  "Yönetim Bilişim Sistemleri",
-  "Bilgisayar Mühendisliği",
-  "Elektrik-Elektronik Mühendisliği",
-  "Endüstri Mühendisliği",
-  "İşletme",
-  "İktisat",
-  "Maliye",
-  "Uluslararası İlişkiler",
-  "Hukuk",
-  "Tıp",
-  "Diğer",
-];
+import { DEU_FACULTIES } from "@/constants/deu-departments";
+import { useLocale } from "next-intl";
 
 export default function StudentRegisterPage() {
   const t = useTranslations();
   const router = useRouter();
+  const locale = useLocale();
+  const isEn = locale === "en";
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [selectedFaculty, setSelectedFaculty] = useState<string>("");
 
   const {
     register,
@@ -260,8 +252,29 @@ export default function StudentRegisterPage() {
               )}
             </div>
 
-            {/* Department & Class Year */}
+            {/* Fakülte & Bölüm Seçimi (İki Aşamalı) */}
             <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  {isEn ? "Faculty *" : "Fakülte *"}
+                </label>
+                <div className="relative">
+                  <BookOpen className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                  <select
+                    value={selectedFaculty}
+                    onChange={(e) => setSelectedFaculty(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                  >
+                    <option value="">{isEn ? "Select Faculty" : "Fakülte Seçiniz"}</option>
+                    {DEU_FACULTIES.map((fac) => (
+                      <option key={fac.name} value={fac.name}>
+                        {isEn ? fac.nameEn : fac.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
                   {t("auth.department")} *
@@ -270,14 +283,17 @@ export default function StudentRegisterPage() {
                   <BookOpen className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
                   <select
                     {...register("department")}
-                    className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                    disabled={!selectedFaculty}
+                    className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20 disabled:opacity-50"
                   >
-                    <option value="">Seçiniz</option>
-                    {DEPARTMENTS.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
+                    <option value="">{isEn ? "Select Department" : "Bölüm Seçiniz"}</option>
+                    {selectedFaculty &&
+                      DEU_FACULTIES.find((fac) => fac.name === selectedFaculty)
+                        ?.departments.map((dept) => (
+                          <option key={dept.name} value={dept.name}>
+                            {isEn ? dept.nameEn : dept.name}
+                          </option>
+                        ))}
                   </select>
                 </div>
                 {errors.department && (
@@ -286,23 +302,25 @@ export default function StudentRegisterPage() {
                   </p>
                 )}
               </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  {t("auth.classYear")}
-                </label>
-                <select
-                  {...register("classYear")}
-                  className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 px-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
-                >
-                  <option value="">Seçiniz</option>
-                  <option value="1">1. Sınıf</option>
-                  <option value="2">2. Sınıf</option>
-                  <option value="3">3. Sınıf</option>
-                  <option value="4">4. Sınıf</option>
-                  <option value="5">Yüksek Lisans</option>
-                  <option value="6">Doktora</option>
-                </select>
-              </div>
+            </div>
+
+            {/* Sınıf Bilgisi */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">
+                {t("auth.classYear")}
+              </label>
+              <select
+                {...register("classYear")}
+                className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 px-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+              >
+                <option value="">{isEn ? "Select Class" : "Sınıf Seçiniz"}</option>
+                <option value="1">{isEn ? "1st Year" : "1. Sınıf"}</option>
+                <option value="2">{isEn ? "2nd Year" : "2. Sınıf"}</option>
+                <option value="3">{isEn ? "3rd Year" : "3. Sınıf"}</option>
+                <option value="4">{isEn ? "4th Year" : "4. Sınıf"}</option>
+                <option value="5">{isEn ? "Master's" : "Yüksek Lisans"}</option>
+                <option value="6">{isEn ? "PhD" : "Doktora"}</option>
+              </select>
             </div>
 
             {/* Password fields */}
