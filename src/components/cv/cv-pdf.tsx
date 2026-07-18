@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Font, Link } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Link, Image } from '@react-pdf/renderer';
 import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLanguage, CvProject, CvReference, CvCustomSection } from "@/types/database";
 import { formatDateRange } from "@/lib/cv/normalize";
 
@@ -32,6 +32,22 @@ function getStyles(templateName: string = 'modern', primaryColor: string = '#3B8
       borderBottomWidth: isBrutalist ? 3 : 1,
       borderBottomColor: isBrutalist ? '#000000' : '#eeeeee',
       paddingBottom: 15,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    headerText: {
+      flex: 1,
+      marginRight: 15,
+    },
+    avatar: {
+      width: 65,
+      height: 65,
+      borderRadius: isBrutalist ? 0 : 32.5,
+      borderWidth: isBrutalist ? 2 : 0,
+      borderColor: '#000000',
     },
     name: {
       fontSize: isBrutalist ? 28 : 22,
@@ -218,18 +234,25 @@ function getLanguageLevelLabel(level: string) {
 function renderHeader(styles: CvStyles, profile: Profile) {
   return (
     <View style={styles.header}>
-      <Text style={styles.name}>{profile.first_name} {profile.last_name}</Text>
-      <Text style={styles.title}>{profile.headline || profile.department || "Yönetim Bilişim Sistemleri Öğrencisi"}</Text>
-      <View style={styles.contactRow}>
-        {profile.location && <Text style={styles.contactItem}>{profile.location}</Text>}
-        {profile.edu_email && <Text style={styles.contactItem}>{profile.edu_email}</Text>}
-        {profile.phone && <Text style={styles.contactItem}>{profile.phone}</Text>}
-        {profile.personal_email && profile.personal_email !== profile.edu_email && (
-          <Text style={styles.contactItem}>{profile.personal_email}</Text>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          <Text style={styles.name}>{profile.first_name} {profile.last_name}</Text>
+          <Text style={styles.title}>{profile.headline || profile.department || "Yönetim Bilişim Sistemleri Öğrencisi"}</Text>
+          <View style={styles.contactRow}>
+            {profile.location && <Text style={styles.contactItem}>{profile.location}</Text>}
+            {profile.edu_email && <Text style={styles.contactItem}>{profile.edu_email}</Text>}
+            {profile.phone && <Text style={styles.contactItem}>{profile.phone}</Text>}
+            {profile.personal_email && profile.personal_email !== profile.edu_email && (
+              <Text style={styles.contactItem}>{profile.personal_email}</Text>
+            )}
+            {profile.linkedin_url && <Link src={profile.linkedin_url} style={[styles.contactItem, styles.link]}>LinkedIn</Link>}
+            {profile.github_url && <Link src={profile.github_url} style={[styles.contactItem, styles.link]}>GitHub</Link>}
+            {profile.website_url && <Link src={profile.website_url} style={[styles.contactItem, styles.link]}>Web Sitesi</Link>}
+          </View>
+        </View>
+        {profile.avatar_url && (
+          <Image src={profile.avatar_url} style={styles.avatar} />
         )}
-        {profile.linkedin_url && <Link src={profile.linkedin_url} style={[styles.contactItem, styles.link]}>LinkedIn</Link>}
-        {profile.github_url && <Link src={profile.github_url} style={[styles.contactItem, styles.link]}>GitHub</Link>}
-        {profile.website_url && <Link src={profile.website_url} style={[styles.contactItem, styles.link]}>Web Sitesi</Link>}
       </View>
     </View>
   );

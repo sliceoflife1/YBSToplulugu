@@ -21,6 +21,7 @@ import {
   Globe,
   Tag,
   Megaphone,
+  BookOpen,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -101,6 +102,7 @@ export default function Navbar() {
         { href: "/explore", label: t("nav.explore"), icon: Compass },
         { href: "/opportunities", label: t("nav.opportunities"), icon: Tag },
         { href: "/announcements", label: t("nav.announcements"), icon: Megaphone },
+        { href: "/yearbook", label: "Andıç", icon: BookOpen },
       ]
     : [];
 

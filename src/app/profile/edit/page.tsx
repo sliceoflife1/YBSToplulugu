@@ -18,6 +18,8 @@ import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLan
 import { DEU_FACULTIES } from "@/constants/deu-departments";
 import { useLocale } from "next-intl";
 import { normalizeEducationList, normalizeExperienceList, parseJsonArray } from "@/lib/cv/normalize";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "@/lib/cv/crop";
 
 export default function ProfileEditPage() {
   const t = useTranslations();
@@ -31,11 +33,32 @@ export default function ProfileEditPage() {
   const [selectedFaculty, setSelectedFaculty] = useState<string>("");
 
   // Sekme yönetimi
-  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "extra" | "mentorship">("personal");
+  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "extra" | "mentorship" | "yearbook">("personal");
 
   // Dinamik CV Dizileri ve Mentorlük
   const [mentorTopics, setMentorTopics] = useState<string[]>([]);
   const [mentorTopicInput, setMentorTopicInput] = useState("");
+
+  // Fotoğraf Kırpma & Yükleme State'leri
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Andıç Modülü State'leri
+  const [yearbookProfile, setYearbookProfile] = useState<any>(null);
+  const [yearbookFaculties, setYearbookFaculties] = useState<any[]>([]);
+  const [yearbookDepartments, setYearbookDepartments] = useState<any[]>([]);
+  const [selectedYearbookFaculty, setSelectedYearbookFaculty] = useState<string>("");
+  const [selectedYearbookDept, setSelectedYearbookDept] = useState<string>("");
+  const [selectedGradYear, setSelectedGradYear] = useState<number>(new Date().getFullYear());
+  const [selectedEduType, setSelectedEduType] = useState<string>("primary");
+  const [yearbookMessage, setYearbookMessage] = useState<string>("");
+  const [yearbookVisible, setYearbookVisible] = useState<boolean>(true);
+  const [loadingYearbook, setLoadingYearbook] = useState<boolean>(false);
+  const [savingYearbook, setSavingYearbook] = useState<boolean>(false);
 
   // Dinamik CV Dizileri
   const [education, setEducation] = useState<CvEducation[]>([]);
@@ -66,9 +89,11 @@ export default function ProfileEditPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      const [profileRes, cvRes] = await Promise.all([
+      const [profileRes, cvRes, facultiesRes, yearbookProfileRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single<Profile>(),
         supabase.from("cv_data").select("*").eq("user_id", user.id).single<CvData>(),
+        supabase.from("yearbook_faculties").select("*").order("name"),
+        supabase.from("yearbook_profiles").select("*, yearbook_departments(*, yearbook_faculties(*))").eq("user_id", user.id).maybeSingle(),
       ]);
 
       if (profileRes.data) {
@@ -116,10 +141,44 @@ export default function ProfileEditPage() {
         setReferences(parseJsonArray<CvReference>(cvRes.data.references));
         setCustomSections(parseJsonArray<CvCustomSection>(cvRes.data.custom_sections));
       }
+
+      if (facultiesRes.data) {
+        setYearbookFaculties(facultiesRes.data);
+      }
+
+      if (yearbookProfileRes.data) {
+        const yb = yearbookProfileRes.data;
+        setYearbookProfile(yb);
+        setSelectedYearbookFaculty(yb.yearbook_departments?.yearbook_faculties?.id || "");
+        setSelectedYearbookDept(yb.department_id || "");
+        setSelectedGradYear(yb.graduation_year);
+        setSelectedEduType(yb.education_type);
+        setYearbookMessage(yb.message || "");
+        setYearbookVisible(yb.is_visible);
+      }
+
       setLoading(false);
     }
     loadAllData();
   }, [reset, router]);
+
+  // Fakülte değiştiğinde o fakülteye ait bölümleri çek
+  useEffect(() => {
+    if (!selectedYearbookFaculty) {
+      setYearbookDepartments([]);
+      return;
+    }
+    const supabase = createClient();
+    async function loadDepts() {
+      const { data } = await supabase
+        .from("yearbook_departments")
+        .select("*")
+        .eq("faculty_id", selectedYearbookFaculty)
+        .order("name");
+      setYearbookDepartments(data || []);
+    }
+    loadDepts();
+  }, [selectedYearbookFaculty]);
 
   // Eğitim Yönetimi
   const addEducation = () => {
@@ -236,6 +295,140 @@ export default function ProfileEditPage() {
     setCustomSections(newSections);
   };
   const removeCustomSection = (index: number) => setCustomSections(customSections.filter((_, i) => i !== index));
+
+  const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Dosya boyutu 5MB'dan küçük olmalıdır.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImageSrc(reader.result as string);
+        setIsCropperOpen(true);
+      });
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCropSave = async () => {
+    if (!imageSrc || !croppedAreaPixels || !profile) return;
+    setUploadingAvatar(true);
+    try {
+      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      if (!croppedBlob) {
+        toast.error("Görsel kırpılırken bir hata oluştu.");
+        setUploadingAvatar(false);
+        return;
+      }
+
+      const supabase = createClient();
+      const filePath = `${profile.id}/avatar.jpg`;
+
+      // Upload to storage bucket
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, croppedBlob, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Update profiles.avatar_url in DB
+      const { error: dbError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", profile.id);
+
+      if (dbError) throw dbError;
+
+      // Update local profile state
+      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+      toast.success("Profil fotoğrafı başarıyla güncellendi!");
+      setIsCropperOpen(false);
+    } catch (err: any) {
+      toast.error("Fotoğraf yüklenirken hata oluştu: " + err.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleYearbookSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile) return;
+    if (!selectedYearbookDept) {
+      toast.error("Lütfen bölüm seçiniz.");
+      return;
+    }
+    setSavingYearbook(true);
+    
+    const payload = {
+      departmentId: selectedYearbookDept,
+      graduationYear: selectedGradYear,
+      educationType: selectedEduType,
+      message: yearbookMessage,
+      isVisible: yearbookVisible
+    };
+
+    try {
+      const res = await fetch("/api/yearbook/profile", {
+        method: yearbookProfile ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Bir hata oluştu");
+
+      setYearbookProfile(resData.data);
+      toast.success("Andıç ayarlarınız başarıyla kaydedildi!");
+    } catch (err: any) {
+      toast.error("Hata: " + err.message);
+    } finally {
+      setSavingYearbook(false);
+    }
+  };
+
+  const handleYearbookDelete = async () => {
+    const messageText = isEn 
+      ? "Are you sure you want to permanently delete your yearbook record? This action cannot be undone and ALL friend yearbook entries written to you will be permanently deleted."
+      : "Andıç kaydınızı tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve size yazılmış tüm arkadaş yazıları (yorumlar) da kalıcı olarak silinecektir.";
+      
+    if (!window.confirm(messageText)) {
+      return;
+    }
+
+    setSavingYearbook(true);
+    try {
+      const res = await fetch("/api/yearbook/profile", {
+        method: "DELETE"
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Bir hata oluştu");
+
+      setYearbookProfile(null);
+      setSelectedYearbookFaculty("");
+      setSelectedYearbookDept("");
+      setYearbookMessage("");
+      toast.success(isEn ? "Yearbook record deleted successfully!" : "Andıç kaydınız tamamen silindi!");
+    } catch (err: any) {
+      toast.error("Hata: " + err.message);
+    } finally {
+      setSavingYearbook(false);
+    }
+  };
 
   const onSubmit = async (data: ProfileUpdateInput) => {
     if (!profile) return;
@@ -390,6 +583,17 @@ export default function ProfileEditPage() {
           >
             <Globe className="h-4 w-4" /> {isEn ? "Mentorship" : "Mentörlük"}
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("yearbook")}
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === "yearbook"
+                ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+            }`}
+          >
+            <FileStack className="h-4 w-4" /> {isEn ? "Yearbook" : "Andıç Ayarları"}
+          </button>
         </div>
 
         {/* Form İçeriği */}
@@ -398,6 +602,31 @@ export default function ProfileEditPage() {
           {/* TAB 1: KİŞİSEL BİLGİLER */}
           {activeTab === "personal" && (
             <div className="space-y-5 animate-fade-in">
+              {/* Profil Resmi Yükleme Bölümü */}
+              <div className="flex flex-col items-center gap-4 sm:flex-row border-b border-[var(--color-border)] pb-5">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="h-20 w-20 rounded-full object-cover border-2 border-[var(--color-primary)]"
+                  />
+                ) : (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-2xl font-bold text-white shadow-sm">
+                    {(profile?.first_name || "?").charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="text-center sm:text-left">
+                  <h3 className="text-sm font-semibold">{isEn ? "Profile Picture" : "Profil Fotoğrafı"}</h3>
+                  <p className="text-xs text-[var(--color-muted-foreground)] mb-2.5">
+                    {isEn ? "JPG or PNG. Max 5MB (Will be compressed automatically)." : "JPG veya PNG. Maks 5MB (Otomatik kırpılır ve sıkıştırılır)."}
+                  </p>
+                  <label className="cursor-pointer rounded-xl bg-[var(--color-primary)]/10 px-4 py-2 text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20 transition-colors">
+                    {uploadingAvatar ? (isEn ? "Uploading..." : "Yükleniyor...") : (isEn ? "Change Photo" : "Fotoğraf Seç")}
+                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={uploadingAvatar} />
+                  </label>
+                </div>
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium">{t("auth.firstName")} *</label>
@@ -1031,17 +1260,254 @@ export default function ProfileEditPage() {
             </div>
           )}
 
+          {/* TAB 6: ANDIÇ AYARLARI */}
+          {activeTab === "yearbook" && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/20 p-5">
+                <div className="mb-4">
+                  <h2 className="flex items-center gap-2 font-semibold text-[var(--color-foreground)]">
+                    <FileStack className="h-5 w-5 text-indigo-500" />
+                    {isEn ? "Yearbook (Andıç) Registration" : "Andıç (Mezuniyet Yıllığı) Kaydı"}
+                  </h2>
+                  <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                    {isEn 
+                      ? "Participate in the graduation yearbook. Your name, surname and student number are automatically retrieved." 
+                      : "Mezuniyet yıllığında yerinizi alın. Ad, soyad ve öğrenci numaranız sistemden otomatik olarak çekilmektedir."}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Otomatik Çekilen ve Düzenlenemeyen Alanlar */}
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <label className="text-xs font-medium text-[var(--color-muted-foreground)]">{isEn ? "First Name" : "Ad"}</label>
+                      <input
+                        type="text"
+                        value={profile?.first_name || ""}
+                        readOnly
+                        className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/50 p-2.5 text-sm text-[var(--color-muted-foreground)] cursor-not-allowed outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-[var(--color-muted-foreground)]">{isEn ? "Last Name" : "Soyad"}</label>
+                      <input
+                        type="text"
+                        value={profile?.last_name || ""}
+                        readOnly
+                        className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/50 p-2.5 text-sm text-[var(--color-muted-foreground)] cursor-not-allowed outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-[var(--color-muted-foreground)]">{isEn ? "Student Number" : "Öğrenci No"}</label>
+                      <input
+                        type="text"
+                        value={profile?.student_no || ""}
+                        readOnly
+                        className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/50 p-2.5 text-sm text-[var(--color-muted-foreground)] cursor-not-allowed outline-none"
+                        placeholder="Örn: 2026..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sadece Seçim (Dropdown) Alanları */}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-semibold block text-[var(--color-foreground)]">{isEn ? "Faculty *" : "Fakülte *"}</label>
+                      <select
+                        value={selectedYearbookFaculty}
+                        onChange={(e) => {
+                          setSelectedYearbookFaculty(e.target.value);
+                          setSelectedYearbookDept("");
+                        }}
+                        className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none"
+                      >
+                        <option value="">{isEn ? "-- Select Faculty --" : "-- Fakülte Seçiniz --"}</option>
+                        {yearbookFaculties.map((fac) => (
+                          <option key={fac.id} value={fac.id}>{fac.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold block text-[var(--color-foreground)]">{isEn ? "Department *" : "Bölüm *"}</label>
+                      <select
+                        value={selectedYearbookDept}
+                        onChange={(e) => setSelectedYearbookDept(e.target.value)}
+                        disabled={!selectedYearbookFaculty}
+                        className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+                      >
+                        <option value="">{isEn ? "-- Select Department --" : "-- Bölüm Seçiniz --"}</option>
+                        {yearbookDepartments.map((dept) => (
+                          <option key={dept.id} value={dept.id}>{dept.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-semibold block text-[var(--color-foreground)]">{isEn ? "Graduation Year *" : "Mezuniyet Yılı *"}</label>
+                      <select
+                        value={selectedGradYear}
+                        onChange={(e) => setSelectedGradYear(parseInt(e.target.value))}
+                        className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none"
+                      >
+                        {Array.from({ length: 16 }, (_, i) => 2020 + i).map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold block text-[var(--color-foreground)]">{isEn ? "Education Type *" : "Öğretim Türü *"}</label>
+                      <select
+                        value={selectedEduType}
+                        onChange={(e) => setSelectedEduType(e.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none"
+                      >
+                        <option value="primary">{isEn ? "First Education (Normal)" : "Birinci Öğretim"}</option>
+                        <option value="secondary">{isEn ? "Second Education (Evening)" : "İkinci Öğretim"}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Serbest Yazılabilen Tek Alan: Mezuniyet Mesajı */}
+                  <div>
+                    <label className="text-xs font-semibold block text-[var(--color-foreground)]">{isEn ? "Graduation Message" : "Mezuniyet Mesajı / Sözü"}</label>
+                    <textarea
+                      value={yearbookMessage}
+                      onChange={(e) => setYearbookMessage(e.target.value)}
+                      maxLength={500}
+                      rows={3}
+                      className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none"
+                      placeholder={isEn ? "Write a memory or message for the yearbook (Max 500 characters)..." : "Yıllıkta görünecek mezuniyet sözünüzü veya mesajınızı yazın (En fazla 500 karakter)..."}
+                    />
+                  </div>
+
+                  {/* KVKK / Soft Gizlilik Seçeneği */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <input
+                      type="checkbox"
+                      id="yearbookVisible"
+                      checked={!yearbookVisible}
+                      onChange={(e) => setYearbookVisible(!e.target.checked)}
+                      className="h-4 w-4 rounded border-[var(--color-border)] text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label htmlFor="yearbookVisible" className="text-sm font-medium text-[var(--color-foreground)] select-none">
+                      {isEn ? "Hide my profile in the yearbook (Soft Privacy)" : "Profilimi andıçta gizle (Aramalarda çıkmam)"}
+                    </label>
+                  </div>
+
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={handleYearbookSave}
+                      disabled={savingYearbook}
+                      className="rounded-xl gradient-primary px-6 py-2.5 text-xs font-semibold text-white shadow-md transition-all hover:opacity-90 disabled:opacity-50"
+                    >
+                      {savingYearbook ? t("common.loading") : (yearbookProfile ? (isEn ? "Update Yearbook Settings" : "Andıç Ayarlarını Güncelle") : (isEn ? "Register to Yearbook" : "Andıca Kaydol"))}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Kalıcı Silme Paneli (Tehlikeli Bölge) */}
+              {yearbookProfile && (
+                <div className="rounded-xl border border-red-200 bg-red-500/5 p-5 dark:border-red-500/20">
+                  <h3 className="font-semibold text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    {isEn ? "Danger Zone" : "Tehlikeli Bölge"}
+                  </h3>
+                  <p className="mt-1.5 text-xs text-[var(--color-muted-foreground)]">
+                    {isEn 
+                      ? "Deleting your yearbook record is permanent and cannot be undone. All memories, ratings, and friend messages written to you will be permanently deleted from the database."
+                      : "Andıç kaydınızı sildiğinizde, andıç profiliniz ve size yazılmış tüm arkadaş yazıları veritabanından kalıcı olarak silinir. Bu işlem geri alınamaz."}
+                  </p>
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={handleYearbookDelete}
+                      disabled={savingYearbook}
+                      className="rounded-xl border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {isEn ? "Permanently Delete Yearbook Record" : "Andıç Kaydımı Tamamen Sil"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Kaydetme Butonu (Alt Kısım) */}
-          <div className="border-t border-[var(--color-border)] pt-5">
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-xl gradient-primary py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50"
-            >
-              {saving ? t("common.loading") : t("profile.saveChanges")}
-            </button>
-          </div>
+          {activeTab !== "yearbook" && (
+            <div className="border-t border-[var(--color-border)] pt-5">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full rounded-xl gradient-primary py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50"
+              >
+                {saving ? t("common.loading") : t("profile.saveChanges")}
+              </button>
+            </div>
+          )}
         </form>
+
+        {/* CROPPER MODAL (SOCIAL MEDIA PHOTO CROPPING OVERLAY) */}
+        {isCropperOpen && imageSrc && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+            <div className="relative flex h-[500px] w-full max-w-lg flex-col rounded-2xl bg-[var(--color-card)] overflow-hidden shadow-2xl">
+              <div className="border-b border-[var(--color-border)] p-4">
+                <h3 className="text-sm font-semibold text-[var(--color-foreground)]">
+                  {isEn ? "Crop and Center Avatar" : "Fotoğrafı Hizala ve Kırp"}
+                </h3>
+              </div>
+              <div className="relative flex-1 bg-black">
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              </div>
+              <div className="border-t border-[var(--color-border)] p-4 flex items-center justify-between bg-[var(--color-background)]">
+                <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+                  <span>Zoom:</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={3}
+                    step={0.1}
+                    value={zoom}
+                    onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    className="h-1 w-24 accent-indigo-600 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCropperOpen(false)}
+                    className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-xs font-semibold hover:bg-[var(--color-muted)] transition-colors"
+                  >
+                    {t("common.cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCropSave}
+                    disabled={uploadingAvatar}
+                    className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-semibold shadow-md transition-colors disabled:opacity-50"
+                  >
+                    {uploadingAvatar ? t("common.loading") : (isEn ? "Save and Crop" : "Kırp ve Kaydet")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
