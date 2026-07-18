@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { MessageSquare, Send, Reply, Clock } from "lucide-react";
+import { MessageSquare, Send, Reply, Clock, Edit2, Trash2, X, Save } from "lucide-react";
 import { type CommentInput } from "@/lib/validations/community";
-import { createComment } from "@/app/community/actions";
+import { createComment, editComment, deleteComment } from "@/app/community/actions";
 import RichTextEditor from "./RichTextEditor";
 
 interface Profile {
@@ -30,11 +30,9 @@ interface CommentSectionProps {
   slug: string;
   initialComments: Comment[];
   isLoggedIn: boolean;
-  currentUser?: { id: string } | null;
+  currentUser?: { id: string; role: string | null } | null;
 }
 
-// 1. Recursive Comment Node Component defined OUTSIDE the parent component
-// to prevent unmounting/remounting issues on parent state updates
 interface CommentNodeProps {
   comment: Comment;
   depth: number;
@@ -47,6 +45,15 @@ interface CommentNodeProps {
   onAddReply: (e: React.FormEvent) => void;
   loadingId: string | null;
   timeAgo: (date: string) => string;
+  
+  // Edit & Delete handlers
+  currentUser?: { id: string; role: string | null } | null;
+  editingCommentId: string | null;
+  setEditingCommentId: (id: string | null) => void;
+  editCommentContent: string;
+  setEditCommentContent: (content: string) => void;
+  onSaveEditComment: (commentId: string) => void;
+  onDeleteComment: (commentId: string) => void;
 }
 
 const CommentNode = ({
@@ -61,9 +68,21 @@ const CommentNode = ({
   onAddReply,
   loadingId,
   timeAgo,
+  currentUser,
+  editingCommentId,
+  setEditingCommentId,
+  editCommentContent,
+  setEditCommentContent,
+  onSaveEditComment,
+  onDeleteComment,
 }: CommentNodeProps) => {
   const commentReplies = repliesMap[comment.id] || [];
   const isReplying = replyingToId === comment.id;
+  const isEditing = editingCommentId === comment.id;
+
+  const isAuthor = currentUser?.id === comment.author_id;
+  const isAdmin = currentUser?.role === "admin" || currentUser?.role === "moderator";
+  const canManage = isAuthor || isAdmin;
 
   return (
     <div className="group/node mt-4 animate-fade-in">
@@ -87,30 +106,85 @@ const CommentNode = ({
 
         <div className="flex-1 min-w-0">
           {/* Header info */}
-          <div className="flex items-center gap-2 text-xs">
-            <Link 
-              href={`/u/${comment.author_id}`}
-              className="font-semibold text-[var(--color-foreground)] hover:text-indigo-500 transition-colors"
-            >
-              {comment.profiles?.first_name} {comment.profiles?.last_name}
-            </Link>
-            <span className="text-[var(--color-muted-foreground)]">•</span>
-            <span 
-              className="flex items-center gap-1 text-[var(--color-muted-foreground)] cursor-help"
-              title={new Date(comment.created_at).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'long', timeStyle: 'short' }) + ' (Türkiye Saati)'}
-            >
-              <Clock className="h-3 w-3" /> {timeAgo(comment.created_at)}
-            </span>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs">
+              <Link 
+                href={`/u/${comment.author_id}`}
+                className="font-semibold text-[var(--color-foreground)] hover:text-indigo-500 transition-colors"
+              >
+                {comment.profiles?.first_name} {comment.profiles?.last_name}
+              </Link>
+              <span className="text-[var(--color-muted-foreground)]">•</span>
+              <span 
+                className="flex items-center gap-1 text-[var(--color-muted-foreground)] cursor-help"
+                title={new Date(comment.created_at).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'long', timeStyle: 'short' }) + ' (Türkiye Saati)'}
+              >
+                <Clock className="h-3 w-3" /> {timeAgo(comment.created_at)}
+              </span>
+            </div>
+
+            {/* Edit / Delete Buttons */}
+            {canManage && !isEditing && (
+              <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/node:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCommentId(comment.id);
+                    setEditCommentContent(comment.content);
+                  }}
+                  className="p-1 rounded text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-indigo-500 transition-colors"
+                  title="Yorumu Düzenle"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDeleteComment(comment.id)}
+                  className="p-1 rounded text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-red-500 transition-colors"
+                  title="Yorumu Sil"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Content (HTML) */}
-          <div 
-            className="mt-1.5 text-sm text-[var(--color-foreground)] leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words"
-            dangerouslySetInnerHTML={{ __html: comment.content }}
-          />
+          {isEditing ? (
+            // Inline Edit Form
+            <div className="mt-2 space-y-2">
+              <RichTextEditor
+                content={editCommentContent}
+                onChange={setEditCommentContent}
+                minHeight="min-h-[80px]"
+              />
+              <div className="flex justify-end gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setEditingCommentId(null)}
+                  className="rounded-lg px-3 py-1.5 font-semibold text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSaveEditComment(comment.id)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 px-3.5 py-1.5 font-semibold text-white shadow-sm transition-colors"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  Kaydet
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Content (HTML)
+            <div 
+              className="mt-1.5 text-sm text-[var(--color-foreground)] leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words"
+              dangerouslySetInnerHTML={{ __html: comment.content }}
+            />
+          )}
 
           {/* Actions */}
-          {isLoggedIn && (
+          {isLoggedIn && !isEditing && (
             <div className="mt-2.5 flex items-center gap-3">
               <button
                 type="button"
@@ -181,6 +255,13 @@ const CommentNode = ({
               onAddReply={onAddReply}
               loadingId={loadingId}
               timeAgo={timeAgo}
+              currentUser={currentUser}
+              editingCommentId={editingCommentId}
+              setEditingCommentId={setEditingCommentId}
+              editCommentContent={editCommentContent}
+              setEditCommentContent={setEditCommentContent}
+              onSaveEditComment={onSaveEditComment}
+              onDeleteComment={onDeleteComment}
             />
           ))}
         </div>
@@ -195,10 +276,15 @@ export default function CommentSection({
   slug,
   initialComments,
   isLoggedIn,
+  currentUser,
 }: CommentSectionProps) {
   const [comments] = useState<Comment[]>(initialComments);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  
+  // Edit & Delete state managers
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState("");
 
   const [rootEditorContent, setRootEditorContent] = useState("");
   const [replyEditorContent, setReplyEditorContent] = useState("");
@@ -276,6 +362,44 @@ export default function CommentSection({
     setLoadingId(null);
   };
 
+  // Edit Comment Handler
+  const onSaveEditComment = async (commentId: string) => {
+    const cleanText = editCommentContent.replace(/<[^>]*>/g, "").trim();
+    if (!cleanText) {
+      toast.error("Yorum içeriği boş olamaz.");
+      return;
+    }
+
+    setLoadingId(commentId);
+    const result = await editComment(commentId, editCommentContent, slug, postId);
+    setLoadingId(null);
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Yorum başarıyla güncellendi!");
+      setEditingCommentId(null);
+      window.location.reload();
+    }
+  };
+
+  // Delete Comment Handler
+  const onDeleteComment = async (commentId: string) => {
+    const confirmDelete = window.confirm("Bu yorumu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.");
+    if (!confirmDelete) return;
+
+    setLoadingId(commentId);
+    const result = await deleteComment(commentId, postId, slug);
+    setLoadingId(null);
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Yorum başarıyla silindi!");
+      window.location.reload();
+    }
+  };
+
   const timeAgo = (date: string) => {
     const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
     if (seconds < 60) return "az önce";
@@ -294,7 +418,7 @@ export default function CommentSection({
   }, {} as Record<string, Comment[]>);
 
   return (
-    <div className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
+    <div className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm animate-fade-in">
       <h2 className="flex items-center gap-2 border-b border-[var(--color-border)] pb-4 text-lg font-bold text-[var(--color-foreground)]">
         <MessageSquare className="h-5 w-5 text-indigo-500" />
         Yorumlar ({comments.length})
@@ -354,6 +478,13 @@ export default function CommentSection({
               onAddReply={onAddReply}
               loadingId={loadingId}
               timeAgo={timeAgo}
+              currentUser={currentUser}
+              editingCommentId={editingCommentId}
+              setEditingCommentId={setEditingCommentId}
+              editCommentContent={editCommentContent}
+              setEditCommentContent={setEditCommentContent}
+              onSaveEditComment={onSaveEditComment}
+              onDeleteComment={onDeleteComment}
             />
           ))
         ) : (

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { projectCommentSchema, type ProjectCommentInput } from "@/lib/validations/profile";
+import { projectCommentSchema, type ProjectCommentInput, type ProjectInput } from "@/lib/validations/profile";
 
 /**
  * Projeyi oylayan (upvote) veya oyu geri alan Server Action.
@@ -64,6 +64,88 @@ export async function upvoteProject(projectId: string) {
 }
 
 /**
+ * Projeyi düzenleyen Server Action.
+ */
+export async function editProject(projectId: string, data: ProjectInput) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Yetkisiz erişim" };
+
+  const adminSupabase = createAdminClient();
+
+  // Yetki Kontrolü
+  const { data: project } = await adminSupabase.from("projects").select("user_id").eq("id", projectId).single();
+  if (!project) return { error: "Proje bulunamadı" };
+
+  const { data: profile } = await adminSupabase.from("profiles").select("role").eq("id", user.id).single();
+  const isAdmin = profile?.role === "admin" || profile?.role === "moderator";
+
+  if (project.user_id !== user.id && !isAdmin) {
+    return { error: "Bu projeyi düzenleme yetkiniz yok." };
+  }
+
+  const { error } = await adminSupabase
+    .from("projects")
+    .update({
+      title: data.title,
+      description: data.description,
+      technologies: data.technologies,
+      github_url: data.githubUrl || null,
+      youtube_url: data.youtubeUrl || null,
+      behance_url: data.behanceUrl || null,
+      external_url: data.externalUrl || null,
+      semester: data.semester || null,
+      year: data.year || null,
+      media_urls: data.mediaUrls || [],
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", projectId);
+
+  if (error) {
+    console.error("Proje düzenleme hatası:", error);
+    return { error: "Proje güncellenirken hata oluştu." };
+  }
+
+  revalidatePath("/projects");
+  revalidatePath(`/projects/${projectId}`);
+
+  return { success: true };
+}
+
+/**
+ * Projeyi silen Server Action.
+ */
+export async function deleteProject(projectId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Yetkisiz erişim" };
+
+  const adminSupabase = createAdminClient();
+
+  // Yetki Kontrolü
+  const { data: project } = await adminSupabase.from("projects").select("user_id").eq("id", projectId).single();
+  if (!project) return { error: "Proje zaten silinmiş" };
+
+  const { data: profile } = await adminSupabase.from("profiles").select("role").eq("id", user.id).single();
+  const isAdmin = profile?.role === "admin" || profile?.role === "moderator";
+
+  if (project.user_id !== user.id && !isAdmin) {
+    return { error: "Bu projeyi silme yetkiniz yok." };
+  }
+
+  const { error } = await adminSupabase.from("projects").delete().eq("id", projectId);
+
+  if (error) {
+    console.error("Proje silme hatası:", error);
+    return { error: "Proje silinirken hata oluştu." };
+  }
+
+  revalidatePath("/projects");
+
+  return { success: true };
+}
+
+/**
  * Projeye yorum veya yanıt ekleyen Server Action.
  */
 export async function createProjectComment(data: ProjectCommentInput) {
@@ -95,8 +177,76 @@ export async function createProjectComment(data: ProjectCommentInput) {
     return { error: "Yorum eklenirken bir hata oluştu." };
   }
 
-  // Detay sayfasının önbelleğini temizle
   revalidatePath(`/projects/${parsed.data.projectId}`);
+
+  return { success: true };
+}
+
+/**
+ * Proje yorumu düzenleyen Server Action.
+ */
+export async function editProjectComment(commentId: string, content: string, projectId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Yetkisiz erişim" };
+
+  const adminSupabase = createAdminClient();
+
+  // Yetki Kontrolü
+  const { data: comment } = await adminSupabase.from("project_comments").select("author_id").eq("id", commentId).single();
+  if (!comment) return { error: "Yorum bulunamadı" };
+
+  const { data: profile } = await adminSupabase.from("profiles").select("role").eq("id", user.id).single();
+  const isAdmin = profile?.role === "admin" || profile?.role === "moderator";
+
+  if (comment.author_id !== user.id && !isAdmin) {
+    return { error: "Bu yorumu düzenleme yetkiniz yok." };
+  }
+
+  const { error } = await adminSupabase
+    .from("project_comments")
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq("id", commentId);
+
+  if (error) {
+    console.error("Proje yorumu düzenleme hatası:", error);
+    return { error: "Yorum güncellenirken hata oluştu." };
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+
+  return { success: true };
+}
+
+/**
+ * Proje yorumu silen Server Action.
+ */
+export async function deleteProjectComment(commentId: string, projectId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Yetkisiz erişim" };
+
+  const adminSupabase = createAdminClient();
+
+  // Yetki Kontrolü
+  const { data: comment } = await adminSupabase.from("project_comments").select("author_id").eq("id", commentId).single();
+  if (!comment) return { error: "Yorum zaten silinmiş" };
+
+  const { data: profile } = await adminSupabase.from("profiles").select("role").eq("id", user.id).single();
+  const isAdmin = profile?.role === "admin" || profile?.role === "moderator";
+
+  if (comment.author_id !== user.id && !isAdmin) {
+    return { error: "Bu yorumu silme yetkiniz yok." };
+  }
+
+  const { error } = await adminSupabase.from("project_comments").delete().eq("id", commentId);
+
+  if (error) {
+    console.error("Proje yorumu silme hatası:", error);
+    return { error: "Yorum silinirken hata oluştu." };
+  }
+
+  revalidatePath(`/projects/${projectId}`);
 
   return { success: true };
 }
