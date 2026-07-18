@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowBigUp, MessageSquare, Clock, Plus, Pin } from "lucide-react";
+import { MessageSquare, Clock, Plus, Pin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import UpvoteButton from "@/components/community/upvote-button";
+import CommunitySearchHeader from "@/components/community/CommunitySearchHeader";
 import type { Post, Subreddit } from "@/types/database";
 
 export default async function SubredditPage({
@@ -25,6 +26,12 @@ export default async function SubredditPage({
     .single<Subreddit>();
 
   if (!subreddit) notFound();
+
+  // Tüm aktif subreddit'leri arama çubuğu için çekelim
+  const { data: allSubreddits } = await adminSupabase
+    .from("subreddits")
+    .select("id, name, slug")
+    .eq("is_active", true);
 
   const { data: posts } = await adminSupabase
     .from("posts")
@@ -58,35 +65,41 @@ export default async function SubredditPage({
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1 bg-[var(--color-muted)]/30">
+      <main className="flex-1 bg-[var(--color-muted)]/30 pb-16">
         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
           {/* Subreddit Header */}
-          <div className="mb-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
+          <div className="mb-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm animate-fade-in">
             <div className="flex items-center gap-4">
               <div
-                className="flex h-14 w-14 items-center justify-center rounded-xl text-xl font-bold text-white"
+                className="flex h-14 w-14 items-center justify-center rounded-xl text-xl font-bold text-white shrink-0"
                 style={{ backgroundColor: subreddit.color }}
               >
                 {subreddit.icon || subreddit.name.charAt(0).toUpperCase()}
               </div>
-              <div className="flex-1">
-                <h1 className="text-xl font-bold text-[var(--color-foreground)]">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-[var(--color-foreground)] truncate">
                   {subreddit.name}
                 </h1>
-                <p className="text-sm text-[var(--color-muted-foreground)]">
+                <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2">
                   {subreddit.description}
                 </p>
               </div>
               {user && (
                 <Link
                   href={`/community/${slug}/new`}
-                  className="flex items-center gap-2 rounded-lg gradient-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                  className="flex items-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-all shadow-md shrink-0"
                 >
                   <Plus className="h-4 w-4" /> Gönderi
                 </Link>
               )}
             </div>
           </div>
+
+          {/* Subreddit Search Input */}
+          <CommunitySearchHeader
+            subreddits={(allSubreddits || []).map((s) => ({ id: s.id, name: s.name, slug: s.slug }))}
+            initialCategory={subreddit.id}
+          />
 
           {/* Posts */}
           {posts && posts.length > 0 ? (
@@ -134,18 +147,18 @@ export default async function SubredditPage({
                         </span>
                       </div>
                       <Link href={`/community/${slug}/${post.id}`}>
-                        <h3 className="mt-1 font-semibold text-[var(--color-foreground)] group-hover:text-[var(--color-primary)] transition-colors">
+                        <h3 className="mt-1 font-semibold text-[var(--color-foreground)] group-hover:text-indigo-500 transition-colors leading-snug">
                           {post.title}
                         </h3>
                       </Link>
                       {post.content && (
                         <p className="mt-1.5 text-sm text-[var(--color-muted-foreground)] line-clamp-2">
-                          {post.content}
+                          {post.content.replace(/<[^>]*>/g, "")}
                         </p>
                       )}
                       <Link
                         href={`/community/${slug}/${post.id}`}
-                        className="mt-2 inline-flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]"
+                        className="mt-2 inline-flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)] hover:text-indigo-500 transition-colors font-medium"
                       >
                         <MessageSquare className="h-3.5 w-3.5" />
                         {post.comment_count} yorum
@@ -158,7 +171,7 @@ export default async function SubredditPage({
           ) : (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-12 text-center">
               <MessageSquare className="mx-auto h-10 w-10 text-[var(--color-muted-foreground)]" />
-              <h3 className="mt-3 font-medium">Henüz gönderi yok</h3>
+              <h3 className="mt-3 font-medium text-[var(--color-foreground)]">Henüz gönderi yok</h3>
               <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">İlk gönderiyi sen paylaş!</p>
             </div>
           )}
