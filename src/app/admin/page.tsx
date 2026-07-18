@@ -14,6 +14,7 @@ import {
   BarChart3,
   Tag,
   Megaphone,
+  BookOpen,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -257,6 +258,18 @@ export default async function AdminPage() {
               </h3>
               <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
                 Üniversite domainlerini yönet
+              </p>
+            </Link>
+            <Link
+              href="/admin/yearbooks"
+              className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            >
+              <BookOpen className="h-6 w-6 text-[var(--color-primary)]" />
+              <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                Andıç Yıllıkları
+              </h3>
+              <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                Mezuniyet andıç yıllarını yönet
               </p>
             </Link>
           </div>

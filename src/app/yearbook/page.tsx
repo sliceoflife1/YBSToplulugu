@@ -20,6 +20,7 @@ export default function YearbookPage() {
   const [faculties, setFaculties] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [periods, setPeriods] = useState<any[]>([]);
 
   // Filtre State'leri
   const [selectedFaculty, setSelectedFaculty] = useState<string>("");
@@ -45,6 +46,15 @@ export default function YearbookPage() {
         .select("*")
         .order("name");
       setFaculties(facs || []);
+
+      // 2.1. Aktif Andıç Yıllarını Yükle
+      try {
+        const res = await fetch("/api/yearbook/periods");
+        const data = await res.json();
+        setPeriods(data.periods || []);
+      } catch (e) {
+        console.error("Yıllar yüklenemedi", e);
+      }
 
       // 3. İlk yüklemede tüm görünür andıç profillerini çek
       const { data: ybProfiles } = await supabase
@@ -184,8 +194,8 @@ export default function YearbookPage() {
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none"
               >
                 <option value="">{isEn ? "All Years" : "Tüm Yıllar"}</option>
-                {Array.from({ length: 16 }, (_, i) => 2020 + i).map((y) => (
-                  <option key={y} value={y}>{y}</option>
+                {periods.map((p) => (
+                  <option key={p.id} value={p.year}>{p.year}</option>
                 ))}
               </select>
             </div>

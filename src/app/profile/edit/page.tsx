@@ -59,6 +59,7 @@ export default function ProfileEditPage() {
   const [yearbookVisible, setYearbookVisible] = useState<boolean>(true);
   const [loadingYearbook, setLoadingYearbook] = useState<boolean>(false);
   const [savingYearbook, setSavingYearbook] = useState<boolean>(false);
+  const [periods, setPeriods] = useState<any[]>([]);
 
   // Dinamik CV Dizileri
   const [education, setEducation] = useState<CvEducation[]>([]);
@@ -144,6 +145,15 @@ export default function ProfileEditPage() {
 
       if (facultiesRes.data) {
         setYearbookFaculties(facultiesRes.data);
+      }
+
+      // 2.1. Yıllık dönemlerini (aktif) API'den çek
+      try {
+        const res = await fetch("/api/yearbook/periods");
+        const data = await res.json();
+        setPeriods(data.periods || []);
+      } catch (e) {
+        console.error("Andıç yılları yüklenemedi", e);
       }
 
       if (yearbookProfileRes.data) {
@@ -1352,8 +1362,9 @@ export default function ProfileEditPage() {
                         onChange={(e) => setSelectedGradYear(parseInt(e.target.value))}
                         className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none"
                       >
-                        {Array.from({ length: 16 }, (_, i) => 2020 + i).map((y) => (
-                          <option key={y} value={y}>{y}</option>
+                        <option value="">{isEn ? "-- Select Year --" : "-- Yıl Seçiniz --"}</option>
+                        {periods.map((p) => (
+                          <option key={p.id} value={p.year}>{p.year}</option>
                         ))}
                       </select>
                     </div>
