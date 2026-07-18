@@ -29,6 +29,7 @@ export const projectSchema = z.object({
   externalUrl: z.string().url('Geçerli bir URL giriniz').optional().or(z.literal('')),
   semester: z.enum(['fall', 'spring', 'summer']).optional(),
   year: z.number().min(2000).max(2030).optional(),
+  mediaUrls: z.array(z.string()).optional(),
 });
 
 export const cvEducationSchema = z.object({
@@ -96,3 +97,11 @@ export const cvDataSchema = z.object({
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type ProjectInput = z.infer<typeof projectSchema>;
 export type CvDataInput = z.infer<typeof cvDataSchema>;
+
+export const projectCommentSchema = z.object({
+  content: z.string().min(1, 'Yorum boş olamaz').max(2000, 'Yorum en fazla 2000 karakter olabilir'),
+  projectId: z.string().uuid('Geçersiz proje kimliği'),
+  parentId: z.string().uuid().optional(),
+});
+
+export type ProjectCommentInput = z.infer<typeof projectCommentSchema>;
