@@ -164,7 +164,9 @@ export default async function UserProfilePage({
                       
                       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-bold text-lg text-[var(--color-foreground)]">{project.title}</h3>
+                          <Link href={`/projects/${project.id}`} className="hover:text-[var(--color-primary)] transition-colors">
+                            <h3 className="font-bold text-lg text-[var(--color-foreground)] hover:text-[var(--color-primary)] transition-colors">{project.title}</h3>
+                          </Link>
                           <span className="text-xs font-medium bg-[var(--color-muted)] text-[var(--color-muted-foreground)] px-2 py-1 rounded-md">
                             {project.year} {project.semester === "fall" ? "Güz" : project.semester === "spring" ? "Bahar" : project.semester === "summer" ? "Yaz" : ""}
                           </span>
@@ -187,6 +189,9 @@ export default async function UserProfilePage({
                         )}
 
                         <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-3">
+                          <Link href={`/projects/${project.id}`} className="text-xs font-semibold text-[var(--color-primary)] hover:underline flex items-center gap-1 mr-auto">
+                            Detayları Gör &rarr;
+                          </Link>
                           {project.github_url && (
                             <a href={project.github_url} target="_blank" rel="noreferrer" className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors">
                               <GitBranch className="h-4 w-4" />
