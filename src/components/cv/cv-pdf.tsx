@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Font, Link, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Link, Image, Svg, Path } from '@react-pdf/renderer';
 import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLanguage, CvProject, CvReference, CvCustomSection } from "@/types/database";
 import { formatDateRange } from "@/lib/cv/normalize";
 
@@ -12,6 +12,31 @@ Font.register({
 });
 
 const PRIMARY_COLOR = '#0ea5e9'; // Profesyonel mavi tonu
+
+// SVG Vektör İkonları (react-pdf uyumlu)
+const PinIcon = () => (
+  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
+    <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#cbd5e1" />
+  </Svg>
+);
+
+const PhoneIcon = () => (
+  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
+    <Path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="#cbd5e1" />
+  </Svg>
+);
+
+const MailIcon = () => (
+  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
+    <Path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#cbd5e1" />
+  </Svg>
+);
+
+const LinkIcon = () => (
+  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
+    <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#0ea5e9" />
+  </Svg>
+);
 
 const styles = StyleSheet.create({
   page: {
@@ -50,6 +75,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     borderWidth: 2,
     borderColor: '#ffffff',
+    objectFit: 'cover',
   },
 
   sidebarSection: {
@@ -65,10 +91,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     letterSpacing: 0.5,
   },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   sidebarText: {
     fontSize: 7.5,
     color: '#cbd5e1',
-    marginBottom: 5,
     lineHeight: 1.3,
   },
   sidebarTextBold: {
@@ -92,7 +122,6 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
     textDecoration: 'none',
     fontSize: 7.5,
-    marginBottom: 5,
   },
 
   // Üst Bilgi (Header)
@@ -101,17 +130,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5,
     borderBottomColor: '#111111',
     paddingBottom: 8,
+    flexDirection: 'column',
   },
   mainName: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#111827',
+    lineHeight: 1.1,
     marginBottom: 2,
   },
   mainTitle: {
     fontSize: 11,
     fontWeight: 'bold',
     color: PRIMARY_COLOR,
+    lineHeight: 1.2,
   },
 
   // Bölüm Başlıkları
@@ -220,20 +252,47 @@ function renderContact(profile: Profile) {
   return (
     <View style={styles.sidebarSection} wrap={false}>
       <Text style={styles.sidebarTitle}>İLETİŞİM</Text>
-      {profile.location && <Text style={styles.sidebarText}>📍  {profile.location}</Text>}
-      {profile.phone && <Text style={styles.sidebarText}>📞  {profile.phone}</Text>}
-      {profile.edu_email && <Text style={styles.sidebarText}>✉  {profile.edu_email}</Text>}
+      {profile.location && (
+        <View style={styles.contactRow}>
+          <PinIcon />
+          <Text style={styles.sidebarText}>{profile.location}</Text>
+        </View>
+      )}
+      {profile.phone && (
+        <View style={styles.contactRow}>
+          <PhoneIcon />
+          <Text style={styles.sidebarText}>{profile.phone}</Text>
+        </View>
+      )}
+      {profile.edu_email && (
+        <View style={styles.contactRow}>
+          <MailIcon />
+          <Text style={styles.sidebarText}>{profile.edu_email}</Text>
+        </View>
+      )}
       {profile.personal_email && profile.personal_email !== profile.edu_email && (
-        <Text style={styles.sidebarText}>✉  {profile.personal_email}</Text>
+        <View style={styles.contactRow}>
+          <MailIcon />
+          <Text style={styles.sidebarText}>{profile.personal_email}</Text>
+        </View>
       )}
       {profile.linkedin_url && (
-        <Link src={profile.linkedin_url} style={styles.sidebarLink}>🔗  LinkedIn</Link>
+        <View style={styles.contactRow}>
+          <LinkIcon />
+          <Link src={profile.linkedin_url} style={styles.sidebarLink}>LinkedIn</Link>
+        </View>
       )}
       {profile.github_url && (
-        <Link src={profile.github_url} style={styles.sidebarLink}>🔗  GitHub</Link>
+        <View style={styles.contactRow}>
+          <LinkIcon />
+          <Link src={profile.github_url} style={styles.sidebarLink}>GitHub</Link>
+        </View>
       )}
       {profile.website_url && (
-        <Link src={profile.website_url} style={styles.sidebarLink}>🔗  Web Sitesi</Link>
+        <View style={styles.contactRow}>
+          <LinkIcon />
+          <Link src={profile.website_url} style={styles.sidebarLink}>Web Sitesi</Link>
+        </View>
       )}
     </View>
   );
