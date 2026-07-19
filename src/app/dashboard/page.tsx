@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 import type { Profile } from "@/types/database";
 
 export default async function DashboardPage() {
@@ -271,6 +272,7 @@ export default async function DashboardPage() {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
