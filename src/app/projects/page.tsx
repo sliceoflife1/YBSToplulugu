@@ -24,6 +24,7 @@ export default async function ProjectsPage() {
       external_url,
       semester,
       year,
+      created_at,
       upvote_count,
       comment_count,
       media_urls,
@@ -32,7 +33,10 @@ export default async function ProjectsPage() {
         first_name,
         last_name,
         avatar_url,
-        role
+        role,
+        department,
+        karma_points,
+        edu_email
       )
     `)
     .order("year", { ascending: false })
