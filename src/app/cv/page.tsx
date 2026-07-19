@@ -48,17 +48,7 @@ export default function CvBuilderPage() {
   const [customSections, setCustomSections] = useState<CvCustomSection[]>([]);
 
   // Editör Sekme Yönetimi
-  const [editorTab, setEditorTab] = useState<"design" | "content" | "extra">("design");
-
-  // Premium Renk Paletleri
-  const colorPalettes = [
-    { value: "#3B82F6", label: isEn ? "Classic Blue" : "Klasik Mavi" },
-    { value: "#10B981", label: isEn ? "Emerald Green" : "Zümrüt Yeşili" },
-    { value: "#F59E0B", label: isEn ? "Sun Orange" : "Güneş Turuncusu" },
-    { value: "#8B5CF6", label: isEn ? "Royal Purple" : "Kraliyet Moru" },
-    { value: "#EF4444", label: isEn ? "Vibrant Red" : "Canlı Kırmızı" },
-    { value: "#1F2937", label: isEn ? "Charcoal Black" : "Kömür Siyahı" },
-  ];
+  const [editorTab, setEditorTab] = useState<"content" | "extra">("content");
 
   // Dil seviyesi etiketleri
   const getLanguageLevelLabel = (level: string) => {
@@ -357,16 +347,6 @@ export default function CvBuilderPage() {
               {/* Sekme Seçici */}
               <div className="flex border-b border-[var(--color-border)] pb-px gap-1">
                 <button
-                  onClick={() => setEditorTab("design")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium border-b-2 transition-all ${
-                    editorTab === "design"
-                      ? "border-[var(--color-primary)] text-[var(--color-primary)]"
-                      : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-                  }`}
-                >
-                  <Palette className="h-4 w-4" /> {t("visualTemplate")}
-                </button>
-                <button
                   onClick={() => setEditorTab("content")}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium border-b-2 transition-all ${
                     editorTab === "content"
@@ -388,91 +368,17 @@ export default function CvBuilderPage() {
                 </button>
               </div>
 
-              {/* SEKMELİ KISIM 1: GÖRSEL ŞABLON & STİL */}
-              {editorTab === "design" && (
-                <div className="space-y-6 animate-fade-in">
-
-                  {/* Şablon Seçici */}
-                  <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
-                    <h2 className="flex items-center gap-2 font-bold mb-4 text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
-                      <Layout className="h-4 w-4 text-[var(--color-primary)]" /> {t("templateChoice")}
-                    </h2>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <button
-                        onClick={() => setTemplateName("modern")}
-                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                          templateName === "modern"
-                            ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 font-semibold text-[var(--color-primary)] shadow-sm"
-                            : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-muted-foreground)] hover:border-[var(--color-primary)]/50"
-                        }`}
-                      >
-                        <span className="text-xl mb-1">📊</span>
-                        <span className="text-xs">{t("modern")}</span>
-                      </button>
-
-                      <button
-                        onClick={() => setTemplateName("classic")}
-                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                          templateName === "classic"
-                            ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 font-semibold text-[var(--color-primary)] shadow-sm"
-                            : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-muted-foreground)] hover:border-[var(--color-primary)]/50"
-                        }`}
-                      >
-                        <span className="text-xl mb-1">📄</span>
-                        <span className="text-xs">{t("classic")}</span>
-                      </button>
-
-                      <button
-                        onClick={() => setTemplateName("brutalist")}
-                        className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                          templateName === "brutalist"
-                            ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 font-semibold text-[var(--color-primary)] shadow-sm"
-                            : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-muted-foreground)] hover:border-[var(--color-primary)]/50"
-                        }`}
-                      >
-                        <span className="text-xl mb-1">⚡</span>
-                        <span className="text-xs">{t("brutalist")}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Renk Paleti */}
-                  <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
-                    <h2 className="flex items-center gap-2 font-bold mb-4 text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
-                      <Palette className="h-4 w-4 text-[var(--color-primary)]" /> {t("themeColor")}
-                    </h2>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {colorPalettes.map((cp) => (
-                        <button
-                          key={cp.value}
-                          onClick={() => setPrimaryColor(cp.value)}
-                          className={`flex items-center gap-3 p-3 rounded-xl border text-sm transition-all ${
-                            primaryColor === cp.value
-                              ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 font-semibold"
-                              : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-muted-foreground)] hover:border-[var(--color-primary)]/50"
-                          }`}
-                        >
-                          <span className="h-4 w-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: cp.value }} />
-                          <span className="text-xs">{cp.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Bilgilendirme */}
-                  <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-muted)]/30 p-5 text-center">
-                    <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {isEn
-                        ? "The primary source of your profile and CV information is at "
-                        : "Profil ve CV bilgilerinizin ana kaydı "}
-                      <Link href="/profile/edit" className="text-[var(--color-primary)] font-semibold hover:underline">/profile/edit</Link>
-                      {isEn
-                        ? ". You can permanently change your information from that page. The editor here allows quick last-minute adjustments."
-                        : " adresindedir. Bu sayfadan bilgilerinizi kalıcı olarak değiştirebilirsiniz. Buradaki içerik editörü ise hızlı son dakika düzenlemeleri yapmanızı sağlar."}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-muted)]/30 p-5 text-center mt-6">
+                <p className="text-xs text-[var(--color-muted-foreground)]">
+                  {isEn
+                    ? "The primary source of your profile and CV information is at "
+                    : "Profil ve CV bilgilerinizin ana kaydı "}
+                  <Link href="/profile/edit" className="text-[var(--color-primary)] font-semibold hover:underline">/profile/edit</Link>
+                  {isEn
+                    ? ". You can permanently change your information from that page. The editor here allows quick last-minute adjustments."
+                    : " adresindedir. Bu sayfadan bilgilerinizi kalıcı olarak değiştirebilirsiniz. Buradaki içerik editörü ise hızlı son dakika düzenlemeleri yapmanızı sağlar."}
+                </p>
+              </div>
 
               {/* SEKMELİ KISIM 2: İÇERİK EDİTÖRÜ (HIZLI EDİT) */}
               {editorTab === "content" && (
@@ -776,219 +682,65 @@ export default function CvBuilderPage() {
 
             </div>
 
-            {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
-            <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm dark:bg-[var(--color-card)] lg:sticky top-6 p-8 overflow-hidden min-h-[600px]">
-
+                        {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
+            <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm dark:bg-[var(--color-card)] lg:sticky top-6 p-10 overflow-hidden min-h-[600px] text-[#111]">
               <div className="mb-6 flex items-center justify-between border-b border-[var(--color-border)] pb-4">
                 <h2 className="flex items-center gap-2 font-bold text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
                   <Eye className="h-4 w-4" /> Canlı Web Önizlemesi
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs rounded-full bg-[var(--color-muted)] px-3 py-1 font-semibold border border-[var(--color-border)]">
-                    Şablon: {templateName.toUpperCase()}
-                  </span>
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: primaryColor }} />
-                </div>
+                <span className="text-xs text-[var(--color-muted-foreground)]">A4 Profesyonel Şablon</span>
               </div>
 
               {/* DİNAMİK CANLI ŞABLON RENDER ALANI */}
-
-              {/* CV Header */}
-              <div className="border-b border-[var(--color-border)] pb-6 mb-6">
-                <h3 className={`text-2xl font-bold text-[var(--color-foreground)] ${templateName === 'brutalist' ? 'uppercase tracking-wide font-black' : ''}`}>
-                  {profile?.first_name} {profile?.last_name}
-                </h3>
-                <p className="text-sm font-semibold mt-1" style={{ color: primaryColor }}>
-                  {headline || profile?.department || "Yönetim Bilişim Sistemleri Öğrencisi"}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--color-muted-foreground)]">
-                  {location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {location}</span>}
-                  {profile?.edu_email && <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> {profile.edu_email}</span>}
-                  {profile?.phone && <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {profile.phone}</span>}
-                  {profile?.linkedin_url && <span className="flex items-center gap-1"><Link2 className="h-3.5 w-3.5" /> LinkedIn</span>}
-                  {profile?.github_url && <span className="flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> GitHub</span>}
-                  {websiteUrl && <span className="flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> Web Sitesi</span>}
-                </div>
-              </div>
-
-              {/* Şablona Göre İçerik Dağılımı */}
-              {templateName === 'modern' ? (
-                // MODERN: ÇİFT SÜTUNLU DÜZEN
-                <div className="grid gap-6 sm:grid-cols-12">
-
-                  {/* Sol Küçük Sütun */}
-                  <div className="sm:col-span-4 space-y-6 border-r border-[var(--color-border)] pr-4">
-                    {/* Yetenekler */}
-                    {skills.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Yetenekler</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {skills.map((skill) => (
-                            <span key={skill} className="rounded-lg bg-[var(--color-muted)] px-2 py-0.5 text-xs text-[var(--color-foreground)] border border-[var(--color-border)]">{skill}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Diller */}
-                    {languages.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Diller</h4>
-                        <div className="space-y-2">
-                          {languages.map((lang, i) => (
-                            <div key={i} className="flex justify-between items-center text-xs">
-                              <span className="font-semibold">{lang.language}</span>
-                              <span className="text-[var(--color-muted-foreground)] text-[10px] bg-[var(--color-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">{getLanguageLevelLabel(lang.level)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Referanslar */}
-                    {references.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Referanslar</h4>
-                        <div className="space-y-3">
-                          {references.map((ref, i) => (
-                            <div key={i} className="text-xs">
-                              <div className="font-bold text-[var(--color-foreground)]">{ref.name}</div>
-                              <div className="text-[11px] text-[var(--color-muted-foreground)]">{[ref.position, ref.company].filter(Boolean).join(" • ")}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+              <div className="font-sans">
+                {/* CV Header */}
+                <div className="border-b-[3px] border-black pb-4 mb-6">
+                  <h3 className="text-4xl font-bold uppercase tracking-tight text-black leading-none mb-2">
+                    {profile?.first_name} {profile?.last_name}
+                  </h3>
+                  <p className="text-base font-bold text-[#0ea5e9] mb-3">
+                    {headline || profile?.department || "Yönetim Bilişim Sistemleri Öğrencisi"}
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#444]">
+                    {location && <span>{location}</span>}
+                    {profile?.edu_email && <span>{profile.edu_email}</span>}
+                    {profile?.phone && <span>{profile.phone}</span>}
+                    {profile?.personal_email && profile.personal_email !== profile.edu_email && <span>{profile.personal_email}</span>}
+                    {profile?.linkedin_url && <span className="text-[#0ea5e9]">LinkedIn</span>}
+                    {profile?.github_url && <span className="text-[#0ea5e9]">GitHub</span>}
+                    {websiteUrl && <span className="text-[#0ea5e9]">Web Sitesi</span>}
                   </div>
-
-                  {/* Sağ Geniş Sütun */}
-                  <div className="sm:col-span-8 space-y-6">
-                    {/* Hakkımda */}
-                    {bio && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: primaryColor }}>Hakkımda</h4>
-                        <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed">{bio}</p>
-                      </div>
-                    )}
-
-                    {/* Deneyim */}
-                    {experience.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Deneyim</h4>
-                        <div className="space-y-4">
-                          {experience.map((exp, i) => (
-                            <div key={i} className="text-xs">
-                              <div className="flex justify-between items-start">
-                                <span className="font-bold text-[var(--color-foreground)]">{exp.title}</span>
-                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</span>
-                              </div>
-                              <div className="text-[11px] font-semibold text-[var(--color-muted-foreground)] mb-1">{[exp.company, exp.location].filter(Boolean).join(" • ")}</div>
-                              {exp.description && <p className="text-[11px] text-[var(--color-muted-foreground)] leading-normal whitespace-pre-line">{exp.description}</p>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Eğitim */}
-                    {education.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Eğitim</h4>
-                        <div className="space-y-3">
-                          {education.map((edu, i) => (
-                            <div key={i} className="text-xs">
-                              <div className="flex justify-between items-start">
-                                <span className="font-bold text-[var(--color-foreground)]">{edu.school}</span>
-                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</span>
-                              </div>
-                              <div className="text-[11px] text-[var(--color-muted-foreground)]">{[edu.degree, edu.field].filter(Boolean).join(" • ")}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Projeler */}
-                    {projects.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Projeler</h4>
-                        <div className="space-y-3">
-                          {projects.map((proj, i) => (
-                            <div key={i} className="text-xs">
-                              <div className="flex justify-between items-start">
-                                <span className="font-bold text-[var(--color-foreground)]">{proj.title}</span>
-                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{proj.date}</span>
-                              </div>
-                              {proj.description && <p className="text-[11px] text-[var(--color-muted-foreground)]">{proj.description}</p>}
-                              {proj.technologies && proj.technologies.length > 0 && (
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                  {proj.technologies.map((tech) => (
-                                    <span key={tech} className="rounded bg-[var(--color-muted)] px-1.5 py-0.5 text-[10px] border border-[var(--color-border)]">{tech}</span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Sertifikalar */}
-                    {certifications.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>Sertifikalar</h4>
-                        <div className="space-y-3">
-                          {certifications.map((cert, i) => (
-                            <div key={i} className="text-xs">
-                              <div className="flex justify-between items-start">
-                                <span className="font-bold text-[var(--color-foreground)]">{cert.name}</span>
-                                <span className="text-[10px] text-[var(--color-muted-foreground)]">{cert.date}</span>
-                              </div>
-                              <div className="text-[11px] text-[var(--color-muted-foreground)]">{cert.issuer}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Özel Bölümler */}
-                    {customSections.filter(s => s.title && s.items?.length > 0).map((section, i) => (
-                      <div key={i}>
-                        <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: primaryColor }}>{section.title}</h4>
-                        <ul className="space-y-1 list-disc list-inside">
-                          {section.items.map((item, ii) => (
-                            <li key={ii} className="text-[11px] text-[var(--color-muted-foreground)]">{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-
                 </div>
-              ) : (
-                // CLASSIC VE BRUTALIST: TEK SÜTUNLU AKIŞ DÜZENİ
-                <div className={`space-y-6 ${templateName === 'brutalist' ? 'brutalist-preview border-l-2 border-black pl-4' : ''}`}>
+
+                <div className="space-y-6">
                   {/* Hakkımda */}
                   {bio && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-3' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Hakkımda</h4>
-                      <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed">{bio}</p>
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Hakkımda</h4>
+                      <p className="text-[13px] text-[#333] leading-relaxed text-justify">{bio}</p>
                     </div>
                   )}
 
                   {/* Deneyim */}
                   {experience.length > 0 && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Deneyim</h4>
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Deneyim</h4>
                       <div className="space-y-4">
                         {experience.map((exp, i) => (
-                          <div key={i} className="text-xs">
-                            <div className="flex justify-between items-start">
-                              <span className="font-bold text-[var(--color-foreground)]">{exp.title}</span>
-                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</span>
+                          <div key={i}>
+                            <div className="flex justify-between items-start mb-0.5">
+                              <span className="text-[14px] font-bold text-black">{exp.title}</span>
+                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</span>
                             </div>
-                            <div className="text-[11px] font-semibold text-[var(--color-muted-foreground)] mb-1">{[exp.company, exp.location].filter(Boolean).join(" • ")}</div>
-                            {exp.description && <p className="text-[11px] text-[var(--color-muted-foreground)] leading-normal whitespace-pre-line">{exp.description}</p>}
+                            <div className="text-[13px] font-bold text-[#333] mb-1">{exp.company}</div>
+                            {exp.location && <div className="text-[12px] text-[#666] mb-1">{exp.location}</div>}
+                            {exp.description && (
+                              <ul className="text-[12.5px] text-[#444] leading-relaxed list-disc list-inside space-y-0.5 ml-1">
+                                {exp.description.split("\n").filter(Boolean).map((line, li) => (
+                                  <li key={li}>{line}</li>
+                                ))}
+                              </ul>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -998,15 +750,18 @@ export default function CvBuilderPage() {
                   {/* Eğitim */}
                   {education.length > 0 && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Eğitim</h4>
-                      <div className="space-y-3">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Eğitim</h4>
+                      <div className="space-y-4">
                         {education.map((edu, i) => (
-                          <div key={i} className="text-xs">
-                            <div className="flex justify-between items-start">
-                              <span className="font-bold text-[var(--color-foreground)]">{edu.school}</span>
-                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</span>
+                          <div key={i}>
+                            <div className="flex justify-between items-start mb-0.5">
+                              <span className="text-[14px] font-bold text-black">{edu.school}</span>
+                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</span>
                             </div>
-                            <div className="text-[11px] text-[var(--color-muted-foreground)]">{[edu.degree, edu.field].filter(Boolean).join(" • ")}</div>
+                            <div className="text-[13px] font-bold text-[#333] mb-1">{[edu.degree, edu.field].filter(Boolean).join(" • ")}</div>
+                            {edu.location && <div className="text-[12px] text-[#666] mb-1">{edu.location}</div>}
+                            {edu.gpa && <div className="text-[12px] text-[#666] mb-1">Not Ortalaması: {edu.gpa}</div>}
+                            {edu.description && <p className="text-[12.5px] text-[#444] leading-relaxed">{edu.description}</p>}
                           </div>
                         ))}
                       </div>
@@ -1016,15 +771,23 @@ export default function CvBuilderPage() {
                   {/* Projeler */}
                   {projects.length > 0 && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Projeler</h4>
-                      <div className="space-y-3">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Projeler</h4>
+                      <div className="space-y-4">
                         {projects.map((proj, i) => (
-                          <div key={i} className="text-xs">
-                            <div className="flex justify-between items-start">
-                              <span className="font-bold text-[var(--color-foreground)]">{proj.title}</span>
-                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{proj.date}</span>
+                          <div key={i}>
+                            <div className="flex justify-between items-start mb-0.5">
+                              <span className="text-[14px] font-bold text-black">{proj.title}</span>
+                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{proj.date}</span>
                             </div>
-                            {proj.description && <p className="text-[11px] text-[var(--color-muted-foreground)]">{proj.description}</p>}
+                            {proj.description && <p className="text-[12.5px] text-[#444] leading-relaxed">{proj.description}</p>}
+                            {proj.technologies && proj.technologies.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {proj.technologies.map((tech) => (
+                                  <span key={tech} className="rounded border border-[#ccc] px-2 py-0.5 text-[11px] text-[#333]">{tech}</span>
+                                ))}
+                              </div>
+                            )}
+                            {proj.url && <div className="mt-1 text-[12px] text-[#0ea5e9]">{proj.url}</div>}
                           </div>
                         ))}
                       </div>
@@ -1034,10 +797,10 @@ export default function CvBuilderPage() {
                   {/* Yetenekler */}
                   {skills.length > 0 && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-3' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Yetenekler</h4>
-                      <div className="flex flex-wrap gap-1.5">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Yetenekler</h4>
+                      <div className="flex flex-wrap gap-2">
                         {skills.map((skill) => (
-                          <span key={skill} className={`rounded px-2 py-0.5 text-xs text-[var(--color-foreground)] border border-[var(--color-border)] ${templateName === 'brutalist' ? 'border-black bg-white rounded-none font-bold' : 'bg-[var(--color-muted)]'}`}>{skill}</span>
+                          <span key={skill} className="rounded border border-[#ccc] px-2 py-1 text-[12px] text-[#333]">{skill}</span>
                         ))}
                       </div>
                     </div>
@@ -1046,12 +809,12 @@ export default function CvBuilderPage() {
                   {/* Diller */}
                   {languages.length > 0 && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Diller</h4>
-                      <div className="grid grid-cols-2 gap-2 max-w-sm">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Yabancı Diller</h4>
+                      <div className="space-y-1.5">
                         {languages.map((lang, i) => (
-                          <div key={i} className="flex justify-between items-center text-xs">
-                            <span className="font-semibold">{lang.language}</span>
-                            <span className="text-[10px] text-[var(--color-muted-foreground)] bg-[var(--color-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">{getLanguageLevelLabel(lang.level)}</span>
+                          <div key={i} className="flex justify-between items-center text-[13px]">
+                            <span className="font-bold text-black">{lang.language}</span>
+                            <span className="text-[#555]">{getLanguageLevelLabel(lang.level)}</span>
                           </div>
                         ))}
                       </div>
@@ -1061,15 +824,16 @@ export default function CvBuilderPage() {
                   {/* Sertifikalar */}
                   {certifications.length > 0 && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Sertifikalar</h4>
-                      <div className="space-y-3">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Sertifikalar</h4>
+                      <div className="space-y-4">
                         {certifications.map((cert, i) => (
-                          <div key={i} className="text-xs">
-                            <div className="flex justify-between items-start">
-                              <span className="font-bold text-[var(--color-foreground)]">{cert.name}</span>
-                              <span className="text-[10px] text-[var(--color-muted-foreground)]">{cert.date}</span>
+                          <div key={i}>
+                            <div className="flex justify-between items-start mb-0.5">
+                              <span className="text-[14px] font-bold text-black">{cert.name}</span>
+                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{cert.date}</span>
                             </div>
-                            <div className="text-[11px] text-[var(--color-muted-foreground)]">{cert.issuer}</div>
+                            <div className="text-[13px] font-bold text-[#333]">{cert.issuer}</div>
+                            {cert.url && <div className="mt-1 text-[12px] text-[#0ea5e9]">Doğrula</div>}
                           </div>
                         ))}
                       </div>
@@ -1079,12 +843,17 @@ export default function CvBuilderPage() {
                   {/* Referanslar */}
                   {references.length > 0 && (
                     <div>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>Referanslar</h4>
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Referanslar</h4>
                       <div className="space-y-3">
                         {references.map((ref, i) => (
-                          <div key={i} className="text-xs">
-                            <div className="font-bold text-[var(--color-foreground)]">{ref.name}</div>
-                            <div className="text-[11px] text-[var(--color-muted-foreground)]">{[ref.position, ref.company].filter(Boolean).join(" • ")}</div>
+                          <div key={i}>
+                            <div className="text-[13px] font-bold text-black">{ref.name}</div>
+                            {(ref.position || ref.company) && (
+                              <div className="text-[12.5px] text-[#555] mt-0.5">{[ref.position, ref.company].filter(Boolean).join(" • ")}</div>
+                            )}
+                            {(ref.email || ref.phone) && (
+                              <div className="text-[12.5px] text-[#555] mt-0.5">{[ref.email, ref.phone].filter(Boolean).join(" • ")}</div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -1094,30 +863,22 @@ export default function CvBuilderPage() {
                   {/* Özel Bölümler */}
                   {customSections.filter(s => s.title && s.items?.length > 0).map((section, i) => (
                     <div key={i}>
-                      <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${templateName === 'brutalist' ? 'border-b border-black pb-1 mb-4' : ''}`} style={{ color: templateName === 'brutalist' ? '#000000' : primaryColor }}>{section.title}</h4>
-                      <ul className="space-y-1 list-disc list-inside">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">{section.title}</h4>
+                      <ul className="space-y-1 list-disc list-inside ml-1">
                         {section.items.map((item, ii) => (
-                          <li key={ii} className="text-[11px] text-[var(--color-muted-foreground)]">{item}</li>
+                          <li key={ii} className="text-[12.5px] text-[#333]">{item}</li>
                         ))}
                       </ul>
                     </div>
                   ))}
                 </div>
-              )}
-
+              </div>
             </div>
 
           </div>
         </div>
       </main>
-
-      {/* Brutalist şablon için web önizleme stilleri (sadece preview alanı için geçerli) */}
-      <style jsx global>{`
-        .brutalist-preview {
-          border-left: 3px solid #000000 !important;
-          border-radius: 0px !important;
-        }
-      `}</style>
     </div>
   );
 }
+
