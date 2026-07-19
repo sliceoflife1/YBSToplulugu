@@ -152,7 +152,7 @@ export default async function UserProfilePage({
             {/* Sol Kolon: Projeler / Andıç */}
             <div className="md:col-span-2 space-y-6">
               <h2 className="flex items-center gap-2 text-xl font-bold text-[var(--color-foreground)]">
-                <Briefcase className="h-5 w-5 text-[var(--color-primary)]" /> Projeler & Andıç
+                <Briefcase className="h-5 w-5 text-[var(--color-primary)]" /> Projeler
               </h2>
 
               {projects && projects.length > 0 ? (
