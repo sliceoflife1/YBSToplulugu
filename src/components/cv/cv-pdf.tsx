@@ -11,201 +11,198 @@ Font.register({
   ]
 });
 
-const PRIMARY_COLOR = '#0ea5e9'; // Profesyonel bir mavi tonu (Tailwind sky-500)
+const PRIMARY_COLOR = '#0ea5e9'; // Profesyonel mavi tonu
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 35,
-    paddingBottom: 50, // Sayfa numarası için altta boşluk
-    paddingHorizontal: 40,
+    paddingLeft: 190, // Sol sütun genişliği + boşluk
+    paddingRight: 25,
+    paddingTop: 30,
+    paddingBottom: 50,
     fontFamily: 'Roboto',
-    fontSize: 10,
-    lineHeight: 1.5,
-    color: '#111111',
+    fontSize: 9,
+    lineHeight: 1.4,
+    color: '#333333',
     backgroundColor: '#ffffff',
   },
   
-  // Çoklu sayfa üst isim tekrarı
-  pageHeader: {
-    fontSize: 9,
-    color: '#888888',
-    textTransform: 'uppercase',
-    marginBottom: 10,
-    textAlign: 'center',
-    letterSpacing: 1,
+  // Sol Sütun (Sabit Sidebar)
+  sidebar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 165,
+    backgroundColor: '#202d3d',
+    color: '#ffffff',
+    paddingHorizontal: 14,
+    paddingTop: 30,
+    paddingBottom: 30,
+  },
+
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+
+  sidebarSection: {
+    marginBottom: 16,
+  },
+  sidebarTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    borderBottomWidth: 1.2,
+    borderBottomColor: '#ffffff',
+    paddingBottom: 3,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  sidebarText: {
+    fontSize: 7.5,
+    color: '#cbd5e1',
+    marginBottom: 5,
+    lineHeight: 1.3,
+  },
+  sidebarTextBold: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 2,
+  },
+  sidebarDate: {
+    fontSize: 7,
+    color: '#94a3b8',
+    marginBottom: 4,
+  },
+  sidebarBullet: {
+    fontSize: 7.5,
+    color: '#cbd5e1',
+    marginBottom: 3,
+    paddingLeft: 4,
+  },
+  sidebarLink: {
+    color: PRIMARY_COLOR,
+    textDecoration: 'none',
+    fontSize: 7.5,
+    marginBottom: 5,
   },
 
   // Üst Bilgi (Header)
-  header: {
-    marginBottom: 20,
+  mainHeaderContainer: {
+    marginBottom: 15,
     borderBottomWidth: 1.5,
-    borderBottomColor: '#000000',
-    paddingBottom: 12,
+    borderBottomColor: '#111111',
+    paddingBottom: 8,
   },
-  name: {
-    fontSize: 26,
+  mainName: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 4,
-    lineHeight: 1.1,
-    textTransform: 'uppercase',
+    color: '#111827',
+    marginBottom: 2,
   },
-  title: {
-    fontSize: 12,
-    color: PRIMARY_COLOR,
+  mainTitle: {
+    fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    fontSize: 9,
-    color: '#444444',
-  },
-  contactItem: {
-    marginRight: 12,
-  },
-  link: {
-    color: '#444444',
-    textDecoration: 'none',
-  },
-  linkHighlight: {
     color: PRIMARY_COLOR,
-    textDecoration: 'none',
   },
 
   // Bölüm Başlıkları
-  sectionTitle: {
-    fontSize: 12,
+  mainSection: {
+    marginBottom: 15,
+  },
+  mainSectionTitle: {
+    fontSize: 11,
     fontWeight: 'bold',
-    color: '#000000',
-    textTransform: 'uppercase',
+    color: '#111827',
     borderBottomWidth: 1.5,
-    borderBottomColor: '#000000',
-    paddingBottom: 4,
-    marginBottom: 10,
-    marginTop: 18,
+    borderBottomColor: '#111111',
+    paddingBottom: 3,
+    marginBottom: 8,
+    marginTop: 8,
   },
 
-  // Hakkımda (Bio)
-  bioText: {
-    fontSize: 10,
-    lineHeight: 1.5,
-    color: '#333333',
+  // Hakkımda
+  mainBioText: {
+    fontSize: 8.5,
+    lineHeight: 1.4,
+    color: '#374151',
     textAlign: 'justify',
   },
 
-  // Listeleme Öğeleri (Eğitim, Deneyim vb.)
-  itemGroup: {
-    marginBottom: 12,
+  // Deneyim & Eğitim Detayları
+  mainItemGroup: {
+    marginBottom: 10,
   },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-    alignItems: 'flex-start',
-  },
-  itemTitle: {
-    fontWeight: 'bold',
-    fontSize: 10.5,
-    color: '#000000',
-    flex: 1,
-    paddingRight: 10,
-  },
-  itemDate: {
-    fontSize: 9.5,
-    color: '#555555',
-    textAlign: 'right',
-  },
-  itemSubtitle: {
-    fontSize: 10,
-    color: '#333333',
-    marginBottom: 4,
-    fontWeight: 'bold',
-  },
-  itemLocation: {
+  mainItemDate: {
     fontSize: 9,
-    color: '#666666',
-    marginBottom: 4,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 1,
   },
-  itemDescription: {
+  mainItemSubtitle: {
     fontSize: 9.5,
-    color: '#444444',
-    lineHeight: 1.4,
+    fontWeight: 'bold',
+    color: '#374151',
+    marginBottom: 1,
   },
-  itemDescriptionLine: {
-    fontSize: 9.5,
-    color: '#444444',
-    lineHeight: 1.4,
-    marginBottom: 2,
-    paddingLeft: 6,
-  },
-
-  // Yetenekler
-  skillsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 5,
-  },
-  skillBadge: {
-    borderWidth: 1,
-    borderColor: '#cccccc',
-    paddingVertical: 3,
-    paddingHorizontal: 8,
+  mainItemTitle: {
     fontSize: 9,
-    marginRight: 6,
-    marginBottom: 6,
-    color: '#333333',
-    borderRadius: 2,
-  },
-
-  // Diller & Referanslar vb.
-  simpleItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  simpleItemLeft: {
-    fontWeight: 'bold',
-    fontSize: 10,
-    color: '#000000',
-  },
-  simpleItemRight: {
-    color: '#555555',
-    fontSize: 10,
-  },
-  
-  referenceBlock: {
-    marginBottom: 8,
-  },
-  referenceName: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  referenceMeta: {
-    fontSize: 9.5,
-    color: '#555555',
-    marginTop: 1,
-  },
-  
-  customSectionItem: {
-    fontSize: 9.5,
-    color: '#333333',
+    color: '#4b5563',
     marginBottom: 3,
+  },
+  mainItemLocation: {
+    fontSize: 8,
+    color: '#6b7280',
+    marginBottom: 3,
+  },
+  mainItemDescription: {
+    fontSize: 8.5,
+    color: '#4b5563',
+    lineHeight: 1.3,
+  },
+  mainItemBullet: {
+    fontSize: 8.5,
+    color: '#374151',
     paddingLeft: 6,
+    marginBottom: 1,
+    lineHeight: 1.3,
+  },
+  mainItemLink: {
+    color: PRIMARY_COLOR,
+    textDecoration: 'none',
+    fontSize: 8,
+    marginTop: 2,
+  },
+
+  // Çoklu sayfa üst isim tekrarı
+  pageHeader: {
+    position: 'absolute',
+    fontSize: 8,
+    top: 15,
+    left: 190,
+    right: 25,
+    color: '#94a3b8',
+    textAlign: 'right',
+    letterSpacing: 0.5,
   },
 
   // Sayfa Numarası
   pageNumber: {
     position: 'absolute',
-    fontSize: 9,
-    bottom: 25,
-    left: 0,
-    right: 0,
+    fontSize: 8,
+    bottom: 20,
+    left: 190,
+    right: 25,
     textAlign: 'center',
-    color: '#888888',
+    color: '#94a3b8',
   },
 });
 
@@ -219,52 +216,105 @@ function getLanguageLevelLabel(level: string) {
   }
 }
 
-function renderHeader(profile: Profile) {
+function renderContact(profile: Profile) {
   return (
-    <View style={styles.header} wrap={false}>
-      <Text style={styles.name}>{profile.first_name} {profile.last_name}</Text>
-      <Text style={styles.title}>{profile.headline || profile.department || "Yönetim Bilişim Sistemleri Öğrencisi"}</Text>
-      <View style={styles.contactRow}>
-        {profile.location && <Text style={styles.contactItem}>{profile.location}</Text>}
-        {profile.edu_email && <Text style={styles.contactItem}>{profile.edu_email}</Text>}
-        {profile.phone && <Text style={styles.contactItem}>{profile.phone}</Text>}
-        {profile.personal_email && profile.personal_email !== profile.edu_email && (
-          <Text style={styles.contactItem}>{profile.personal_email}</Text>
-        )}
-        {profile.linkedin_url && <Link src={profile.linkedin_url} style={[styles.contactItem, styles.linkHighlight]}>LinkedIn</Link>}
-        {profile.github_url && <Link src={profile.github_url} style={[styles.contactItem, styles.linkHighlight]}>GitHub</Link>}
-        {profile.website_url && <Link src={profile.website_url} style={[styles.contactItem, styles.linkHighlight]}>Web Sitesi</Link>}
-      </View>
+    <View style={styles.sidebarSection} wrap={false}>
+      <Text style={styles.sidebarTitle}>İLETİŞİM</Text>
+      {profile.location && <Text style={styles.sidebarText}>📍  {profile.location}</Text>}
+      {profile.phone && <Text style={styles.sidebarText}>📞  {profile.phone}</Text>}
+      {profile.edu_email && <Text style={styles.sidebarText}>✉  {profile.edu_email}</Text>}
+      {profile.personal_email && profile.personal_email !== profile.edu_email && (
+        <Text style={styles.sidebarText}>✉  {profile.personal_email}</Text>
+      )}
+      {profile.linkedin_url && (
+        <Link src={profile.linkedin_url} style={styles.sidebarLink}>🔗  LinkedIn</Link>
+      )}
+      {profile.github_url && (
+        <Link src={profile.github_url} style={styles.sidebarLink}>🔗  GitHub</Link>
+      )}
+      {profile.website_url && (
+        <Link src={profile.website_url} style={styles.sidebarLink}>🔗  Web Sitesi</Link>
+      )}
     </View>
   );
 }
 
-function renderBio(bio: string | null) {
+function renderSidebarEducation(education: CvEducation[]) {
+  if (!education || education.length === 0) return null;
+  return (
+    <View style={styles.sidebarSection} wrap={false}>
+      <Text style={styles.sidebarTitle}>EĞİTİM</Text>
+      {education.map((edu, i) => (
+        <View key={i} style={{ marginBottom: 8 }}>
+          <Text style={styles.sidebarTextBold}>{edu.school}</Text>
+          <Text style={styles.sidebarText}>{[edu.degree, edu.field].filter(Boolean).join(" - ")}</Text>
+          {edu.gpa && <Text style={styles.sidebarText}>Not Ortalaması: {edu.gpa}</Text>}
+          <Text style={styles.sidebarDate}>{formatDateRange(edu.startDate, edu.endDate, edu.current, false)}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function renderSidebarSkills(skills: string[]) {
+  if (!skills || skills.length === 0) return null;
+  return (
+    <View style={styles.sidebarSection} wrap={false}>
+      <Text style={styles.sidebarTitle}>YETENEKLER</Text>
+      {skills.map((skill, i) => (
+        <Text key={i} style={styles.sidebarBullet}>•  {skill}</Text>
+      ))}
+    </View>
+  );
+}
+
+function renderSidebarLanguages(languages: CvLanguage[]) {
+  if (!languages || languages.length === 0) return null;
+  return (
+    <View style={styles.sidebarSection} wrap={false}>
+      <Text style={styles.sidebarTitle}>YABANCI DİLLER</Text>
+      {languages.map((lang, i) => (
+        <Text key={i} style={styles.sidebarBullet}>•  {lang.language} ({getLanguageLevelLabel(lang.level)})</Text>
+      ))}
+    </View>
+  );
+}
+
+function renderMainHeader(profile: Profile) {
+  const name = `${profile.first_name || ''} ${profile.last_name || ''}`.toLocaleUpperCase('tr-TR');
+  const headline = profile.headline || profile.department || "Yönetim Bilişim Sistemleri Öğrencisi";
+  return (
+    <View style={styles.mainHeaderContainer} wrap={false}>
+      <Text style={styles.mainName}>{name}</Text>
+      <Text style={styles.mainTitle}>{headline}</Text>
+    </View>
+  );
+}
+
+function renderMainBio(bio: string | null) {
   if (!bio) return null;
   return (
-    <View wrap={false}>
-      <Text style={styles.sectionTitle}>Hakkımda</Text>
-      <Text style={styles.bioText}>{bio}</Text>
+    <View style={styles.mainSection} wrap={false}>
+      <Text style={styles.mainSectionTitle}>HAKKIMDA</Text>
+      <Text style={styles.mainBioText}>{bio}</Text>
     </View>
   );
 }
 
-function renderExperience(experience: CvExperience[]) {
+function renderMainExperience(experience: CvExperience[]) {
   if (!experience || experience.length === 0) return null;
   return (
-    <View wrap={true}>
-      <Text style={styles.sectionTitle}>Deneyim</Text>
+    <View style={styles.mainSection}>
+      <Text style={styles.mainSectionTitle}>DENEYİM</Text>
       {experience.map((exp, i) => (
-        <View key={i} style={styles.itemGroup} wrap={false}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemTitle}>{exp.title}</Text>
-            <Text style={styles.itemDate}>{formatDateRange(exp.startDate, exp.endDate, exp.current, false)}</Text>
-          </View>
-          <Text style={styles.itemSubtitle}>{exp.company}</Text>
-          {exp.location ? <Text style={styles.itemLocation}>{exp.location}</Text> : null}
+        <View key={i} style={styles.mainItemGroup} wrap={false}>
+          <Text style={styles.mainItemDate}>{formatDateRange(exp.startDate, exp.endDate, exp.current, false)}</Text>
+          <Text style={styles.mainItemSubtitle}>{exp.company}</Text>
+          <Text style={styles.mainItemTitle}>{exp.title}</Text>
+          {exp.location ? <Text style={styles.mainItemLocation}>{exp.location}</Text> : null}
           {exp.description
             ? exp.description.split("\n").filter(Boolean).map((line, li) => (
-                <Text key={li} style={styles.itemDescriptionLine}>• {line}</Text>
+                <Text key={li} style={styles.mainItemBullet}>• {line}</Text>
               ))
             : null}
         </View>
@@ -273,114 +323,56 @@ function renderExperience(experience: CvExperience[]) {
   );
 }
 
-function renderEducation(education: CvEducation[]) {
-  if (!education || education.length === 0) return null;
-  return (
-    <View wrap={true}>
-      <Text style={styles.sectionTitle}>Eğitim</Text>
-      {education.map((edu, i) => (
-        <View key={i} style={styles.itemGroup} wrap={false}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemTitle}>{edu.school}</Text>
-            <Text style={styles.itemDate}>{formatDateRange(edu.startDate, edu.endDate, edu.current, false)}</Text>
-          </View>
-          <Text style={styles.itemSubtitle}>{[edu.degree, edu.field].filter(Boolean).join(" • ")}</Text>
-          {edu.location ? <Text style={styles.itemLocation}>{edu.location}</Text> : null}
-          {edu.gpa ? <Text style={styles.itemLocation}>Not Ortalaması: {edu.gpa}</Text> : null}
-          {edu.description ? <Text style={styles.itemDescription}>{edu.description}</Text> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderSkills(skills: string[]) {
-  if (!skills || skills.length === 0) return null;
-  return (
-    <View wrap={false}>
-      <Text style={styles.sectionTitle}>Yetenekler</Text>
-      <View style={styles.skillsContainer}>
-        {skills.map((skill, i) => (
-          <Text key={i} style={styles.skillBadge}>{skill}</Text>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-function renderLanguages(languages: CvLanguage[]) {
-  if (!languages || languages.length === 0) return null;
-  return (
-    <View wrap={false}>
-      <Text style={styles.sectionTitle}>Yabancı Diller</Text>
-      {languages.map((lang, i) => (
-        <View key={i} style={styles.simpleItem}>
-          <Text style={styles.simpleItemLeft}>{lang.language}</Text>
-          <Text style={styles.simpleItemRight}>{getLanguageLevelLabel(lang.level)}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderCertifications(certifications: CvCertification[]) {
-  if (!certifications || certifications.length === 0) return null;
-  return (
-    <View wrap={true}>
-      <Text style={styles.sectionTitle}>Sertifikalar</Text>
-      {certifications.map((cert, i) => (
-        <View key={i} style={styles.itemGroup} wrap={false}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemTitle}>{cert.name}</Text>
-            <Text style={styles.itemDate}>{cert.date}</Text>
-          </View>
-          <Text style={styles.itemSubtitle}>{cert.issuer}</Text>
-          {cert.url ? <Link src={cert.url} style={[styles.itemLocation, styles.linkHighlight]}>Doğrula</Link> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderProjects(projects: CvProject[]) {
+function renderMainProjects(projects: CvProject[]) {
   if (!projects || projects.length === 0) return null;
   return (
-    <View wrap={true}>
-      <Text style={styles.sectionTitle}>Projeler</Text>
+    <View style={styles.mainSection}>
+      <Text style={styles.mainSectionTitle}>PROJELER</Text>
       {projects.map((proj, i) => (
-        <View key={i} style={styles.itemGroup} wrap={false}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemTitle}>{proj.title}</Text>
-            <Text style={styles.itemDate}>{proj.date}</Text>
-          </View>
-          {proj.description ? <Text style={styles.itemDescription}>{proj.description}</Text> : null}
+        <View key={i} style={styles.mainItemGroup} wrap={false}>
+          <Text style={styles.mainItemDate}>{proj.date}</Text>
+          <Text style={styles.mainItemSubtitle}>{proj.title}</Text>
+          {proj.description ? <Text style={styles.mainItemDescription}>{proj.description}</Text> : null}
           {proj.technologies && proj.technologies.length > 0 && (
-            <View style={[styles.skillsContainer, { marginTop: 4 }]}>
-              {proj.technologies.map((tech, ti) => (
-                <Text key={ti} style={styles.skillBadge}>{tech}</Text>
-              ))}
-            </View>
+            <Text style={[styles.mainItemDescription, { marginTop: 2, fontWeight: 'bold' }]}>Araçlar: {proj.technologies.join(", ")}</Text>
           )}
-          {proj.url ? <Link src={proj.url} style={[styles.itemLocation, styles.linkHighlight, { marginTop: 4 }]}>{proj.url}</Link> : null}
+          {proj.url ? <Link src={proj.url} style={styles.mainItemLink}>{proj.url}</Link> : null}
         </View>
       ))}
     </View>
   );
 }
 
-function renderReferences(references: CvReference[]) {
+function renderMainCertifications(certifications: CvCertification[]) {
+  if (!certifications || certifications.length === 0) return null;
+  return (
+    <View style={styles.mainSection}>
+      <Text style={styles.mainSectionTitle}>SERTİFİKALAR</Text>
+      {certifications.map((cert, i) => (
+        <View key={i} style={styles.mainItemGroup} wrap={false}>
+          <Text style={styles.mainItemDate}>{cert.date}</Text>
+          <Text style={styles.mainItemSubtitle}>{cert.name}</Text>
+          <Text style={styles.mainItemTitle}>{cert.issuer}</Text>
+          {cert.url ? <Link src={cert.url} style={styles.mainItemLink}>Doğrula</Link> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function renderMainReferences(references: CvReference[]) {
   if (!references || references.length === 0) return null;
   return (
-    <View wrap={false}>
-      <Text style={styles.sectionTitle}>Referanslar</Text>
+    <View style={styles.mainSection}>
+      <Text style={styles.mainSectionTitle}>REFERANSLAR</Text>
       {references.map((ref, i) => (
-        <View key={i} style={styles.referenceBlock}>
-          <Text style={styles.referenceName}>{ref.name}</Text>
+        <View key={i} style={styles.mainItemGroup} wrap={false}>
+          <Text style={styles.mainItemSubtitle}>{ref.name}</Text>
           {(ref.position || ref.company) && (
-            <Text style={styles.referenceMeta}>{[ref.position, ref.company].filter(Boolean).join(" • ")}</Text>
+            <Text style={styles.mainItemTitle}>{[ref.position, ref.company].filter(Boolean).join(" - ")}</Text>
           )}
           {(ref.email || ref.phone) && (
-            <Text style={styles.referenceMeta}>{[ref.email, ref.phone].filter(Boolean).join(" • ")}</Text>
+            <Text style={styles.mainItemDescription}>{[ref.email, ref.phone].filter(Boolean).join(" • ")}</Text>
           )}
         </View>
       ))}
@@ -388,16 +380,16 @@ function renderReferences(references: CvReference[]) {
   );
 }
 
-function renderCustomSections(customSections: CvCustomSection[]) {
+function renderMainCustomSections(customSections: CvCustomSection[]) {
   if (!customSections || customSections.length === 0) return null;
   return (
     <>
       {customSections.map((section, i) => (
         section.title && section.items && section.items.length > 0 ? (
-          <View key={i} wrap={true}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+          <View key={i} style={styles.mainSection}>
+            <Text style={styles.mainSectionTitle}>{section.title.toLocaleUpperCase('tr-TR')}</Text>
             {section.items.map((item, ii) => (
-              <Text key={ii} style={styles.customSectionItem} wrap={false}>• {item}</Text>
+              <Text key={ii} style={styles.mainItemBullet} wrap={false}>• {item}</Text>
             ))}
           </View>
         ) : null
@@ -417,7 +409,7 @@ interface CvPdfProps {
   projects?: CvProject[];
   references?: CvReference[];
   customSections?: CvCustomSection[];
-  // Eski proplar API'den gelebilir ama artık kullanılmıyor.
+  // Legacy props
   templateName?: string;
   primaryColor?: string;
 }
@@ -438,21 +430,33 @@ export function CvPdf({
     <Document>
       <Page size="A4" style={styles.page} wrap={true}>
         
-        {/* Her sayfanın üstüne (1. sayfa hariç) küçük isim yazdırma */}
+        {/* Sol Sütun - Sidebar (Her sayfada sabit) */}
+        <View style={styles.sidebar} fixed>
+          {profile.avatar_url ? (
+            <View style={styles.avatarContainer}>
+              <Image src={profile.avatar_url} style={styles.avatar} />
+            </View>
+          ) : null}
+
+          {renderContact(profile)}
+          {renderSidebarEducation(education)}
+          {renderSidebarSkills(skills)}
+          {renderSidebarLanguages(languages)}
+        </View>
+
+        {/* Üst Bilgi İsmi (2. sayfadan itibaren görünür) */}
         <Text style={styles.pageHeader} render={({ pageNumber }) => (
           pageNumber > 1 ? `${profile.first_name} ${profile.last_name}` : ''
         )} fixed />
 
-        {renderHeader(profile)}
-        {renderBio(profile.bio)}
-        {renderExperience(experience)}
-        {renderEducation(education)}
-        {renderProjects(projects)}
-        {renderSkills(skills)}
-        {renderLanguages(languages)}
-        {renderCertifications(certifications)}
-        {renderReferences(references)}
-        {renderCustomSections(customSections)}
+        {/* Ana İçerik */}
+        {renderMainHeader(profile)}
+        {renderMainBio(profile.bio)}
+        {renderMainExperience(experience)}
+        {renderMainProjects(projects)}
+        {renderMainCertifications(certifications)}
+        {renderMainReferences(references)}
+        {renderMainCustomSections(customSections)}
 
         {/* Sayfa numaraları: 1 / 2 formatında */}
         <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (

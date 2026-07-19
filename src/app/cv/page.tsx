@@ -682,196 +682,184 @@ export default function CvBuilderPage() {
 
             </div>
 
-                        {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
-            <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm dark:bg-[var(--color-card)] lg:sticky top-6 p-10 overflow-hidden min-h-[600px] text-[#111]">
-              <div className="mb-6 flex items-center justify-between border-b border-[var(--color-border)] pb-4">
-                <h2 className="flex items-center gap-2 font-bold text-sm tracking-wider uppercase text-[var(--color-muted-foreground)]">
-                  <Eye className="h-4 w-4" /> Canlı Web Önizlemesi
-                </h2>
-                <span className="text-xs text-[var(--color-muted-foreground)]">A4 Profesyonel Şablon</span>
-              </div>
+                                    {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
+            <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm dark:bg-[var(--color-card)] lg:sticky top-6 p-0 overflow-hidden min-h-[600px] text-[#111] flex flex-row">
+              {/* Sol Sütun - Sidebar */}
+              <div className="w-[180px] bg-[#202d3d] text-white p-6 flex flex-col gap-6 flex-shrink-0">
+                {profile?.avatar_url ? (
+                  <div className="flex justify-center">
+                    <img src={profile.avatar_url} alt="Avatar" className="w-20 h-20 rounded-full border-2 border-white object-cover" />
+                  </div>
+                ) : null}
 
-              {/* DİNAMİK CANLI ŞABLON RENDER ALANI */}
-              <div className="font-sans">
-                {/* CV Header */}
-                <div className="border-b-[3px] border-black pb-4 mb-6">
-                  <h3 className="text-4xl font-bold uppercase tracking-tight text-black leading-none mb-2">
-                    {profile?.first_name} {profile?.last_name}
-                  </h3>
-                  <p className="text-base font-bold text-[#0ea5e9] mb-3">
-                    {headline || profile?.department || "Yönetim Bilişim Sistemleri Öğrencisi"}
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#444]">
-                    {location && <span>{location}</span>}
-                    {profile?.edu_email && <span>{profile.edu_email}</span>}
-                    {profile?.phone && <span>{profile.phone}</span>}
-                    {profile?.personal_email && profile.personal_email !== profile.edu_email && <span>{profile.personal_email}</span>}
-                    {profile?.linkedin_url && <span className="text-[#0ea5e9]">LinkedIn</span>}
-                    {profile?.github_url && <span className="text-[#0ea5e9]">GitHub</span>}
-                    {websiteUrl && <span className="text-[#0ea5e9]">Web Sitesi</span>}
+                {/* İletişim */}
+                <div>
+                  <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">İLETİŞİM</h4>
+                  <div className="space-y-2 text-[10px] text-slate-300 break-all">
+                    {location && <div className="flex items-center gap-1.5">📍 {location}</div>}
+                    {profile?.phone && <div className="flex items-center gap-1.5">📞 {profile.phone}</div>}
+                    {profile?.edu_email && <div className="flex items-center gap-1.5">✉ {profile.edu_email}</div>}
+                    {profile?.personal_email && profile.personal_email !== profile.edu_email && <div className="flex items-center gap-1.5">✉ {profile.personal_email}</div>}
+                    {profile?.linkedin_url && <a href={profile.linkedin_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 LinkedIn</a>}
+                    {profile?.github_url && <a href={profile.github_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 GitHub</a>}
+                    {websiteUrl && <a href={websiteUrl} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 Web Sitesi</a>}
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  {/* Hakkımda */}
-                  {bio && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Hakkımda</h4>
-                      <p className="text-[13px] text-[#333] leading-relaxed text-justify">{bio}</p>
+                {/* Eğitim */}
+                {education.length > 0 && (
+                  <div>
+                    <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">EĞİTİM</h4>
+                    <div className="space-y-3">
+                      {education.map((edu, i) => (
+                        <div key={i} className="text-[10px]">
+                          <div className="font-bold text-white leading-tight">{edu.school}</div>
+                          <div className="text-slate-300 leading-tight mt-0.5">{[edu.degree, edu.field].filter(Boolean).join(" - ")}</div>
+                          {edu.gpa && <div className="text-slate-300 leading-tight">GPA: {edu.gpa}</div>}
+                          <div className="text-slate-400 mt-1">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</div>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Deneyim */}
-                  {experience.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Deneyim</h4>
-                      <div className="space-y-4">
-                        {experience.map((exp, i) => (
-                          <div key={i}>
-                            <div className="flex justify-between items-start mb-0.5">
-                              <span className="text-[14px] font-bold text-black">{exp.title}</span>
-                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</span>
-                            </div>
-                            <div className="text-[13px] font-bold text-[#333] mb-1">{exp.company}</div>
-                            {exp.location && <div className="text-[12px] text-[#666] mb-1">{exp.location}</div>}
-                            {exp.description && (
-                              <ul className="text-[12.5px] text-[#444] leading-relaxed list-disc list-inside space-y-0.5 ml-1">
-                                {exp.description.split("\n").filter(Boolean).map((line, li) => (
-                                  <li key={li}>{line}</li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                {/* Yetenekler */}
+                {skills.length > 0 && (
+                  <div>
+                    <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">YETENEKLER</h4>
+                    <ul className="space-y-1.5 text-[10px] text-slate-300">
+                      {skills.map((skill) => (
+                        <li key={skill} className="flex items-center gap-1">• {skill}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-                  {/* Eğitim */}
-                  {education.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Eğitim</h4>
-                      <div className="space-y-4">
-                        {education.map((edu, i) => (
-                          <div key={i}>
-                            <div className="flex justify-between items-start mb-0.5">
-                              <span className="text-[14px] font-bold text-black">{edu.school}</span>
-                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</span>
-                            </div>
-                            <div className="text-[13px] font-bold text-[#333] mb-1">{[edu.degree, edu.field].filter(Boolean).join(" • ")}</div>
-                            {edu.location && <div className="text-[12px] text-[#666] mb-1">{edu.location}</div>}
-                            {edu.gpa && <div className="text-[12px] text-[#666] mb-1">Not Ortalaması: {edu.gpa}</div>}
-                            {edu.description && <p className="text-[12.5px] text-[#444] leading-relaxed">{edu.description}</p>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                {/* Diller */}
+                {languages.length > 0 && (
+                  <div>
+                    <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">YABANCI DİLLER</h4>
+                    <ul className="space-y-1.5 text-[10px] text-slate-300">
+                      {languages.map((lang, i) => (
+                        <li key={i} className="flex items-center gap-1">• {lang.language} ({getLanguageLevelLabel(lang.level)})</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
 
-                  {/* Projeler */}
-                  {projects.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Projeler</h4>
-                      <div className="space-y-4">
-                        {projects.map((proj, i) => (
-                          <div key={i}>
-                            <div className="flex justify-between items-start mb-0.5">
-                              <span className="text-[14px] font-bold text-black">{proj.title}</span>
-                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{proj.date}</span>
-                            </div>
-                            {proj.description && <p className="text-[12.5px] text-[#444] leading-relaxed">{proj.description}</p>}
-                            {proj.technologies && proj.technologies.length > 0 && (
-                              <div className="mt-2 flex flex-wrap gap-1.5">
-                                {proj.technologies.map((tech) => (
-                                  <span key={tech} className="rounded border border-[#ccc] px-2 py-0.5 text-[11px] text-[#333]">{tech}</span>
-                                ))}
-                              </div>
-                            )}
-                            {proj.url && <div className="mt-1 text-[12px] text-[#0ea5e9]">{proj.url}</div>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Yetenekler */}
-                  {skills.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Yetenekler</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {skills.map((skill) => (
-                          <span key={skill} className="rounded border border-[#ccc] px-2 py-1 text-[12px] text-[#333]">{skill}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Diller */}
-                  {languages.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Yabancı Diller</h4>
-                      <div className="space-y-1.5">
-                        {languages.map((lang, i) => (
-                          <div key={i} className="flex justify-between items-center text-[13px]">
-                            <span className="font-bold text-black">{lang.language}</span>
-                            <span className="text-[#555]">{getLanguageLevelLabel(lang.level)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sertifikalar */}
-                  {certifications.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Sertifikalar</h4>
-                      <div className="space-y-4">
-                        {certifications.map((cert, i) => (
-                          <div key={i}>
-                            <div className="flex justify-between items-start mb-0.5">
-                              <span className="text-[14px] font-bold text-black">{cert.name}</span>
-                              <span className="text-[12px] text-[#555] whitespace-nowrap ml-2">{cert.date}</span>
-                            </div>
-                            <div className="text-[13px] font-bold text-[#333]">{cert.issuer}</div>
-                            {cert.url && <div className="mt-1 text-[12px] text-[#0ea5e9]">Doğrula</div>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Referanslar */}
-                  {references.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">Referanslar</h4>
-                      <div className="space-y-3">
-                        {references.map((ref, i) => (
-                          <div key={i}>
-                            <div className="text-[13px] font-bold text-black">{ref.name}</div>
-                            {(ref.position || ref.company) && (
-                              <div className="text-[12.5px] text-[#555] mt-0.5">{[ref.position, ref.company].filter(Boolean).join(" • ")}</div>
-                            )}
-                            {(ref.email || ref.phone) && (
-                              <div className="text-[12.5px] text-[#555] mt-0.5">{[ref.email, ref.phone].filter(Boolean).join(" • ")}</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Özel Bölümler */}
-                  {customSections.filter(s => s.title && s.items?.length > 0).map((section, i) => (
-                    <div key={i}>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-black border-b-[2px] border-black pb-1 mb-3 mt-4">{section.title}</h4>
-                      <ul className="space-y-1 list-disc list-inside ml-1">
-                        {section.items.map((item, ii) => (
-                          <li key={ii} className="text-[12.5px] text-[#333]">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+              {/* Sağ Sütun - Ana İçerik */}
+              <div className="flex-1 p-8 bg-white min-h-[600px] flex flex-col gap-6">
+                {/* Header */}
+                <div className="border-b-2 border-black pb-3">
+                  <h3 className="text-2xl font-bold uppercase text-black tracking-tight leading-none mb-1">
+                    {profile?.first_name} {profile?.last_name}
+                  </h3>
+                  <p className="text-xs font-bold text-[#0ea5e9] tracking-wide">
+                    {headline || profile?.department || "Yönetim Bilişim Sistemleri Öğrencisi"}
+                  </p>
                 </div>
+
+                {/* Hakkımda */}
+                {bio && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-2 tracking-wide">HAKKIMDA</h4>
+                    <p className="text-[11.5px] text-[#333] leading-relaxed text-justify">{bio}</p>
+                  </div>
+                )}
+
+                {/* Deneyim */}
+                {experience.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">DENEYİM</h4>
+                    <div className="space-y-4">
+                      {experience.map((exp, i) => (
+                        <div key={i} className="text-[11.5px]">
+                          <div className="font-bold text-black">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</div>
+                          <div className="font-bold text-[#333] mt-0.5">{exp.company}</div>
+                          <div className="text-gray-600 font-semibold">{exp.title}</div>
+                          {exp.location && <div className="text-gray-500 text-[10px]">{exp.location}</div>}
+                          {exp.description && (
+                            <ul className="mt-1 list-disc list-inside space-y-0.5 text-gray-700 ml-1">
+                              {exp.description.split("\n").filter(Boolean).map((line, li) => (
+                                <li key={li}>{line}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Projeler */}
+                {projects.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">PROJELER</h4>
+                    <div className="space-y-4">
+                      {projects.map((proj, i) => (
+                        <div key={i} className="text-[11.5px]">
+                          <div className="font-bold text-black">{proj.date}</div>
+                          <div className="font-bold text-[#333] mt-0.5">{proj.title}</div>
+                          {proj.description && <p className="text-gray-700 leading-relaxed mt-0.5">{proj.description}</p>}
+                          {proj.technologies && proj.technologies.length > 0 && (
+                            <p className="text-[10.5px] font-semibold text-gray-700 mt-1">Araçlar: {proj.technologies.join(", ")}</p>
+                          )}
+                          {proj.url && <a href={proj.url} target="_blank" className="text-[#0ea5e9] hover:underline block mt-0.5">{proj.url}</a>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sertifikalar */}
+                {certifications.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">SERTİFİKALAR</h4>
+                    <div className="space-y-3">
+                      {certifications.map((cert, i) => (
+                        <div key={i} className="text-[11.5px]">
+                          <div className="font-bold text-black">{cert.date}</div>
+                          <div className="font-bold text-[#333] mt-0.5">{cert.name}</div>
+                          <div className="text-gray-600">{cert.issuer}</div>
+                          {cert.url && <a href={cert.url} target="_blank" className="text-[#0ea5e9] hover:underline block mt-0.5">Doğrula</a>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Referanslar */}
+                {references.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">REFERANSLAR</h4>
+                    <div className="space-y-3">
+                      {references.map((ref, i) => (
+                        <div key={i} className="text-[11.5px]">
+                          <div className="font-bold text-black">{ref.name}</div>
+                          {(ref.position || ref.company) && (
+                            <div className="text-gray-600 mt-0.5">{[ref.position, ref.company].filter(Boolean).join(" - ")}</div>
+                          )}
+                          {(ref.email || ref.phone) && (
+                            <div className="text-gray-500 text-[10.5px] mt-0.5">{[ref.email, ref.phone].filter(Boolean).join(" • ")}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Özel Bölümler */}
+                {customSections.filter(s => s.title && s.items?.length > 0).map((section, i) => (
+                  <div key={i}>
+                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">{section.title.toLocaleUpperCase('tr-TR')}</h4>
+                    <ul className="list-disc list-inside space-y-0.5 text-gray-700 ml-1 text-[11.5px]">
+                      {section.items.map((item, ii) => (
+                        <li key={ii}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             </div>
 
