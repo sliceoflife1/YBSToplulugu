@@ -13,6 +13,12 @@ Font.register({
 
 const PRIMARY_COLOR = '#0ea5e9'; // Profesyonel mavi tonu
 
+// URL'leri temizleyen yardımcı fonksiyon
+function formatUrlLabel(url: string) {
+  if (!url) return "";
+  return url.replace(/https?:\/\/(www\.)?/, ""); // http://, https:// ve www. kısımlarını temizler
+}
+
 // SVG Vektör İkonları (react-pdf uyumlu)
 const PinIcon = () => (
   <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
@@ -40,7 +46,7 @@ const LinkIcon = () => (
 
 const styles = StyleSheet.create({
   page: {
-    paddingLeft: 190, // Sol sütun genişliği + boşluk
+    paddingLeft: 200, // Sol sütun genişliği + boşluk
     paddingRight: 25,
     paddingTop: 30,
     paddingBottom: 50,
@@ -57,7 +63,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 165,
+    width: 175,
     backgroundColor: '#202d3d',
     color: '#ffffff',
     paddingHorizontal: 14,
@@ -219,7 +225,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 8,
     top: 15,
-    left: 190,
+    left: 200,
     right: 25,
     color: '#94a3b8',
     textAlign: 'right',
@@ -231,7 +237,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 8,
     bottom: 20,
-    left: 190,
+    left: 200,
     right: 25,
     textAlign: 'center',
     color: '#94a3b8',
@@ -279,19 +285,25 @@ function renderContact(profile: Profile) {
       {profile.linkedin_url && (
         <View style={styles.contactRow}>
           <LinkIcon />
-          <Link src={profile.linkedin_url} style={styles.sidebarLink}>LinkedIn</Link>
+          <Link src={profile.linkedin_url} style={styles.sidebarLink}>
+            LinkedIn: {formatUrlLabel(profile.linkedin_url)}
+          </Link>
         </View>
       )}
       {profile.github_url && (
         <View style={styles.contactRow}>
           <LinkIcon />
-          <Link src={profile.github_url} style={styles.sidebarLink}>GitHub</Link>
+          <Link src={profile.github_url} style={styles.sidebarLink}>
+            GitHub: {formatUrlLabel(profile.github_url)}
+          </Link>
         </View>
       )}
       {profile.website_url && (
         <View style={styles.contactRow}>
           <LinkIcon />
-          <Link src={profile.website_url} style={styles.sidebarLink}>Web Sitesi</Link>
+          <Link src={profile.website_url} style={styles.sidebarLink}>
+            Web Sitesi: {formatUrlLabel(profile.website_url)}
+          </Link>
         </View>
       )}
     </View>

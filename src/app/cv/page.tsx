@@ -15,6 +15,12 @@ import Navbar from "@/components/layout/navbar";
 import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLanguage, CvProject, CvReference, CvCustomSection } from "@/types/database";
 import { normalizeEducationList, normalizeExperienceList, parseJsonArray, formatDateRange } from "@/lib/cv/normalize";
 
+
+function formatUrlLabel(url: string) {
+  if (!url) return "";
+  return url.replace(/https?:\/\/(www\.)?/, "");
+}
+
 export default function CvBuilderPage() {
   const t = useTranslations("cv");
   const locale = useLocale();
@@ -682,7 +688,7 @@ export default function CvBuilderPage() {
 
             </div>
 
-                                    {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
+                                                {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
             <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm dark:bg-[var(--color-card)] lg:sticky top-6 p-0 overflow-hidden min-h-[600px] text-[#111] flex flex-row">
               {/* Sol Sütun - Sidebar */}
               <div className="w-[180px] bg-[#202d3d] text-white p-6 flex flex-col gap-6 flex-shrink-0">
@@ -700,9 +706,9 @@ export default function CvBuilderPage() {
                     {profile?.phone && <div className="flex items-center gap-1.5">📞 {profile.phone}</div>}
                     {profile?.edu_email && <div className="flex items-center gap-1.5">✉ {profile.edu_email}</div>}
                     {profile?.personal_email && profile.personal_email !== profile.edu_email && <div className="flex items-center gap-1.5">✉ {profile.personal_email}</div>}
-                    {profile?.linkedin_url && <a href={profile.linkedin_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 LinkedIn</a>}
-                    {profile?.github_url && <a href={profile.github_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 GitHub</a>}
-                    {websiteUrl && <a href={websiteUrl} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 Web Sitesi</a>}
+                    {profile?.linkedin_url && <a href={profile.linkedin_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 LinkedIn: {formatUrlLabel(profile.linkedin_url)}</a>}
+                    {profile?.github_url && <a href={profile.github_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 GitHub: {formatUrlLabel(profile.github_url)}</a>}
+                    {websiteUrl && <a href={websiteUrl} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 Web Sitesi: {formatUrlLabel(websiteUrl)}</a>}
                   </div>
                 </div>
 
