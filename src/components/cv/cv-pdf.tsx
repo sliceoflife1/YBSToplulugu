@@ -11,42 +11,33 @@ Font.register({
   ]
 });
 
-const PRIMARY_COLOR = '#0ea5e9'; // Profesyonel mavi tonu
-
 // URL'leri temizleyen yardımcı fonksiyon
 function formatUrlLabel(url: string) {
   if (!url) return "";
-  return url.replace(/https?:\/\/(www\.)?/, ""); // http://, https:// ve www. kısımlarını temizler
+  return url.replace(/https?:\/\/(www\.)?/, "");
 }
 
-// SVG Vektör İkonları (react-pdf uyumlu)
-const PinIcon = () => (
-  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
-    <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#cbd5e1" />
-  </Svg>
-);
+interface CvPdfProps {
+  profile: Profile;
+  cvData?: CvData | null;
+  skills: string[];
+  education: CvEducation[];
+  experience: CvExperience[];
+  certifications?: CvCertification[];
+  languages?: CvLanguage[];
+  projects?: CvProject[];
+  references?: CvReference[];
+  customSections?: CvCustomSection[];
+  templateName?: string;
+  primaryColor?: string;
+}
 
-const PhoneIcon = () => (
-  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
-    <Path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="#cbd5e1" />
-  </Svg>
-);
-
-const MailIcon = () => (
-  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
-    <Path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#cbd5e1" />
-  </Svg>
-);
-
-const LinkIcon = () => (
-  <Svg width="8" height="8" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
-    <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#0ea5e9" />
-  </Svg>
-);
-
-const styles = StyleSheet.create({
+// ----------------------------------------------------
+// 1. STANDART / TOPLULUK ŞABLONU (Varsayılan 2 Kolon)
+// ----------------------------------------------------
+const standardStyles = StyleSheet.create({
   page: {
-    paddingLeft: 200, // Sol sütun genişliği + boşluk
+    paddingLeft: 195,
     paddingRight: 25,
     paddingTop: 30,
     paddingBottom: 50,
@@ -56,8 +47,6 @@ const styles = StyleSheet.create({
     color: '#333333',
     backgroundColor: '#ffffff',
   },
-  
-  // Sol Sütun (Sabit Sidebar)
   sidebar: {
     position: 'absolute',
     left: 0,
@@ -70,37 +59,35 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingBottom: 30,
   },
-
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     borderWidth: 2,
     borderColor: '#ffffff',
     objectFit: 'cover',
   },
-
   sidebarSection: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   sidebarTitle: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: 'bold',
     color: '#ffffff',
-    borderBottomWidth: 1.2,
+    borderBottomWidth: 1,
     borderBottomColor: '#ffffff',
     paddingBottom: 3,
-    marginBottom: 8,
+    marginBottom: 6,
     letterSpacing: 0.5,
   },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   sidebarText: {
     fontSize: 7.5,
@@ -116,424 +103,697 @@ const styles = StyleSheet.create({
   sidebarDate: {
     fontSize: 7,
     color: '#94a3b8',
-    marginBottom: 4,
-  },
-  sidebarBullet: {
-    fontSize: 7.5,
-    color: '#cbd5e1',
     marginBottom: 3,
-    paddingLeft: 4,
   },
-  sidebarLink: {
-    color: PRIMARY_COLOR,
-    textDecoration: 'none',
-    fontSize: 7.5,
-  },
-
-  // Üst Bilgi (Header)
   mainHeaderContainer: {
-    marginBottom: 15,
+    marginBottom: 12,
     borderBottomWidth: 1.5,
     borderBottomColor: '#111111',
-    paddingBottom: 8,
-    flexDirection: 'column',
+    paddingBottom: 6,
   },
   mainName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#111827',
-    lineHeight: 1.1,
     marginBottom: 2,
   },
   mainTitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: 'bold',
-    color: PRIMARY_COLOR,
-    lineHeight: 1.2,
+    color: '#0ea5e9',
   },
-
-  // Bölüm Başlıkları
   mainSection: {
-    marginBottom: 15,
+    marginBottom: 12,
   },
   mainSectionTitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: 'bold',
     color: '#111827',
-    borderBottomWidth: 1.5,
+    borderBottomWidth: 1.2,
     borderBottomColor: '#111111',
-    paddingBottom: 3,
-    marginBottom: 8,
-    marginTop: 8,
+    paddingBottom: 2,
+    marginBottom: 6,
+    marginTop: 6,
   },
-
-  // Hakkımda
   mainBioText: {
     fontSize: 8.5,
     lineHeight: 1.4,
     color: '#374151',
-    textAlign: 'justify',
   },
-
-  // Deneyim & Eğitim Detayları
   mainItemGroup: {
-    marginBottom: 10,
-  },
-  mainItemDate: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 1,
+    marginBottom: 8,
   },
   mainItemSubtitle: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontWeight: 'bold',
     color: '#374151',
-    marginBottom: 1,
   },
   mainItemTitle: {
-    fontSize: 9,
-    color: '#4b5563',
-    marginBottom: 3,
-  },
-  mainItemLocation: {
-    fontSize: 8,
-    color: '#6b7280',
-    marginBottom: 3,
-  },
-  mainItemDescription: {
     fontSize: 8.5,
     color: '#4b5563',
-    lineHeight: 1.3,
+    marginBottom: 2,
   },
   mainItemBullet: {
-    fontSize: 8.5,
-    color: '#374151',
-    paddingLeft: 6,
-    marginBottom: 1,
+    fontSize: 8,
+    color: '#4b5563',
     lineHeight: 1.3,
+    marginBottom: 1,
+    paddingLeft: 4,
   },
-  mainItemLink: {
-    color: PRIMARY_COLOR,
-    textDecoration: 'none',
-    fontSize: 8,
-    marginTop: 2,
-  },
-
-  // Çoklu sayfa üst isim tekrarı
-  pageHeader: {
-    position: 'absolute',
-    fontSize: 8,
-    top: 15,
-    left: 200,
-    right: 25,
-    color: '#94a3b8',
-    textAlign: 'right',
-    letterSpacing: 0.5,
-  },
-
-  // Sayfa Numarası
   pageNumber: {
     position: 'absolute',
     fontSize: 8,
     bottom: 20,
-    left: 200,
     right: 25,
-    textAlign: 'center',
     color: '#94a3b8',
   },
 });
 
-function getLanguageLevelLabel(level: string) {
-  switch (level) {
-    case "beginner": return "Başlangıç";
-    case "intermediate": return "Orta";
-    case "advanced": return "İleri";
-    case "native": return "Anadil";
-    default: return level;
-  }
-}
-
-function renderContact(profile: Profile) {
-  return (
-    <View style={styles.sidebarSection} wrap={false}>
-      <Text style={styles.sidebarTitle}>İLETİŞİM</Text>
-      {profile.location && (
-        <View style={styles.contactRow}>
-          <PinIcon />
-          <Text style={styles.sidebarText}>{profile.location}</Text>
-        </View>
-      )}
-      {profile.phone && (
-        <View style={styles.contactRow}>
-          <PhoneIcon />
-          <Text style={styles.sidebarText}>{profile.phone}</Text>
-        </View>
-      )}
-      {profile.edu_email && (
-        <View style={styles.contactRow}>
-          <MailIcon />
-          <Text style={styles.sidebarText}>{profile.edu_email}</Text>
-        </View>
-      )}
-      {profile.personal_email && profile.personal_email !== profile.edu_email && (
-        <View style={styles.contactRow}>
-          <MailIcon />
-          <Text style={styles.sidebarText}>{profile.personal_email}</Text>
-        </View>
-      )}
-      {profile.linkedin_url && (
-        <View style={styles.contactRow}>
-          <LinkIcon />
-          <Link src={profile.linkedin_url} style={styles.sidebarLink}>
-            LinkedIn: {formatUrlLabel(profile.linkedin_url)}
-          </Link>
-        </View>
-      )}
-      {profile.github_url && (
-        <View style={styles.contactRow}>
-          <LinkIcon />
-          <Link src={profile.github_url} style={styles.sidebarLink}>
-            GitHub: {formatUrlLabel(profile.github_url)}
-          </Link>
-        </View>
-      )}
-      {profile.website_url && (
-        <View style={styles.contactRow}>
-          <LinkIcon />
-          <Link src={profile.website_url} style={styles.sidebarLink}>
-            Web Sitesi: {formatUrlLabel(profile.website_url)}
-          </Link>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function renderSidebarEducation(education: CvEducation[]) {
-  if (!education || education.length === 0) return null;
-  return (
-    <View style={styles.sidebarSection} wrap={false}>
-      <Text style={styles.sidebarTitle}>EĞİTİM</Text>
-      {education.map((edu, i) => (
-        <View key={i} style={{ marginBottom: 8 }}>
-          <Text style={styles.sidebarTextBold}>{edu.school}</Text>
-          <Text style={styles.sidebarText}>{[edu.degree, edu.field].filter(Boolean).join(" - ")}</Text>
-          {edu.gpa && <Text style={styles.sidebarText}>Not Ortalaması: {edu.gpa}</Text>}
-          <Text style={styles.sidebarDate}>{formatDateRange(edu.startDate, edu.endDate, edu.current, false)}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderSidebarSkills(skills: string[]) {
-  if (!skills || skills.length === 0) return null;
-  return (
-    <View style={styles.sidebarSection} wrap={false}>
-      <Text style={styles.sidebarTitle}>YETENEKLER</Text>
-      {skills.map((skill, i) => (
-        <Text key={i} style={styles.sidebarBullet}>•  {skill}</Text>
-      ))}
-    </View>
-  );
-}
-
-function renderSidebarLanguages(languages: CvLanguage[]) {
-  if (!languages || languages.length === 0) return null;
-  return (
-    <View style={styles.sidebarSection} wrap={false}>
-      <Text style={styles.sidebarTitle}>YABANCI DİLLER</Text>
-      {languages.map((lang, i) => (
-        <Text key={i} style={styles.sidebarBullet}>•  {lang.language} ({getLanguageLevelLabel(lang.level)})</Text>
-      ))}
-    </View>
-  );
-}
-
-function renderMainHeader(profile: Profile) {
-  const name = `${profile.first_name || ''} ${profile.last_name || ''}`.toLocaleUpperCase('tr-TR');
-  const headline = profile.headline || profile.department || "Yönetim Bilişim Sistemleri Öğrencisi";
-  return (
-    <View style={styles.mainHeaderContainer} wrap={false}>
-      <Text style={styles.mainName}>{name}</Text>
-      <Text style={styles.mainTitle}>{headline}</Text>
-    </View>
-  );
-}
-
-function renderMainBio(bio: string | null) {
-  if (!bio) return null;
-  return (
-    <View style={styles.mainSection} wrap={false}>
-      <Text style={styles.mainSectionTitle}>HAKKIMDA</Text>
-      <Text style={styles.mainBioText}>{bio}</Text>
-    </View>
-  );
-}
-
-function renderMainExperience(experience: CvExperience[]) {
-  if (!experience || experience.length === 0) return null;
-  return (
-    <View style={styles.mainSection}>
-      <Text style={styles.mainSectionTitle}>DENEYİM</Text>
-      {experience.map((exp, i) => (
-        <View key={i} style={styles.mainItemGroup} wrap={false}>
-          <Text style={styles.mainItemDate}>{formatDateRange(exp.startDate, exp.endDate, exp.current, false)}</Text>
-          <Text style={styles.mainItemSubtitle}>{exp.company}</Text>
-          <Text style={styles.mainItemTitle}>{exp.title}</Text>
-          {exp.location ? <Text style={styles.mainItemLocation}>{exp.location}</Text> : null}
-          {exp.description
-            ? exp.description.split("\n").filter(Boolean).map((line, li) => (
-                <Text key={li} style={styles.mainItemBullet}>• {line}</Text>
-              ))
-            : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderMainProjects(projects: CvProject[]) {
-  if (!projects || projects.length === 0) return null;
-  return (
-    <View style={styles.mainSection}>
-      <Text style={styles.mainSectionTitle}>PROJELER</Text>
-      {projects.map((proj, i) => (
-        <View key={i} style={styles.mainItemGroup} wrap={false}>
-          <Text style={styles.mainItemDate}>{proj.date}</Text>
-          <Text style={styles.mainItemSubtitle}>{proj.title}</Text>
-          {proj.description ? <Text style={styles.mainItemDescription}>{proj.description}</Text> : null}
-          {proj.technologies && proj.technologies.length > 0 && (
-            <Text style={[styles.mainItemDescription, { marginTop: 2, fontWeight: 'bold' }]}>Araçlar: {proj.technologies.join(", ")}</Text>
-          )}
-          {proj.url ? <Link src={proj.url} style={styles.mainItemLink}>{proj.url}</Link> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderMainCertifications(certifications: CvCertification[]) {
-  if (!certifications || certifications.length === 0) return null;
-  return (
-    <View style={styles.mainSection}>
-      <Text style={styles.mainSectionTitle}>SERTİFİKALAR</Text>
-      {certifications.map((cert, i) => (
-        <View key={i} style={styles.mainItemGroup} wrap={false}>
-          <Text style={styles.mainItemDate}>{cert.date}</Text>
-          <Text style={styles.mainItemSubtitle}>{cert.name}</Text>
-          <Text style={styles.mainItemTitle}>{cert.issuer}</Text>
-          {cert.url ? <Link src={cert.url} style={styles.mainItemLink}>Doğrula</Link> : null}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderMainReferences(references: CvReference[]) {
-  if (!references || references.length === 0) return null;
-  return (
-    <View style={styles.mainSection}>
-      <Text style={styles.mainSectionTitle}>REFERANSLAR</Text>
-      {references.map((ref, i) => (
-        <View key={i} style={styles.mainItemGroup} wrap={false}>
-          <Text style={styles.mainItemSubtitle}>{ref.name}</Text>
-          {(ref.position || ref.company) && (
-            <Text style={styles.mainItemTitle}>{[ref.position, ref.company].filter(Boolean).join(" - ")}</Text>
-          )}
-          {(ref.email || ref.phone) && (
-            <Text style={styles.mainItemDescription}>{[ref.email, ref.phone].filter(Boolean).join(" • ")}</Text>
-          )}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function renderMainCustomSections(customSections: CvCustomSection[]) {
-  if (!customSections || customSections.length === 0) return null;
-  return (
-    <>
-      {customSections.map((section, i) => (
-        section.title && section.items && section.items.length > 0 ? (
-          <View key={i} style={styles.mainSection}>
-            <Text style={styles.mainSectionTitle}>{section.title.toLocaleUpperCase('tr-TR')}</Text>
-            {section.items.map((item, ii) => (
-              <Text key={ii} style={styles.mainItemBullet} wrap={false}>• {item}</Text>
-            ))}
-          </View>
-        ) : null
-      ))}
-    </>
-  );
-}
-
-interface CvPdfProps {
-  profile: Profile;
-  cvData: CvData | null;
-  skills: string[];
-  education: CvEducation[];
-  experience: CvExperience[];
-  certifications?: CvCertification[];
-  languages?: CvLanguage[];
-  projects?: CvProject[];
-  references?: CvReference[];
-  customSections?: CvCustomSection[];
-  // Legacy props
-  templateName?: string;
-  primaryColor?: string;
-}
-
-export function CvPdf({
-  profile,
-  skills,
-  education,
-  experience,
-  certifications = [],
-  languages = [],
-  projects = [],
-  references = [],
-  customSections = []
-}: CvPdfProps) {
-  
+function StandardTemplate({ profile, skills, education, experience, certifications = [], languages = [], projects = [], references = [], customSections = [], primaryColor = '#0ea5e9' }: CvPdfProps) {
+  const dynamicTitleStyle = [standardStyles.mainTitle, { color: primaryColor }];
   return (
     <Document>
-      <Page size="A4" style={styles.page} wrap={true}>
-        
-        {/* Sol Sütun - Sidebar (Her sayfada sabit) */}
-        <View style={styles.sidebar} fixed>
+      <Page size="A4" style={standardStyles.page} wrap={true}>
+        <View style={standardStyles.sidebar} fixed>
           {profile.avatar_url ? (
-            <View style={styles.avatarContainer}>
-              <Image src={profile.avatar_url} style={styles.avatar} />
+            <View style={standardStyles.avatarContainer}>
+              <Image src={profile.avatar_url} style={standardStyles.avatar} />
             </View>
           ) : null}
 
-          {renderContact(profile)}
-          {renderSidebarEducation(education)}
-          {renderSidebarSkills(skills)}
-          {renderSidebarLanguages(languages)}
+          {/* İletişim */}
+          <View style={standardStyles.sidebarSection}>
+            <Text style={standardStyles.sidebarTitle}>İLETİŞİM</Text>
+            {profile.location ? <Text style={standardStyles.sidebarText}>📍 {profile.location}</Text> : null}
+            {profile.phone ? <Text style={standardStyles.sidebarText}>📞 {profile.phone}</Text> : null}
+            <Text style={standardStyles.sidebarText}>✉️ {profile.edu_email}</Text>
+            {profile.website_url ? <Text style={standardStyles.sidebarText}>🌐 {formatUrlLabel(profile.website_url)}</Text> : null}
+          </View>
+
+          {/* Eğitim */}
+          {education.length > 0 ? (
+            <View style={standardStyles.sidebarSection}>
+              <Text style={standardStyles.sidebarTitle}>EĞİTİM</Text>
+              {education.map((edu, i) => (
+                <View key={i} style={{ marginBottom: 6 }}>
+                  <Text style={standardStyles.sidebarTextBold}>{edu.school}</Text>
+                  <Text style={standardStyles.sidebarText}>{edu.degree} - {edu.field}</Text>
+                  <Text style={standardStyles.sidebarDate}>{formatDateRange(edu.startDate || (edu as any).start_date, edu.endDate || (edu as any).end_date, edu.current)}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {/* Yetenekler */}
+          {skills.length > 0 ? (
+            <View style={standardStyles.sidebarSection}>
+              <Text style={standardStyles.sidebarTitle}>YETENEKLER</Text>
+              {skills.map((skill, i) => (
+                <Text key={i} style={standardStyles.sidebarText}>• {skill}</Text>
+              ))}
+            </View>
+          ) : null}
+
+          {/* Diller */}
+          {languages.length > 0 ? (
+            <View style={standardStyles.sidebarSection}>
+              <Text style={standardStyles.sidebarTitle}>DİLLER</Text>
+              {languages.map((lang, i) => (
+                <Text key={i} style={standardStyles.sidebarText}>• {lang.language || (lang as any).name} ({lang.level})</Text>
+              ))}
+            </View>
+          ) : null}
         </View>
 
-        {/* Üst Bilgi İsmi (2. sayfadan itibaren görünür) */}
-        <Text style={styles.pageHeader} render={({ pageNumber }) => (
-          pageNumber > 1 ? `${profile.first_name} ${profile.last_name}` : ''
-        )} fixed />
-
         {/* Ana İçerik */}
-        {renderMainHeader(profile)}
-        {renderMainBio(profile.bio)}
-        {renderMainExperience(experience)}
-        {renderMainProjects(projects)}
-        {renderMainCertifications(certifications)}
-        {renderMainReferences(references)}
-        {renderMainCustomSections(customSections)}
+        <View style={standardStyles.mainHeaderContainer}>
+          <Text style={standardStyles.mainName}>{profile.first_name} {profile.last_name}</Text>
+          {profile.headline ? <Text style={dynamicTitleStyle}>{profile.headline}</Text> : null}
+        </View>
 
-        {/* Sayfa numaraları: 1 / 2 formatında */}
-        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
-          `${pageNumber} / ${totalPages}`
-        )} fixed />
+        {profile.bio ? (
+          <View style={standardStyles.mainSection}>
+            <Text style={standardStyles.mainSectionTitle}>HAKKIMDA</Text>
+            <Text style={standardStyles.mainBioText}>{profile.bio}</Text>
+          </View>
+        ) : null}
+
+        {experience.length > 0 ? (
+          <View style={standardStyles.mainSection}>
+            <Text style={standardStyles.mainSectionTitle}>DENEYİM</Text>
+            {experience.map((exp, i) => (
+              <View key={i} style={standardStyles.mainItemGroup}>
+                <Text style={standardStyles.mainItemSubtitle}>{exp.company} — {exp.position}</Text>
+                <Text style={standardStyles.mainItemTitle}>{formatDateRange(exp.startDate || (exp as any).start_date, exp.endDate || (exp as any).end_date, exp.current)} | {exp.location || 'Türkiye'}</Text>
+                {exp.description ? <Text style={standardStyles.mainBioText}>{exp.description}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {projects.length > 0 ? (
+          <View style={standardStyles.mainSection}>
+            <Text style={standardStyles.mainSectionTitle}>PROJELER</Text>
+            {projects.map((proj, i) => (
+              <View key={i} style={standardStyles.mainItemGroup}>
+                <Text style={standardStyles.mainItemSubtitle}>{proj.title}</Text>
+                {proj.description ? <Text style={standardStyles.mainBioText}>{proj.description}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {certifications.length > 0 ? (
+          <View style={standardStyles.mainSection}>
+            <Text style={standardStyles.mainSectionTitle}>SERTİFİKALAR</Text>
+            {certifications.map((cert, i) => (
+              <Text key={i} style={standardStyles.mainBioText}>• {cert.name} ({cert.issuer} - {cert.date || (cert as any).issue_date})</Text>
+            ))}
+          </View>
+        ) : null}
+
+        {references.length > 0 ? (
+          <View style={standardStyles.mainSection}>
+            <Text style={standardStyles.mainSectionTitle}>REFERANSLAR</Text>
+            {references.map((ref, i) => (
+              <Text key={i} style={standardStyles.mainBioText}>• {ref.name} — {ref.position || (ref as any).title} ({ref.company}) - {(ref as any).contact || [ref.email, ref.phone].filter(Boolean).join(" • ")}</Text>
+            ))}
+          </View>
+        ) : null}
+
+        <Text style={standardStyles.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} fixed />
       </Page>
     </Document>
   );
+}
+
+// ----------------------------------------------------
+// 2. KURUMSAL / KLASİK ŞABLON (Tek Kolon, Çizgili)
+// ----------------------------------------------------
+const corporateStyles = StyleSheet.create({
+  page: {
+    padding: 35,
+    fontFamily: 'Roboto',
+    fontSize: 9,
+    lineHeight: 1.4,
+    color: '#1f2937',
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#1e3a8a',
+    paddingBottom: 10,
+    marginBottom: 15,
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1e3a8a',
+    textTransform: 'uppercase',
+  },
+  headline: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#475569',
+    marginTop: 2,
+  },
+  contactBar: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 6,
+    fontSize: 8,
+    color: '#64748b',
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#1e3a8a',
+    borderBottomWidth: 1,
+    borderBottomColor: '#cbd5e1',
+    paddingBottom: 3,
+    marginTop: 10,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  itemTitle: {
+    fontSize: 9.5,
+    fontWeight: 'bold',
+    color: '#0f172a',
+  },
+  itemSub: {
+    fontSize: 8.5,
+    color: '#475569',
+    marginBottom: 3,
+  },
+  desc: {
+    fontSize: 8.5,
+    color: '#334155',
+    marginBottom: 6,
+  },
+  gridTwoCol: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  col: {
+    flex: 1,
+  },
+  badge: {
+    fontSize: 8,
+    color: '#1e293b',
+    marginBottom: 3,
+  }
+});
+
+function CorporateTemplate({ profile, skills, education, experience, certifications = [], languages = [], projects = [], references = [], primaryColor = '#1e3a8a' }: CvPdfProps) {
+  const dynamicHeader = [corporateStyles.header, { borderBottomColor: primaryColor }];
+  const dynamicName = [corporateStyles.name, { color: primaryColor }];
+  const dynamicSection = [corporateStyles.sectionTitle, { color: primaryColor }];
+
+  return (
+    <Document>
+      <Page size="A4" style={corporateStyles.page} wrap={true}>
+        <View style={dynamicHeader}>
+          <Text style={dynamicName}>{profile.first_name} {profile.last_name}</Text>
+          {profile.headline ? <Text style={corporateStyles.headline}>{profile.headline}</Text> : null}
+          <View style={corporateStyles.contactBar}>
+            <Text>✉️ {profile.edu_email}</Text>
+            {profile.phone ? <Text>📞 {profile.phone}</Text> : null}
+            {profile.location ? <Text>📍 {profile.location}</Text> : null}
+            {profile.website_url ? <Text>🌐 {formatUrlLabel(profile.website_url)}</Text> : null}
+          </View>
+        </View>
+
+        {profile.bio ? (
+          <View>
+            <Text style={dynamicSection}>PROFESYONEL ÖZET</Text>
+            <Text style={corporateStyles.desc}>{profile.bio}</Text>
+          </View>
+        ) : null}
+
+        {experience.length > 0 ? (
+          <View>
+            <Text style={dynamicSection}>İŞ VE STAJ DENEYİMİ</Text>
+            {experience.map((exp, i) => (
+              <View key={i} style={{ marginBottom: 8 }}>
+                <View style={corporateStyles.itemHeader}>
+                  <Text style={corporateStyles.itemTitle}>{exp.position} — {exp.company}</Text>
+                  <Text style={{ fontSize: 8, color: '#64748b' }}>{formatDateRange(exp.startDate || (exp as any).start_date, exp.endDate || (exp as any).end_date, exp.current)}</Text>
+                </View>
+                <Text style={corporateStyles.itemSub}>{exp.location || 'İzmir'}</Text>
+                {exp.description ? <Text style={corporateStyles.desc}>{exp.description}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <View style={corporateStyles.gridTwoCol}>
+          <View style={corporateStyles.col}>
+            {education.length > 0 ? (
+              <View>
+                <Text style={dynamicSection}>EĞİTİM GEÇMİŞİ</Text>
+                {education.map((edu, i) => (
+                  <View key={i} style={{ marginBottom: 6 }}>
+                    <Text style={corporateStyles.itemTitle}>{edu.school}</Text>
+                    <Text style={corporateStyles.itemSub}>{edu.degree} - {edu.field}</Text>
+                    <Text style={{ fontSize: 7.5, color: '#64748b' }}>{formatDateRange(edu.startDate || (edu as any).start_date, edu.endDate || (edu as any).end_date, edu.current)}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {skills.length > 0 ? (
+              <View>
+                <Text style={dynamicSection}>UZMANLIK VE YETENEKLER</Text>
+                {skills.map((s, i) => (
+                  <Text key={i} style={corporateStyles.badge}>• {s}</Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
+
+          <View style={corporateStyles.col}>
+            {projects.length > 0 ? (
+              <View>
+                <Text style={dynamicSection}>PROJELER VE BAŞARILAR</Text>
+                {projects.map((p, i) => (
+                  <View key={i} style={{ marginBottom: 6 }}>
+                    <Text style={corporateStyles.itemTitle}>{p.title}</Text>
+                    {p.description ? <Text style={corporateStyles.desc}>{p.description}</Text> : null}
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {languages.length > 0 ? (
+              <View>
+                <Text style={dynamicSection}>YABANCI DİLLER</Text>
+                {languages.map((l, i) => (
+                  <Text key={i} style={corporateStyles.badge}>• {l.language || (l as any).name} ({l.level})</Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </Page>
+    </Document>
+  );
+}
+
+// ----------------------------------------------------
+// 3. MODERN / MİNİMALİST ŞABLON (2 Kolon, Renkli Kartlar)
+// ----------------------------------------------------
+const modernStyles = StyleSheet.create({
+  page: {
+    flexDirection: 'row',
+    fontFamily: 'Roboto',
+    fontSize: 8.5,
+    color: '#1f2937',
+    backgroundColor: '#ffffff',
+  },
+  leftSide: {
+    width: '32%',
+    backgroundColor: '#0f172a',
+    color: '#ffffff',
+    padding: 20,
+  },
+  rightSide: {
+    width: '68%',
+    padding: 24,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 9.5,
+    color: '#38bdf8',
+    marginBottom: 14,
+    fontWeight: 'bold',
+  },
+  sideTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#f8fafc',
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+    paddingBottom: 3,
+    marginTop: 12,
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  sideText: {
+    fontSize: 7.5,
+    color: '#94a3b8',
+    marginBottom: 3,
+  },
+  mainSectionTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  card: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#0ea5e9',
+  },
+  cardTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#0f172a',
+  },
+  cardDate: {
+    fontSize: 7.5,
+    color: '#64748b',
+    marginBottom: 3,
+  },
+  cardDesc: {
+    fontSize: 8,
+    color: '#334155',
+  }
+});
+
+function ModernTemplate({ profile, skills, education, experience, projects = [], languages = [], primaryColor = '#0ea5e9' }: CvPdfProps) {
+  const dynamicTitle = [modernStyles.title, { color: primaryColor }];
+  const dynamicCard = [modernStyles.card, { borderLeftColor: primaryColor }];
+
+  return (
+    <Document>
+      <Page size="A4" style={modernStyles.page} wrap={true}>
+        <View style={modernStyles.leftSide}>
+          <Text style={modernStyles.name}>{profile.first_name} {profile.last_name}</Text>
+          {profile.headline ? <Text style={dynamicTitle}>{profile.headline}</Text> : null}
+
+          <Text style={modernStyles.sideTitle}>İLETİŞİM</Text>
+          <Text style={modernStyles.sideText}>✉️ {profile.edu_email}</Text>
+          {profile.phone ? <Text style={modernStyles.sideText}>📞 {profile.phone}</Text> : null}
+          {profile.location ? <Text style={modernStyles.sideText}>📍 {profile.location}</Text> : null}
+          {profile.website_url ? <Text style={modernStyles.sideText}>🌐 {formatUrlLabel(profile.website_url)}</Text> : null}
+
+          {skills.length > 0 ? (
+            <View>
+              <Text style={modernStyles.sideTitle}>YETENEKLER</Text>
+              {skills.map((s, i) => (
+                <Text key={i} style={modernStyles.sideText}>• {s}</Text>
+              ))}
+            </View>
+          ) : null}
+
+          {languages.length > 0 ? (
+            <View>
+              <Text style={modernStyles.sideTitle}>DİLLER</Text>
+              {languages.map((l, i) => (
+                <Text key={i} style={modernStyles.sideText}>• {l.language || (l as any).name} ({l.level})</Text>
+              ))}
+            </View>
+          ) : null}
+        </View>
+
+        <View style={modernStyles.rightSide}>
+          {profile.bio ? (
+            <View style={{ marginBottom: 10 }}>
+              <Text style={modernStyles.mainSectionTitle}>ÖZET</Text>
+              <Text style={modernStyles.cardDesc}>{profile.bio}</Text>
+            </View>
+          ) : null}
+
+          {experience.length > 0 ? (
+            <View>
+              <Text style={modernStyles.mainSectionTitle}>DENEYİMLER</Text>
+              {experience.map((exp, i) => (
+                <View key={i} style={dynamicCard}>
+                  <Text style={modernStyles.cardTitle}>{exp.position} @ {exp.company}</Text>
+                  <Text style={modernStyles.cardDate}>{formatDateRange(exp.startDate || (exp as any).start_date, exp.endDate || (exp as any).end_date, exp.current)}</Text>
+                  {exp.description ? <Text style={modernStyles.cardDesc}>{exp.description}</Text> : null}
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {education.length > 0 ? (
+            <View>
+              <Text style={modernStyles.mainSectionTitle}>EĞİTİM</Text>
+              {education.map((edu, i) => (
+                <View key={i} style={dynamicCard}>
+                  <Text style={modernStyles.cardTitle}>{edu.school}</Text>
+                  <Text style={modernStyles.cardDate}>{edu.degree} - {edu.field} ({formatDateRange(edu.startDate || (edu as any).start_date, edu.endDate || (edu as any).end_date, edu.current)})</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {projects.length > 0 ? (
+            <View>
+              <Text style={modernStyles.mainSectionTitle}>PROJELER</Text>
+              {projects.map((p, i) => (
+                <View key={i} style={dynamicCard}>
+                  <Text style={modernStyles.cardTitle}>{p.title}</Text>
+                  {p.description ? <Text style={modernStyles.cardDesc}>{p.description}</Text> : null}
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      </Page>
+    </Document>
+  );
+}
+
+// ----------------------------------------------------
+// 4. AKADEMİK / ATS SADE ŞABLON (Tek Kolon, Minimal Siyah-Beyaz)
+// ----------------------------------------------------
+const academicStyles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'Roboto',
+    fontSize: 9,
+    lineHeight: 1.5,
+    color: '#000000',
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000000',
+    paddingBottom: 10,
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  title: {
+    fontSize: 10,
+    fontStyle: 'italic',
+    marginTop: 2,
+    color: '#333333',
+  },
+  contact: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+    fontSize: 8,
+  },
+  sectionTitle: {
+    fontSize: 10.5,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000000',
+    marginTop: 10,
+    marginBottom: 6,
+    paddingBottom: 2,
+    letterSpacing: 0.5,
+  },
+  rowHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  italic: {
+    fontStyle: 'italic',
+  },
+  text: {
+    fontSize: 8.5,
+    color: '#111111',
+  }
+});
+
+function AcademicTemplate({ profile, skills, education, experience, projects = [], languages = [], references = [] }: CvPdfProps) {
+  return (
+    <Document>
+      <Page size="A4" style={academicStyles.page} wrap={true}>
+        <View style={academicStyles.header}>
+          <Text style={academicStyles.name}>{profile.first_name} {profile.last_name}</Text>
+          {profile.headline ? <Text style={academicStyles.title}>{profile.headline}</Text> : null}
+          <View style={academicStyles.contact}>
+            <Text>{profile.edu_email}</Text>
+            {profile.phone ? <Text>|  {profile.phone}</Text> : null}
+            {profile.location ? <Text>|  {profile.location}</Text> : null}
+            {profile.website_url ? <Text>|  {formatUrlLabel(profile.website_url)}</Text> : null}
+          </View>
+        </View>
+
+        {profile.bio ? (
+          <View>
+            <Text style={academicStyles.sectionTitle}>AKADEMİK & PROFESYONEL ÖZET</Text>
+            <Text style={academicStyles.text}>{profile.bio}</Text>
+          </View>
+        ) : null}
+
+        {education.length > 0 ? (
+          <View>
+            <Text style={academicStyles.sectionTitle}>EĞİTİM BİLGİLERİ</Text>
+            {education.map((edu, i) => (
+              <View key={i} style={{ marginBottom: 6 }}>
+                <View style={academicStyles.rowHeader}>
+                  <Text style={academicStyles.bold}>{edu.school}</Text>
+                  <Text>{formatDateRange(edu.startDate || (edu as any).start_date, edu.endDate || (edu as any).end_date, edu.current)}</Text>
+                </View>
+                <Text style={academicStyles.italic}>{edu.degree} - {edu.field}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {experience.length > 0 ? (
+          <View>
+            <Text style={academicStyles.sectionTitle}>DENEYİM VE AKADEMİK GÖREVLER</Text>
+            {experience.map((exp, i) => (
+              <View key={i} style={{ marginBottom: 6 }}>
+                <View style={academicStyles.rowHeader}>
+                  <Text style={academicStyles.bold}>{exp.position} — {exp.company}</Text>
+                  <Text>{formatDateRange(exp.startDate || (exp as any).start_date, exp.endDate || (exp as any).end_date, exp.current)}</Text>
+                </View>
+                {exp.description ? <Text style={academicStyles.text}>{exp.description}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {projects.length > 0 ? (
+          <View>
+            <Text style={academicStyles.sectionTitle}>PROJELER VE YAYINLAR</Text>
+            {projects.map((p, i) => (
+              <View key={i} style={{ marginBottom: 4 }}>
+                <Text style={academicStyles.bold}>{p.title}</Text>
+                {p.description ? <Text style={academicStyles.text}>{p.description}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {skills.length > 0 ? (
+          <View>
+            <Text style={academicStyles.sectionTitle}>TEKNİK YETKİNLİKLER</Text>
+            <Text style={academicStyles.text}>{skills.join(', ')}</Text>
+          </View>
+        ) : null}
+
+        {references.length > 0 ? (
+          <View>
+            <Text style={academicStyles.sectionTitle}>AKADEMİK / SEKTÖREL REFERANSLAR</Text>
+            {references.map((r, i) => (
+              <Text key={i} style={academicStyles.text}>• {r.name} — {r.position || (r as any).title}, {r.company} ({(r as any).contact || [r.email, r.phone].filter(Boolean).join(" • ")})</Text>
+            ))}
+          </View>
+        ) : null}
+      </Page>
+    </Document>
+  );
+}
+
+// ----------------------------------------------------
+// DİNAMİK PDF YÖNETİCİSİ (Export Edilen Ana Bileşen)
+// ----------------------------------------------------
+export function CvPdf(props: CvPdfProps) {
+  const template = props.templateName || 'standard';
+
+  switch (template) {
+    case 'corporate':
+      return <CorporateTemplate {...props} />;
+    case 'modern':
+      return <ModernTemplate {...props} />;
+    case 'academic':
+      return <AcademicTemplate {...props} />;
+    case 'standard':
+    default:
+      return <StandardTemplate {...props} />;
+  }
 }

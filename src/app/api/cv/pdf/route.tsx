@@ -97,6 +97,12 @@ export async function GET(request: NextRequest) {
     .eq("user_id", userId)
     .single<CvData>();
 
+  const reqTemplate = request.nextUrl.searchParams.get("template");
+  const reqColor = request.nextUrl.searchParams.get("color");
+
+  const activeTemplate = reqTemplate || cvData?.template_name || "standard";
+  const activeColor = reqColor || cvData?.primary_color || "#0ea5e9";
+
   const buffer = await renderToBuffer(
     <CvPdf
       profile={profile}
@@ -109,8 +115,8 @@ export async function GET(request: NextRequest) {
       projects={parseJsonArray(cvData?.projects)}
       references={parseJsonArray(cvData?.references)}
       customSections={parseJsonArray(cvData?.custom_sections)}
-      templateName={cvData?.template_name || "modern"}
-      primaryColor={cvData?.primary_color || "#3B82F6"}
+      templateName={activeTemplate}
+      primaryColor={activeColor}
     />
   );
 

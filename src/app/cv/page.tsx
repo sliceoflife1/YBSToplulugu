@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/layout/navbar";
 import type { Profile, CvData, CvEducation, CvExperience, CvCertification, CvLanguage, CvProject, CvReference, CvCustomSection } from "@/types/database";
 import { normalizeEducationList, normalizeExperienceList, parseJsonArray, formatDateRange } from "@/lib/cv/normalize";
+import CvWebPreview from "@/components/cv/cv-web-preview";
 
 
 function formatUrlLabel(url: string) {
@@ -688,185 +689,167 @@ export default function CvBuilderPage() {
 
             </div>
 
-                                                {/* SAĞ KOLON: Canlı Önizleme (7 Column) */}
-            <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm dark:bg-[var(--color-card)] lg:sticky top-6 p-0 overflow-hidden min-h-[600px] text-[#111] flex flex-row">
-              {/* Sol Sütun - Sidebar */}
-              <div className="w-[180px] bg-[#202d3d] text-white p-6 flex flex-col gap-6 flex-shrink-0">
-                {profile?.avatar_url ? (
-                  <div className="flex justify-center">
-                    <img src={profile.avatar_url} alt="Avatar" className="w-20 h-20 rounded-full border-2 border-white object-cover" />
-                  </div>
-                ) : null}
+            {/* SAĞ KOLON: Canlı Önizleme & Şablon Seçici (7 Column) */}
+            <div className="lg:col-span-7 space-y-6 lg:sticky top-6">
+              {/* Şablon & Renk Seçim Paneli */}
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm space-y-4">
+                <h2 className="text-sm font-bold tracking-wider uppercase text-[var(--color-muted-foreground)] flex items-center justify-between">
+                  <span>🎨 CV Şablonu ve Renk Paleti</span>
+                  <span className="text-xs font-normal normal-case text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200">
+                    Canlı Önizleme
+                  </span>
+                </h2>
 
-                {/* İletişim */}
-                <div>
-                  <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">İLETİŞİM</h4>
-                  <div className="space-y-2 text-[10px] text-slate-300 break-all">
-                    {location && <div className="flex items-center gap-1.5">📍 {location}</div>}
-                    {profile?.phone && <div className="flex items-center gap-1.5">📞 {profile.phone}</div>}
-                    {profile?.edu_email && <div className="flex items-center gap-1.5">✉ {profile.edu_email}</div>}
-                    {profile?.personal_email && profile.personal_email !== profile.edu_email && <div className="flex items-center gap-1.5">✉ {profile.personal_email}</div>}
-                    {profile?.linkedin_url && <a href={profile.linkedin_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 LinkedIn: {formatUrlLabel(profile.linkedin_url)}</a>}
-                    {profile?.github_url && <a href={profile.github_url} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 GitHub: {formatUrlLabel(profile.github_url)}</a>}
-                    {websiteUrl && <a href={websiteUrl} target="_blank" className="flex items-center gap-1.5 text-[#0ea5e9] hover:underline">🔗 Web Sitesi: {formatUrlLabel(websiteUrl)}</a>}
-                  </div>
+                {/* 4 Şablon Seçim Kartı */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTemplateName("standard")}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      templateName === "standard"
+                        ? "border-2 border-[var(--color-primary)] bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/20 font-bold"
+                        : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-slate-400"
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-bold block text-[var(--color-foreground)]">🌐 Standart</span>
+                      <span className="text-[10px] text-[var(--color-muted-foreground)] block mt-0.5">Topluluk Mimarisi (2 Kolon)</span>
+                    </div>
+                    {templateName === "standard" && <span className="text-[10px] text-[var(--color-primary)] font-bold mt-2">✓ Seçili</span>}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTemplateName("corporate")}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      templateName === "corporate"
+                        ? "border-2 border-[var(--color-primary)] bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/20 font-bold"
+                        : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-slate-400"
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-bold block text-[var(--color-foreground)]">🏛️ Kurumsal</span>
+                      <span className="text-[10px] text-[var(--color-muted-foreground)] block mt-0.5">Klasik & Çizgili (Tek Kolon)</span>
+                    </div>
+                    {templateName === "corporate" && <span className="text-[10px] text-[var(--color-primary)] font-bold mt-2">✓ Seçili</span>}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTemplateName("modern")}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      templateName === "modern"
+                        ? "border-2 border-[var(--color-primary)] bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/20 font-bold"
+                        : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-slate-400"
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-bold block text-[var(--color-foreground)]">🎨 Modern</span>
+                      <span className="text-[10px] text-[var(--color-muted-foreground)] block mt-0.5">Renkli Kartlar (2 Kolon)</span>
+                    </div>
+                    {templateName === "modern" && <span className="text-[10px] text-[var(--color-primary)] font-bold mt-2">✓ Seçili</span>}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTemplateName("academic")}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      templateName === "academic"
+                        ? "border-2 border-[var(--color-primary)] bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]/20 font-bold"
+                        : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-slate-400"
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-bold block text-[var(--color-foreground)]">🎓 Akademik / ATS</span>
+                      <span className="text-[10px] text-[var(--color-muted-foreground)] block mt-0.5">Sade & Siyah-Beyaz</span>
+                    </div>
+                    {templateName === "academic" && <span className="text-[10px] text-[var(--color-primary)] font-bold mt-2">✓ Seçili</span>}
+                  </button>
                 </div>
 
-                {/* Eğitim */}
-                {education.length > 0 && (
-                  <div>
-                    <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">EĞİTİM</h4>
-                    <div className="space-y-3">
-                      {education.map((edu, i) => (
-                        <div key={i} className="text-[10px]">
-                          <div className="font-bold text-white leading-tight">{edu.school}</div>
-                          <div className="text-slate-300 leading-tight mt-0.5">{[edu.degree, edu.field].filter(Boolean).join(" - ")}</div>
-                          {edu.gpa && <div className="text-slate-300 leading-tight">GPA: {edu.gpa}</div>}
-                          <div className="text-slate-400 mt-1">{formatDateRange(edu.startDate, edu.endDate, edu.current, isEn)}</div>
-                        </div>
-                      ))}
-                    </div>
+                {/* Renk Paleti Seçici */}
+                <div className="flex items-center gap-3 pt-2 border-t border-[var(--color-border)]">
+                  <span className="text-xs font-semibold text-[var(--color-muted-foreground)]">Vurgu Rengi:</span>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { name: "Mavi", hex: "#0ea5e9" },
+                      { name: "Lacivert", hex: "#1e3a8a" },
+                      { name: "Zümrüt", hex: "#059669" },
+                      { name: "Bordo", hex: "#9f1239" },
+                      { name: "Kömür", hex: "#334155" },
+                    ].map((color) => (
+                      <button
+                        key={color.hex}
+                        type="button"
+                        onClick={() => setPrimaryColor(color.hex)}
+                        className={`w-6 h-6 rounded-full transition-transform ${
+                          primaryColor === color.hex ? "scale-125 ring-2 ring-offset-2 ring-slate-400" : "hover:scale-110"
+                        }`}
+                        style={{ backgroundColor: color.hex }}
+                        title={color.name}
+                      />
+                    ))}
                   </div>
-                )}
-
-                {/* Yetenekler */}
-                {skills.length > 0 && (
-                  <div>
-                    <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">YETENEKLER</h4>
-                    <ul className="space-y-1.5 text-[10px] text-slate-300">
-                      {skills.map((skill) => (
-                        <li key={skill} className="flex items-center gap-1">• {skill}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Diller */}
-                {languages.length > 0 && (
-                  <div>
-                    <h4 className="text-[11px] font-bold text-white border-b border-white pb-1.5 mb-3 tracking-wide">YABANCI DİLLER</h4>
-                    <ul className="space-y-1.5 text-[10px] text-slate-300">
-                      {languages.map((lang, i) => (
-                        <li key={i} className="flex items-center gap-1">• {lang.language} ({getLanguageLevelLabel(lang.level)})</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* Sağ Sütun - Ana İçerik */}
-              <div className="flex-1 p-8 bg-white min-h-[600px] flex flex-col gap-6">
-                {/* Header */}
-                <div className="border-b-2 border-black pb-3">
-                  <h3 className="text-2xl font-bold uppercase text-black tracking-tight leading-none mb-1">
-                    {profile?.first_name} {profile?.last_name}
-                  </h3>
-                  <p className="text-xs font-bold text-[#0ea5e9] tracking-wide">
-                    {headline || profile?.department || "Yönetim Bilişim Sistemleri Öğrencisi"}
-                  </p>
                 </div>
-
-                {/* Hakkımda */}
-                {bio && (
-                  <div>
-                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-2 tracking-wide">HAKKIMDA</h4>
-                    <p className="text-[11.5px] text-[#333] leading-relaxed text-justify">{bio}</p>
-                  </div>
-                )}
-
-                {/* Deneyim */}
-                {experience.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">DENEYİM</h4>
-                    <div className="space-y-4">
-                      {experience.map((exp, i) => (
-                        <div key={i} className="text-[11.5px]">
-                          <div className="font-bold text-black">{formatDateRange(exp.startDate, exp.endDate, exp.current, isEn)}</div>
-                          <div className="font-bold text-[#333] mt-0.5">{exp.company}</div>
-                          <div className="text-gray-600 font-semibold">{exp.title}</div>
-                          {exp.location && <div className="text-gray-500 text-[10px]">{exp.location}</div>}
-                          {exp.description && (
-                            <ul className="mt-1 list-disc list-inside space-y-0.5 text-gray-700 ml-1">
-                              {exp.description.split("\n").filter(Boolean).map((line, li) => (
-                                <li key={li}>{line}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Projeler */}
-                {projects.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">PROJELER</h4>
-                    <div className="space-y-4">
-                      {projects.map((proj, i) => (
-                        <div key={i} className="text-[11.5px]">
-                          <div className="font-bold text-black">{proj.date}</div>
-                          <div className="font-bold text-[#333] mt-0.5">{proj.title}</div>
-                          {proj.description && <p className="text-gray-700 leading-relaxed mt-0.5">{proj.description}</p>}
-                          {proj.technologies && proj.technologies.length > 0 && (
-                            <p className="text-[10.5px] font-semibold text-gray-700 mt-1">Araçlar: {proj.technologies.join(", ")}</p>
-                          )}
-                          {proj.url && <a href={proj.url} target="_blank" className="text-[#0ea5e9] hover:underline block mt-0.5">{proj.url}</a>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Sertifikalar */}
-                {certifications.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">SERTİFİKALAR</h4>
-                    <div className="space-y-3">
-                      {certifications.map((cert, i) => (
-                        <div key={i} className="text-[11.5px]">
-                          <div className="font-bold text-black">{cert.date}</div>
-                          <div className="font-bold text-[#333] mt-0.5">{cert.name}</div>
-                          <div className="text-gray-600">{cert.issuer}</div>
-                          {cert.url && <a href={cert.url} target="_blank" className="text-[#0ea5e9] hover:underline block mt-0.5">Doğrula</a>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Referanslar */}
-                {references.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">REFERANSLAR</h4>
-                    <div className="space-y-3">
-                      {references.map((ref, i) => (
-                        <div key={i} className="text-[11.5px]">
-                          <div className="font-bold text-black">{ref.name}</div>
-                          {(ref.position || ref.company) && (
-                            <div className="text-gray-600 mt-0.5">{[ref.position, ref.company].filter(Boolean).join(" - ")}</div>
-                          )}
-                          {(ref.email || ref.phone) && (
-                            <div className="text-gray-500 text-[10.5px] mt-0.5">{[ref.email, ref.phone].filter(Boolean).join(" • ")}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Özel Bölümler */}
-                {customSections.filter(s => s.title && s.items?.length > 0).map((section, i) => (
-                  <div key={i}>
-                    <h4 className="text-xs font-bold uppercase text-black border-b border-black pb-1 mb-3 tracking-wide">{section.title.toLocaleUpperCase('tr-TR')}</h4>
-                    <ul className="list-disc list-inside space-y-0.5 text-gray-700 ml-1 text-[11.5px]">
-                      {section.items.map((item, ii) => (
-                        <li key={ii}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
               </div>
+
+              {/* Canlı HTML/Tailwind Önizleme Bileşeni */}
+              {profile && (
+                <CvWebPreview
+                  profile={{ ...profile, bio, headline, location, website_url: websiteUrl }}
+                  skills={skills}
+                  education={education.map((e) => ({
+                    school: e.school,
+                    degree: e.degree,
+                    field: e.field,
+                    start_date: e.startDate,
+                    startDate: e.startDate,
+                    end_date: e.endDate,
+                    endDate: e.endDate,
+                    current: e.current,
+                    description: e.description,
+                    gpa: e.gpa,
+                  }))}
+                  experience={experience.map((e) => ({
+                    company: e.company,
+                    position: e.title,
+                    title: e.title,
+                    location: e.location,
+                    start_date: e.startDate,
+                    startDate: e.startDate,
+                    end_date: e.endDate,
+                    endDate: e.endDate,
+                    current: e.current,
+                    description: e.description,
+                  }))}
+                  certifications={certifications.map((c) => ({
+                    name: c.name,
+                    issuer: c.issuer,
+                    issue_date: c.date,
+                    credential_id: c.url,
+                  }))}
+                  languages={languages.map((l) => ({
+                    name: l.language,
+                    language: l.language,
+                    level: l.level,
+                  }))}
+                  projects={projects.map((p) => ({
+                    title: p.title,
+                    description: p.description,
+                    project_url: p.url,
+                    start_date: p.date,
+                  }))}
+                  references={references.map((r) => ({
+                    name: r.name,
+                    title: r.position,
+                    company: r.company,
+                    contact: [r.email, r.phone].filter(Boolean).join(" • "),
+                  }))}
+                  customSections={customSections}
+                  templateName={templateName}
+                  primaryColor={primaryColor}
+                />
+              )}
             </div>
 
           </div>
