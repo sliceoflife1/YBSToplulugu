@@ -55,110 +55,114 @@ const standardStyles = StyleSheet.create({
     width: 175,
     backgroundColor: '#202d3d',
     color: '#ffffff',
-    paddingHorizontal: 14,
-    paddingTop: 30,
-    paddingBottom: 30,
+    paddingHorizontal: 16,
+    paddingTop: 32,
+    paddingBottom: 32,
   },
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 20,
   },
   avatar: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     borderWidth: 2,
     borderColor: '#ffffff',
     objectFit: 'cover',
   },
   sidebarSection: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   sidebarTitle: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#ffffff',
-    paddingBottom: 3,
-    marginBottom: 6,
+    borderBottomColor: 'rgba(255, 255, 255, 0.4)',
+    paddingBottom: 4,
+    marginBottom: 8,
     letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
+  sidebarItem: {
+    marginBottom: 5,
+  },
+  sidebarLabel: {
+    fontSize: 7,
+    fontWeight: 'bold',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    marginBottom: 1,
   },
   sidebarText: {
-    fontSize: 7.5,
-    color: '#cbd5e1',
+    fontSize: 8,
+    color: '#e2e8f0',
     lineHeight: 1.3,
   },
   sidebarTextBold: {
-    fontSize: 8,
+    fontSize: 8.5,
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 2,
   },
   sidebarDate: {
-    fontSize: 7,
+    fontSize: 7.5,
     color: '#94a3b8',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   mainHeaderContainer: {
-    marginBottom: 12,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#111111',
-    paddingBottom: 6,
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#cbd5e1',
+    paddingBottom: 10,
   },
   mainName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 2,
+    color: '#0f172a',
+    lineHeight: 1.2,
+    marginBottom: 4,
   },
   mainTitle: {
-    fontSize: 10.5,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#0ea5e9',
+    lineHeight: 1.3,
   },
   mainSection: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   mainSectionTitle: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: 'bold',
-    color: '#111827',
-    borderBottomWidth: 1.2,
-    borderBottomColor: '#111111',
-    paddingBottom: 2,
-    marginBottom: 6,
-    marginTop: 6,
+    color: '#0f172a',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingBottom: 3,
+    marginBottom: 8,
+    marginTop: 4,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   mainBioText: {
     fontSize: 8.5,
-    lineHeight: 1.4,
-    color: '#374151',
+    lineHeight: 1.45,
+    color: '#334155',
   },
   mainItemGroup: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   mainItemSubtitle: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: 'bold',
-    color: '#374151',
+    color: '#0f172a',
+    marginBottom: 2,
   },
   mainItemTitle: {
     fontSize: 8.5,
-    color: '#4b5563',
-    marginBottom: 2,
-  },
-  mainItemBullet: {
-    fontSize: 8,
-    color: '#4b5563',
-    lineHeight: 1.3,
-    marginBottom: 1,
-    paddingLeft: 4,
+    color: '#64748b',
+    marginBottom: 3,
   },
   pageNumber: {
     position: 'absolute',
@@ -174,6 +178,7 @@ function StandardTemplate({ profile, skills, education, experience, certificatio
   return (
     <Document>
       <Page size="A4" style={standardStyles.page} wrap={true}>
+        {/* Sol Sabit Kolon */}
         <View style={standardStyles.sidebar} fixed>
           {profile.avatar_url ? (
             <View style={standardStyles.avatarContainer}>
@@ -184,10 +189,31 @@ function StandardTemplate({ profile, skills, education, experience, certificatio
           {/* İletişim */}
           <View style={standardStyles.sidebarSection}>
             <Text style={standardStyles.sidebarTitle}>İLETİŞİM</Text>
-            {profile.location ? <Text style={standardStyles.sidebarText}>📍 {profile.location}</Text> : null}
-            {profile.phone ? <Text style={standardStyles.sidebarText}>📞 {profile.phone}</Text> : null}
-            <Text style={standardStyles.sidebarText}>✉️ {profile.edu_email}</Text>
-            {profile.website_url ? <Text style={standardStyles.sidebarText}>🌐 {formatUrlLabel(profile.website_url)}</Text> : null}
+            {profile.location ? (
+              <View style={standardStyles.sidebarItem}>
+                <Text style={standardStyles.sidebarLabel}>KONUM</Text>
+                <Text style={standardStyles.sidebarText}>{profile.location}</Text>
+              </View>
+            ) : null}
+
+            {profile.phone ? (
+              <View style={standardStyles.sidebarItem}>
+                <Text style={standardStyles.sidebarLabel}>TELEFON</Text>
+                <Text style={standardStyles.sidebarText}>{profile.phone}</Text>
+              </View>
+            ) : null}
+
+            <View style={standardStyles.sidebarItem}>
+              <Text style={standardStyles.sidebarLabel}>E-POSTA</Text>
+              <Text style={standardStyles.sidebarText}>{profile.edu_email}</Text>
+            </View>
+
+            {profile.website_url ? (
+              <View style={standardStyles.sidebarItem}>
+                <Text style={standardStyles.sidebarLabel}>WEB</Text>
+                <Text style={standardStyles.sidebarText}>{formatUrlLabel(profile.website_url)}</Text>
+              </View>
+            ) : null}
           </View>
 
           {/* Eğitim */}
@@ -225,7 +251,7 @@ function StandardTemplate({ profile, skills, education, experience, certificatio
           ) : null}
         </View>
 
-        {/* Ana İçerik */}
+        {/* Sağ Ana İçerik */}
         <View style={standardStyles.mainHeaderContainer}>
           <Text style={standardStyles.mainName}>{profile.first_name} {profile.last_name}</Text>
           {profile.headline ? <Text style={dynamicTitleStyle}>{profile.headline}</Text> : null}
@@ -240,11 +266,11 @@ function StandardTemplate({ profile, skills, education, experience, certificatio
 
         {experience.length > 0 ? (
           <View style={standardStyles.mainSection}>
-            <Text style={standardStyles.mainSectionTitle}>DENEYİM</Text>
+            <Text style={standardStyles.mainSectionTitle}>İŞ VE STAJ DENEYİMİ</Text>
             {experience.map((exp, i) => (
               <View key={i} style={standardStyles.mainItemGroup}>
-                <Text style={standardStyles.mainItemSubtitle}>{exp.company} — {exp.position}</Text>
-                <Text style={standardStyles.mainItemTitle}>{formatDateRange(exp.startDate || (exp as any).start_date, exp.endDate || (exp as any).end_date, exp.current)} | {exp.location || 'Türkiye'}</Text>
+                <Text style={standardStyles.mainItemSubtitle}>{exp.company} — {exp.title || (exp as any).position}</Text>
+                <Text style={standardStyles.mainItemTitle}>{formatDateRange(exp.startDate || (exp as any).start_date, exp.endDate || (exp as any).end_date, exp.current)} | {exp.location || 'İzmir, Türkiye'}</Text>
                 {exp.description ? <Text style={standardStyles.mainBioText}>{exp.description}</Text> : null}
               </View>
             ))}

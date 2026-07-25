@@ -49,12 +49,30 @@ export default function CvWebPreview({
           )}
 
           <div>
-            <h3 className="text-xs font-bold text-white border-b border-slate-600 pb-1 mb-2 tracking-wider">İLETİŞİM</h3>
-            <div className="text-xs text-slate-300 space-y-1.5">
-              {profile.location && <p>📍 {profile.location}</p>}
-              {profile.phone && <p>📞 {profile.phone}</p>}
-              <p className="break-all">✉️ {profile.edu_email}</p>
-              {profile.website_url && <p className="break-all">🌐 {profile.website_url.replace(/https?:\/\/(www\.)?/, '')}</p>}
+            <h3 className="text-[10px] font-bold text-white border-b border-slate-600/80 pb-1 mb-2.5 tracking-wider uppercase">İLETİŞİM</h3>
+            <div className="text-xs text-slate-200 space-y-2">
+              {profile.location && (
+                <div>
+                  <span className="text-[9px] font-bold text-slate-400 block uppercase">KONUM</span>
+                  <span className="text-slate-200">{profile.location}</span>
+                </div>
+              )}
+              {profile.phone && (
+                <div>
+                  <span className="text-[9px] font-bold text-slate-400 block uppercase">TELEFON</span>
+                  <span className="text-slate-200">{profile.phone}</span>
+                </div>
+              )}
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 block uppercase">E-POSTA</span>
+                <span className="text-slate-200 break-all">{profile.edu_email}</span>
+              </div>
+              {profile.website_url && (
+                <div>
+                  <span className="text-[9px] font-bold text-slate-400 block uppercase">WEB</span>
+                  <span className="text-slate-200 break-all">{profile.website_url.replace(/https?:\/\/(www\.)?/, '')}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -102,7 +120,7 @@ export default function CvWebPreview({
         <div className="w-2/3 p-8 flex flex-col gap-6">
           <div className="border-b border-slate-200 pb-4">
             <h1 className="text-2xl font-bold text-slate-900">{profile.first_name} {profile.last_name}</h1>
-            {profile.headline && <p className="text-sm font-semibold text-slate-600 mt-1">{profile.headline}</p>}
+            {profile.headline && <p className="text-sm font-semibold mt-1" style={{ color: primaryColor }}>{profile.headline}</p>}
           </div>
 
           {profile.bio && (
