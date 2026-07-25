@@ -40,13 +40,45 @@ export async function DELETE(
       );
     }
 
-    // 3. Profiles tablosundan sil
+    // 3. Bağımlı verileri temizle (Foreign Key çakışmalarını önlemek için)
+    try {
+      // a) Kullanıcının yaptığı ve aldığı ilan başvurularını sil
+      await adminSupabase.from("job_applications").delete().eq("applicant_id", targetUserId);
+      
+      // Kullanıcının ilanlarının ID'lerini bul ve bu ilanlara yapılan başvuruları sil
+      const { data: userJobs } = await adminSupabase.from("job_listings").select("id").eq("employer_id", targetUserId);
+      if (userJobs && userJobs.length > 0) {
+        const jobIds = userJobs.map(j => j.id);
+        await adminSupabase.from("job_applications").delete().in("job_listing_id", jobIds);
+      }
+
+      // b) Kullanıcının oluşturduğu iş ilanlarını sil
+      await adminSupabase.from("job_listings").delete().eq("employer_id", targetUserId);
+
+      // c) Kullanıcının sahibi olduğu organizasyonları sil
+      await adminSupabase.from("organizations").delete().eq("owner_id", targetUserId);
+
+      // d) Bildirimleri, onayları ve yıllık kayıtlarını temizle
+      await adminSupabase.from("notifications").delete().eq("recipient_id", targetUserId);
+      await adminSupabase.from("user_legal_consents").delete().eq("user_id", targetUserId);
+      await adminSupabase.from("yearbook_entries").delete().eq("user_id", targetUserId);
+      await adminSupabase.from("yearbook_profiles").delete().eq("user_id", targetUserId);
+
+      // e) Projelerini ve yorumlarını temizle
+      await adminSupabase.from("project_upvotes").delete().eq("user_id", targetUserId);
+      await adminSupabase.from("project_comments").delete().eq("user_id", targetUserId);
+      await adminSupabase.from("projects").delete().eq("user_id", targetUserId);
+    } catch (cleanError) {
+      console.warn("Dependent data cleanup notice:", cleanError);
+    }
+
+    // 4. Profiles tablosundan sil
     const { error: deleteProfileError } = await adminSupabase
       .from("profiles")
       .delete()
       .eq("id", targetUserId);
 
-    // 4. Auth.users tablosundan sil (var ise)
+    // 5. Auth.users tablosundan sil (var ise)
     try {
       await adminSupabase.auth.admin.deleteUser(targetUserId);
     } catch (e) {
