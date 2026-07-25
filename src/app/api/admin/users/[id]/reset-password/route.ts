@@ -1,0 +1,72 @@
+import { NextResponse } from "next/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: targetUserId } = await params;
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+
+    // 1. İstek atan kullanıcının admin kontrolü
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
+
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", currentUser.id)
+      .single();
+
+    if (currentProfile?.role !== "admin") {
+      return NextResponse.json(
+        { error: "Bu işlem için admin yetkisi gereklidir" },
+        { status: 403 }
+      );
+    }
+
+    // 2. Hedef kullanıcının e-postasını çek
+    const { data: targetProfile, error: profileError } = await adminSupabase
+      .from("profiles")
+      .select("edu_email, first_name, last_name")
+      .eq("id", targetUserId)
+      .single();
+
+    if (profileError || !targetProfile?.edu_email) {
+      return NextResponse.json(
+        { error: "Kullanıcı e-posta adresi bulunamadı" },
+        { status: 404 }
+      );
+    }
+
+    // 3. Supabase Auth reset password e-postası gönder
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ybs-toplulugu.vercel.app";
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      targetProfile.edu_email,
+      {
+        redirectTo: `${siteUrl}/reset-password`,
+      }
+    );
+
+    if (resetError) {
+      return NextResponse.json({ error: resetError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `${targetProfile.edu_email} adresine şifre sıfırlama e-postası başarıyla gönderildi.`,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Sunucu hatası oluştu" },
+      { status: 500 }
+    );
+  }
+}
