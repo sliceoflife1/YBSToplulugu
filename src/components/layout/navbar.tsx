@@ -105,7 +105,7 @@ export default function Navbar() {
         { href: "/jobs", label: "İş İlanları", icon: Briefcase },
         { href: "/opportunities", label: t("nav.opportunities"), icon: Tag },
         { href: "/announcements", label: t("nav.announcements"), icon: Megaphone },
-        { href: "/yearbook", label: "Andıç", icon: BookOpen },
+        { href: "/yearbook", label: "Yıllık", icon: BookOpen },
       ]
     : [];
 

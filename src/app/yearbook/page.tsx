@@ -142,7 +142,7 @@ export default function YearbookPage() {
         <div className="mb-8 border-b border-[var(--color-border)] pb-6">
           <h1 className="text-3xl font-extrabold flex items-center gap-3">
             <FileStack className="h-8 w-8 text-indigo-500" />
-            {isEn ? "Graduation Yearbook" : "Mezuniyet Andıcı (Yıllık)"}
+            {isEn ? "Graduation Yearbook" : "Mezuniyet Yıllığı"}
           </h1>
           <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
             {isEn
@@ -284,7 +284,7 @@ export default function YearbookPage() {
                       href={`/yearbook/${p.user_id}`}
                       className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500/10 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition-colors"
                     >
-                      {isEn ? "View Yearbook Profile" : "Andıcı Gör"}
+                      {isEn ? "View Yearbook Profile" : "Yıllığı Gör"}
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
