@@ -225,3 +225,60 @@ export interface AllowedEmailDomain {
   is_active: boolean;
   created_at: string;
 }
+
+// Job Listings
+export type JobCategory =
+  | 'software_it' | 'engineering' | 'data_science' | 'marketing'
+  | 'finance_accounting' | 'human_resources' | 'sales' | 'design'
+  | 'operations_logistics' | 'education_training' | 'healthcare' | 'legal'
+  | 'media_communications' | 'consulting' | 'customer_service'
+  | 'research_development' | 'management' | 'manufacturing'
+  | 'architecture_construction' | 'other';
+
+export type EmploymentType = 'full_time' | 'part_time' | 'internship';
+export type WorkMode = 'onsite' | 'remote' | 'hybrid';
+export type ApplicationStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected';
+export type NotificationType = 'job_application' | 'interview_request' | 'application_success' | 'system';
+
+export interface JobListing {
+  id: string;
+  employer_id: string;
+  organization_id: string | null;
+  title: string;
+  description: string | null;
+  category: JobCategory;
+  employment_type: EmploymentType;
+  work_mode: WorkMode;
+  location: string | null;
+  requirements: string[];
+  deadline: string | null;
+  is_active: boolean;
+  application_count: number;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  profiles?: Profile;
+  organizations?: Organization;
+}
+
+export interface JobApplication {
+  id: string;
+  job_listing_id: string;
+  applicant_id: string;
+  status: ApplicationStatus;
+  created_at: string;
+  // Joined fields
+  profiles?: Profile;
+  job_listings?: JobListing;
+}
+
+export interface Notification {
+  id: string;
+  recipient_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  is_read: boolean;
+  created_at: string;
+}

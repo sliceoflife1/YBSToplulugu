@@ -22,7 +22,9 @@ import {
   Tag,
   Megaphone,
   BookOpen,
+  Briefcase,
 } from "lucide-react";
+import NotificationBell from "@/components/layout/notification-bell";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
@@ -100,6 +102,7 @@ export default function Navbar() {
         { href: "/cv", label: t("nav.cv"), icon: FileText },
         { href: "/community", label: t("nav.community"), icon: MessageSquare },
         { href: "/explore", label: t("nav.explore"), icon: Compass },
+        { href: "/jobs", label: "İş İlanları", icon: Briefcase },
         { href: "/opportunities", label: t("nav.opportunities"), icon: Tag },
         { href: "/announcements", label: t("nav.announcements"), icon: Megaphone },
         { href: "/yearbook", label: "Andıç", icon: BookOpen },
@@ -193,6 +196,7 @@ export default function Navbar() {
             <div className="h-9 w-20 animate-pulse rounded-lg bg-[var(--color-muted)]" />
           ) : user ? (
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <Link
                 href="/profile"
                 className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] sm:flex"

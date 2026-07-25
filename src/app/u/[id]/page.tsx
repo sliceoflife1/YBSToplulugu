@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import CvDownloadButton from "./cv-download";
+import InterviewRequestButton from "./interview-request-button";
 
 export default async function UserProfilePage({
   params,
@@ -43,6 +44,19 @@ export default async function UserProfilePage({
     .order("created_at", { ascending: false });
 
   // 3. Kullanıcının CV özet bilgisi için görünürlük kontrolü (PDF üretimi artık /api/cv/pdf üzerinden sunucu tarafında yapılır)
+
+  // 4. Ziyaretçinin rolünü kontrol et (işveren ise görüşme butonu gösterilecek)
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  let isVisitorEmployer = false;
+  if (currentUser && currentUser.id !== id) {
+    const { data: visitorProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", currentUser.id)
+      .single();
+    isVisitorEmployer = visitorProfile?.role === "employer";
+  }
+  const isProfileOwnerStudent = profile.role === "student" || profile.role === "alumni";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -97,6 +111,12 @@ export default async function UserProfilePage({
 
               {/* Alt Satır: Butonlar */}
               <div className="flex flex-wrap gap-3 mb-6">
+                {isVisitorEmployer && isProfileOwnerStudent && (
+                  <InterviewRequestButton
+                    recipientId={profile.id}
+                    recipientName={`${profile.first_name} ${profile.last_name}`}
+                  />
+                )}
                 {yearbookProfile && (
                   <Link
                     href={`/yearbook/${profile.id}`}

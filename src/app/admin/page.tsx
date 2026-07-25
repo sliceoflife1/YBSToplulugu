@@ -15,6 +15,7 @@ import {
   Tag,
   Megaphone,
   BookOpen,
+  Briefcase,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -42,7 +43,7 @@ export default async function AdminPage() {
   }
 
   // Fetch stats
-  const [usersRes, orgsRes, pendingOrgsRes, postsRes, projectsRes] =
+  const [usersRes, orgsRes, pendingOrgsRes, postsRes, projectsRes, jobListingsRes, jobAppsRes] =
     await Promise.all([
       supabase.from("profiles").select("id", { count: "exact" }),
       supabase.from("organizations").select("id", { count: "exact" }),
@@ -53,6 +54,8 @@ export default async function AdminPage() {
         .order("created_at", { ascending: false }),
       supabase.from("posts").select("id", { count: "exact" }),
       supabase.from("projects").select("id", { count: "exact" }),
+      supabase.from("job_listings").select("id", { count: "exact" }),
+      supabase.from("job_applications").select("id", { count: "exact" }),
     ]);
 
   const stats = [
@@ -80,6 +83,18 @@ export default async function AdminPage() {
       value: orgsRes.count || 0,
       color: "bg-pink-500/10 text-pink-600",
     },
+    {
+      icon: Briefcase,
+      label: "İş İlanları",
+      value: jobListingsRes.count || 0,
+      color: "bg-cyan-500/10 text-cyan-600",
+    },
+    {
+      icon: FolderKanban,
+      label: "Başvurular",
+      value: jobAppsRes.count || 0,
+      color: "bg-indigo-500/10 text-indigo-600",
+    },
   ];
 
   const pendingOrgs = (pendingOrgsRes.data || []) as Organization[];
@@ -105,7 +120,7 @@ export default async function AdminPage() {
           </div>
 
           {/* Stats grid */}
-          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -234,6 +249,18 @@ export default async function AdminPage() {
               </h3>
               <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
                 Öğrenci indirimlerini yönet
+              </p>
+            </Link>
+            <Link
+              href="/admin/jobs"
+              className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            >
+              <Briefcase className="h-6 w-6 text-[var(--color-primary)]" />
+              <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                İş İlanları Yönetimi
+              </h3>
+              <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                İş ve staj ilanlarını yönet
               </p>
             </Link>
             <Link
