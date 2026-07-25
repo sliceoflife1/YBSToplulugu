@@ -40,6 +40,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/contact" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--color-primary)] font-medium text-[var(--color-primary)]">
+                  İletişim
+                </Link>
+              </li>
+              <li>
                 <Link href="/register" className="transition-colors hover:text-[var(--color-primary)]">
                   Kayıt Ol
                 </Link>

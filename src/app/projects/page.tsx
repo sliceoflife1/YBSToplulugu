@@ -1,6 +1,8 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import ProjectsClient from "./projects-client";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +78,15 @@ export default async function ProjectsPage() {
               <p className="mt-1 text-[var(--color-muted-foreground)]">
                 Öğrencilerimiz tarafından geliştirilen projeleri keşfedin
               </p>
+            </div>
+            <div>
+              <Link
+                href="/projects/new"
+                className="flex items-center justify-center gap-2 rounded-lg gradient-primary px-4 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                Yeni Proje Ekle
+              </Link>
             </div>
           </div>
 
