@@ -44,6 +44,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
   // 1. Silme İşlemi
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
+    const deletedName = `${userToDelete.first_name || ''} ${userToDelete.last_name || ''}`.trim() || userToDelete.edu_email;
     setLoading(true);
 
     try {
@@ -54,15 +55,16 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Kullanıcı silinemedi");
+        throw new Error(typeof data.error === "string" ? data.error : JSON.stringify(data.error || "Kullanıcı silinemedi"));
       }
 
-      toast.success("Kullanıcı tamamen silindi.");
+      toast.success(`${deletedName} isimli kullanıcı başarıyla silindi.`);
       setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
       setUserToDelete(null);
       router.refresh();
     } catch (err: any) {
-      toast.error(err?.message || "Silme işlemi sırasında hata oluştu");
+      const errMsg = typeof err === "string" ? err : err?.message || "Kullanıcı silinirken bir hata oluştu.";
+      toast.error(errMsg && errMsg !== "{}" ? errMsg : "Kullanıcı silinirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }

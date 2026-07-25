@@ -40,30 +40,35 @@ export async function DELETE(
       );
     }
 
-    // 3. Supabase Admin API ile auth.users seviyesinden sil (Cascading profil ve bağlı verileri temizler)
-    const { error: deleteAuthError } = await adminSupabase.auth.admin.deleteUser(
-      targetUserId
-    );
+    // 3. Profiles tablosundan sil
+    const { error: deleteProfileError } = await adminSupabase
+      .from("profiles")
+      .delete()
+      .eq("id", targetUserId);
 
-    if (deleteAuthError) {
-      // Eğer auth.users silinirken hata olduysa doğrudan profiles'tan silmeyi dene
-      const { error: deleteProfileError } = await adminSupabase
-        .from("profiles")
-        .delete()
-        .eq("id", targetUserId);
+    // 4. Auth.users tablosundan sil (var ise)
+    try {
+      await adminSupabase.auth.admin.deleteUser(targetUserId);
+    } catch (e) {
+      console.log("Auth user delete notice:", e);
+    }
 
-      if (deleteProfileError) {
-        return NextResponse.json(
-          { error: deleteAuthError.message || deleteProfileError.message },
-          { status: 500 }
-        );
-      }
+    if (deleteProfileError) {
+      const errMsg = typeof deleteProfileError === "string" 
+        ? deleteProfileError 
+        : deleteProfileError.message || JSON.stringify(deleteProfileError);
+
+      return NextResponse.json(
+        { error: errMsg || "Kullanıcı veritabanından silinemedi" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true, message: "Kullanıcı başarıyla silindi." });
   } catch (error: any) {
+    const errMsg = typeof error === "string" ? error : error?.message || "Sunucu hatası oluştu";
     return NextResponse.json(
-      { error: error?.message || "Sunucu hatası oluştu" },
+      { error: errMsg },
       { status: 500 }
     );
   }
