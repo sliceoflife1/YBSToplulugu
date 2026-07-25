@@ -58,10 +58,15 @@ export default function FacultyRegisterPage() {
     setLoading(true);
     const supabase = createClient();
 
+    const redirectUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback`
+      : "https://ybs-toplulugu.vercel.app/auth/callback";
+
     const { error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           first_name: data.firstName,
           last_name: data.lastName,

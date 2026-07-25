@@ -53,11 +53,16 @@ export default function OrganizationRegisterPage() {
     setLoading(true);
     const supabase = createClient();
 
+    const redirectUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback`
+      : "https://ybs-toplulugu.vercel.app/auth/callback";
+
     // Signup organization (with role "employer" and user metadata)
     const { error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           first_name: data.orgName, // Profiles expects first_name for org name
           last_name: "",
