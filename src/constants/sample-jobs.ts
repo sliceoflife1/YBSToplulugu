@@ -1,0 +1,226 @@
+import type { JobListing } from "@/types/database";
+
+export const SAMPLE_JOB_LISTINGS: JobListing[] = [
+  {
+    id: "sample-1",
+    employer_id: "3e1ee090-a98f-4d55-a0eb-62c14c4bd8b3", // Veritabanındaki gerçek işveren hesabı (özgürün şirketi)
+    organization_id: "org-sample-1",
+    title: "Senior Full Stack Developer (Next.js & Node.js)",
+    description: `Özgür Bilişim & Teknoloji bünyesinde geliştirdiğimiz büyük ölçekli web platformlarında görev alacak, kullanıcı deneyimine önem veren ve modern web mimarilerine hakim Senior Full Stack Developer arıyoruz.
+
+Sorumluluklar:
+• Next.js 15 App Router ve React Server Components ile ölçeklenebilir ön yüz mimarileri geliştirmek
+• PostgreSQL ve Supabase veritabanı performans optimizasyonlarını yürütmek
+• RESTful API ve GraphQL servis entegrasyonlarını kurgulamak
+• Junior geliştiricilere mentörlük sağlamak ve kod gözden geçirme (code review) süreçlerine liderlik etmek`,
+    category: "software_it",
+    employment_type: "full_time",
+    work_mode: "hybrid",
+    location: "İzmir / Hibrit",
+    requirements: [
+      "En az 3 yıl profesyonel React / Next.js ve TypeScript tecrübesi",
+      "PostgreSQL, Prisma veya Supabase ORM/Backend deneyimi",
+      "Tailwind CSS, CSS-in-JS ve modern UI component kütüphaneleri bilgisi",
+      "Git, CI/CD ve Docker süreçlerine hakimiyet",
+      "İyi derecede İngilizce okuma ve yazma becerisi",
+    ],
+    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    is_active: true,
+    application_count: 8,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    profiles: {
+      id: "3e1ee090-a98f-4d55-a0eb-62c14c4bd8b3",
+      edu_email: "ozgurcanaka@gmail.com",
+      first_name: "özgürün şirketi",
+      last_name: "Teknoloji",
+      role: "employer",
+      avatar_url: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_active: true,
+    } as any,
+    organizations: {
+      id: "org-sample-1",
+      name: "Özgür Bilişim & Teknoloji A.Ş.",
+      type: "employer",
+      description: "Öncü yazılım geliştirme ve dijital dönüşüm çözümleri sunan teknoloji şirketi.",
+      website_url: "https://ybs-toplulugu.vercel.app",
+      contact_email: "ozgurcanaka@gmail.com",
+      contact_phone: "+90 232 000 0000",
+      logo_url: null,
+      owner_id: "3e1ee090-a98f-4d55-a0eb-62c14c4bd8b3",
+      approval_status: "approved",
+      approved_by: null,
+      approved_at: null,
+      rejection_reason: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    } as any,
+  },
+  {
+    id: "sample-2",
+    employer_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", // Veritabanındaki gerçek işveren hesabı (Selin Aksoy)
+    organization_id: "d2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e", // Veritabanındaki gerçek onaylı TeknoBilişim A.Ş.
+    title: "Yapay Zeka & Veri Analisti Stajyeri",
+    description: `TeknoBilişim A.Ş. Ar-Ge merkezinde yürütülen yapay zeka projelerinde görev almak üzere analitik düşünme yeteneğine sahip, veri bilimine tutkulu stajyer takım arkadaşları arıyoruz.
+
+Staj Kapsamı:
+• Büyük veri setlerinin Pandas ve NumPy ile temizlenmesi ve analiz edilmesi
+• Makine öğrenmesi modelleri için veri hazırlığı ve özellik mühendisliği (feature engineering) yapılması
+• PowerBI ve Python görselleştirme kütüphaneleri ile iş zekası raporlarının kurgulanması`,
+    category: "data_science",
+    employment_type: "internship",
+    work_mode: "remote",
+    location: "Uzaktan / Türkiye",
+    requirements: [
+      "DEÜ YBS, Bilgisayar Mühendisliği veya İstatistik 3. veya 4. sınıf öğrencisi olmak",
+      "Temel düzeyde Python, SQL ve R bilgisi",
+      "Scikit-learn, Pandas ve Matplotlib kütüphanelerine aşinalık",
+      "Problem çözme ve veri odaklı düşünme becerisi",
+    ],
+    deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    is_active: true,
+    application_count: 14,
+    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    profiles: {
+      id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      edu_email: "selin.aksoy@test.com",
+      first_name: "Selin",
+      last_name: "Aksoy",
+      role: "employer",
+      avatar_url: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_active: true,
+    } as any,
+    organizations: {
+      id: "d2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+      name: "TeknoBilişim A.Ş.",
+      type: "employer",
+      description: "Yazılım, veri analitiği ve yapay zeka alanında kurumsal hizmetler sunan lider firma.",
+      website_url: "https://example.com",
+      contact_email: "selin.aksoy@test.com",
+      contact_phone: "+90 232 111 2233",
+      logo_url: null,
+      owner_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      approval_status: "approved",
+      approved_by: null,
+      approved_at: null,
+      rejection_reason: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    } as any,
+  },
+  {
+    id: "sample-3",
+    employer_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    organization_id: "d2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+    title: "Dijital Pazarlama & Sosyal Medya Yarı Zamanlı Uzmanı",
+    description: `TeknoBilişim markamızın dijital kanallardaki stratejilerini yönetecek, performans odaklı pazarlama kampanyaları kurgulayacak yarı zamanlı çalışma arkadaşı arıyoruz.
+
+Görev Tanımı:
+• Google Ads, Meta Ads ve LinkedIn Ads reklam kampanyalarının optimizasyonu
+• Sosyal medya içerik takviminin hazırlanması ve metin yazarlığı
+• Web sitesi SEO analizi ve organik trafik geliştirme stratejileri`,
+    category: "marketing",
+    employment_type: "part_time",
+    work_mode: "onsite",
+    location: "Alsancak, İzmir",
+    requirements: [
+      "Dijital pazarlama ve sosyal medya yönetimi konusunda deneyimli",
+      "Google Analytics ve Meta Business Manager kullanımı",
+      "İçerik yazarlığı ve iletişim becerisi yüksek",
+      "Haftada en az 2.5 gün ofis katılımı sağlayabilecek",
+    ],
+    deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+    is_active: true,
+    application_count: 6,
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    profiles: {
+      id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      edu_email: "selin.aksoy@test.com",
+      first_name: "Selin",
+      last_name: "Aksoy",
+      role: "employer",
+      avatar_url: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_active: true,
+    } as any,
+    organizations: {
+      id: "d2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+      name: "TeknoBilişim A.Ş.",
+      type: "employer",
+      description: "Yazılım, veri analitiği ve yapay zeka alanında kurumsal hizmetler sunan lider firma.",
+      website_url: "https://example.com",
+      contact_email: "selin.aksoy@test.com",
+      contact_phone: "+90 232 111 2233",
+      logo_url: null,
+      owner_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      approval_status: "approved",
+      approved_by: null,
+      approved_at: null,
+      rejection_reason: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    } as any,
+  },
+  {
+    id: "sample-4",
+    employer_id: "3e1ee090-a98f-4d55-a0eb-62c14c4bd8b3",
+    organization_id: "org-sample-1",
+    title: "UI/UX Tasarım & Arayüz Stajyeri",
+    description: `Kullanıcı odaklı tasarım süreçlerimize katkı sağlayacak, Figma ile modern ve estetik web/mobil arayüz prototipleri geliştirecek stajyer çalışma arkadaşı arıyoruz.
+
+Beklentiler:
+• Kullanıcı araştırması ve tel çerçeve (wireframe) çizimleri yapılması
+• Figma kütüphaneleri ve Design System bileşenleri ile tasarım üretilmesi
+• Kullanılabilirlik testlerinin yürütülmesi`,
+    category: "design",
+    employment_type: "internship",
+    work_mode: "remote",
+    location: "Uzaktan",
+    requirements: [
+      "Figma ve Adobe XD araçlarına hakimiyet",
+      "Kullanıcı deneyimi (UX) temel prensiplerini bilme",
+      "Portfolyo veya çalışma örnekleri sunabilme",
+      "Takım çalışmasına uyum ve detaylara özen gösterme",
+    ],
+    deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+    is_active: true,
+    application_count: 11,
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    profiles: {
+      id: "3e1ee090-a98f-4d55-a0eb-62c14c4bd8b3",
+      edu_email: "ozgurcanaka@gmail.com",
+      first_name: "özgürün şirketi",
+      last_name: "Teknoloji",
+      role: "employer",
+      avatar_url: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_active: true,
+    } as any,
+    organizations: {
+      id: "org-sample-1",
+      name: "Özgür Bilişim & Teknoloji A.Ş.",
+      type: "employer",
+      description: "Öncü yazılım geliştirme ve dijital dönüşüm çözümleri sunan teknoloji şirketi.",
+      website_url: "https://ybs-toplulugu.vercel.app",
+      contact_email: "ozgurcanaka@gmail.com",
+      contact_phone: "+90 232 000 0000",
+      logo_url: null,
+      owner_id: "3e1ee090-a98f-4d55-a0eb-62c14c4bd8b3",
+      approval_status: "approved",
+      approved_by: null,
+      approved_at: null,
+      rejection_reason: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    } as any,
+  },
+];

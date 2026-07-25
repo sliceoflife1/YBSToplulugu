@@ -24,6 +24,8 @@ import CountdownTimer from "@/components/jobs/countdown-timer";
 import ApplyButton from "@/components/jobs/apply-button";
 import JobDetailActions from "./job-detail-actions";
 
+import { SAMPLE_JOB_LISTINGS } from "@/constants/sample-jobs";
+
 export const dynamic = "force-dynamic";
 
 export default async function JobDetailPage({
@@ -35,13 +37,16 @@ export default async function JobDetailPage({
   const supabase = await createClient();
 
   // İlan detayını çek
-  const { data: listing } = await supabase
+  const { data: dbListing } = await supabase
     .from("job_listings")
     .select(
       "*, profiles!employer_id(id, first_name, last_name, avatar_url), organizations(id, name, logo_url, website_url, contact_email, contact_phone, description)"
     )
     .eq("id", id)
-    .single();
+    .maybeSingle();
+
+  // DB'de yoksa sample listesinden kontrol et
+  const listing = dbListing || SAMPLE_JOB_LISTINGS.find((item) => item.id === id);
 
   if (!listing) {
     notFound();
