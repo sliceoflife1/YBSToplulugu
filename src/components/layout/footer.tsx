@@ -97,6 +97,16 @@ export default function Footer() {
                   Kullanım Koşulları
                 </Link>
               </li>
+              <li>
+                <Link href="/privacy" className="transition-colors hover:text-[var(--color-primary)]">
+                  Gizlilik Politikası
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookies" className="transition-colors hover:text-[var(--color-primary)]">
+                  Çerez Politikası
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

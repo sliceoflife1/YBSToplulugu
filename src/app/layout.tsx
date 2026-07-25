@@ -39,6 +39,8 @@ export const metadata: Metadata = {
   },
 };
 
+import LegalConsentModal from "@/components/layout/legal-consent-modal";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -58,6 +60,7 @@ export default async function RootLayout({
         >
           <NextIntlClientProvider messages={messages}>
             {children}
+            <LegalConsentModal />
             <Toaster
               position="bottom-right"
               richColors

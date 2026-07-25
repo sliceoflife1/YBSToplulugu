@@ -365,7 +365,7 @@ export default function StudentRegisterPage() {
               </div>
             </div>
 
-            {/* KVKK Consent */}
+            {/* KVKK & Yasal Onaylar */}
             <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/50 p-4">
               <label className="flex items-start gap-3">
                 <input
@@ -373,15 +373,23 @@ export default function StudentRegisterPage() {
                   {...register("kvkkConsent")}
                   className="mt-0.5 h-4 w-4 rounded border-[var(--color-input)] text-[var(--color-primary)] focus:ring-[var(--color-ring)]"
                 />
-                <span className="text-sm text-[var(--color-muted-foreground)]">
-                  <Link
-                    href="/kvkk"
-                    target="_blank"
-                    className="font-medium text-[var(--color-primary)] underline"
-                  >
-                    {t("auth.kvkkTitle")}
+                <span className="text-xs sm:text-sm text-[var(--color-muted-foreground)] leading-relaxed">
+                  <Link href="/kvkk" target="_blank" className="font-medium text-[var(--color-primary)] underline">
+                    KVKK Aydınlatma Metni
                   </Link>
-                  &apos;ni okudum ve kabul ediyorum. *
+                  &apos;ni,{" "}
+                  <Link href="/terms" target="_blank" className="font-medium text-[var(--color-primary)] underline">
+                    Kullanım Koşulları
+                  </Link>
+                  &apos;nı,{" "}
+                  <Link href="/privacy" target="_blank" className="font-medium text-[var(--color-primary)] underline">
+                    Gizlilik Politikası
+                  </Link>
+                  &apos;nı ve{" "}
+                  <Link href="/cookies" target="_blank" className="font-medium text-[var(--color-primary)] underline">
+                    Çerez Politikası
+                  </Link>
+                  &apos;nı okudum, kabul ediyorum. *
                 </span>
               </label>
               {errors.kvkkConsent && (
