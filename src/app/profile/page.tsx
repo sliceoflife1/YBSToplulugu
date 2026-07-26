@@ -39,7 +39,7 @@ export default async function ProfilePage() {
   const { data: projects } = await supabase
     .from("projects")
     .select("*")
-    .eq("user_id", user.id)
+    .or(`user_id.eq.${user.id},team_members.cs.{${user.id}}`)
     .order("year", { ascending: false });
 
   if (!profile) redirect("/login");

@@ -48,6 +48,9 @@ export interface Project {
   external_url: string | null;
   semester: Semester | null;
   year: number | null;
+  project_type?: string | null;
+  team_members?: string[] | null;
+  license?: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;

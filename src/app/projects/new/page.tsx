@@ -12,18 +12,43 @@ import {
   Upload, 
   FileText, 
   FileArchive, 
-  Paperclip 
+  Globe,
+  ShieldCheck,
+  Code2,
+  Users,
+  CheckCircle2,
+  Sparkles,
+  Info
 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { projectSchema, type ProjectInput } from "@/lib/validations/profile";
 import RichTextEditor from "@/components/community/RichTextEditor";
+import type { Profile } from "@/types/database";
 
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"];
 const DOCUMENT_EXTENSIONS = [".zip", ".rar", ".odt", ".txt", ".rtf", ".docx", ".xls", ".pptx", ".pdf"];
 const ALL_ALLOWED_EXTENSIONS = [...IMAGE_EXTENSIONS, ...DOCUMENT_EXTENSIONS];
 const MAX_FILES = 10;
+
+const PROJECT_TYPES = [
+  { value: "personal", label: "Kişisel Proje" },
+  { value: "term_project", label: "Dönem Projesi" },
+  { value: "graduation_thesis", label: "Bitirme Tezi" },
+  { value: "hackathon", label: "Hackathon Projesi" },
+  { value: "course_assignment", label: "Ders Ödevi" },
+  { value: "other", label: "Diğer" },
+];
+
+const LICENSES = [
+  { value: "none", label: "Özel / Lisanssız (Tüm Hakları Saklıdır)", desc: "Kodunuz tescilli kalır, izin vermez." },
+  { value: "mit", label: "MIT Lisansı (En Popüler / Özgür)", desc: "Herkes serbestçe kopyalayabilir, değiştirebilir ve ticari kullanabilir." },
+  { value: "apache_2", label: "Apache 2.0 Lisansı", desc: "Özgür kullanım sunar, ek olarak patent koruması sağlar." },
+  { value: "gpl_v3", label: "GNU GPL v3 Lisansı", desc: "Türetilen projelerin de açık kaynak olmasını şart koşar." },
+];
+
+const YEARS = Array.from({ length: 11 }, (_, i) => 2030 - i);
 
 interface AttachedFile {
   id: string;
@@ -43,13 +68,48 @@ export default function NewProjectPage() {
   const [techInput, setTechInput] = useState("");
   const [techs, setTechs] = useState<string[]>([]);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  
+  // Takım Arkadaşları Seçimi State'leri
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState<Profile[]>([]);
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProjectInput>({
     resolver: zodResolver(projectSchema),
-    defaultValues: { technologies: [], mediaUrls: [] },
+    defaultValues: { 
+      technologies: [], 
+      mediaUrls: [], 
+      projectType: "personal",
+      license: "none",
+      year: new Date().getFullYear(),
+      semester: "fall",
+      teamMembers: [],
+    },
   });
 
   const descriptionValue = watch("description");
+  const selectedLicense = watch("license");
+
+  // Topluluktaki diğer aktif öğrencileri/üyeleri çek
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .neq("id", user.id)
+        .eq("is_active", true)
+        .order("first_name", { ascending: true });
+
+      if (data) {
+        setAllProfiles(data as Profile[]);
+      }
+    };
+    fetchProfiles();
+  }, []);
 
   const addTech = () => {
     const trimmed = techInput.trim();
@@ -67,6 +127,17 @@ export default function NewProjectPage() {
     setValue("technologies", newTechs);
   };
 
+  const toggleTeamMember = (profileItem: Profile) => {
+    let updated: Profile[];
+    if (selectedMembers.some(m => m.id === profileItem.id)) {
+      updated = selectedMembers.filter(m => m.id !== profileItem.id);
+    } else {
+      updated = [...selectedMembers, profileItem];
+    }
+    setSelectedMembers(updated);
+    setValue("teamMembers", updated.map(m => m.id));
+  };
+
   const handleEditorChange = useCallback(
     (html: string) => {
       setValue("description", html, { shouldValidate: true });
@@ -78,7 +149,6 @@ export default function NewProjectPage() {
   const validateFile = (file: File): { valid: boolean; error?: string } => {
     const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
     
-    // 1. Format Kontrolü
     if (!ALL_ALLOWED_EXTENSIONS.includes(ext)) {
       return { 
         valid: false, 
@@ -86,9 +156,8 @@ export default function NewProjectPage() {
       };
     }
 
-    // 2. Boyut Kontrolü
     const isImage = IMAGE_EXTENSIONS.includes(ext);
-    const maxSize = isImage ? 10 * 1024 * 1024 : 30 * 1024 * 1024; // 10MB vs 30MB
+    const maxSize = isImage ? 10 * 1024 * 1024 : 30 * 1024 * 1024;
     
     if (file.size > maxSize) {
       return { 
@@ -102,14 +171,12 @@ export default function NewProjectPage() {
     return { valid: true };
   };
 
-  // Azure Blob'a Dosya Yükleme Mantığı
   const uploadToAzure = async (file: File, fileId: string) => {
     setAttachedFiles(prev => 
       prev.map(f => f.id === fileId ? { ...f, status: "uploading", progress: 10 } : f)
     );
 
     try {
-      // 1. SAS Token Al
       const sasRes = await fetch("/api/storage/sas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,7 +191,6 @@ export default function NewProjectPage() {
 
       const { uploadUrl, blobUrl } = sasData;
 
-      // 2. XMLHttpRequest kullanarak doğrudan Azure Blob'a yükle (Progress takibi için)
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", uploadUrl, true);
       xhr.setRequestHeader("Content-Type", file.type);
@@ -153,12 +219,10 @@ export default function NewProjectPage() {
       xhr.send(file);
       await uploadPromise;
 
-      // Yükleme Başarılı
       setAttachedFiles(prev => 
         prev.map(f => f.id === fileId ? { ...f, status: "success", progress: 100, blobUrl } : f)
       );
 
-      // React Hook Form payload'ını güncelle
       setAttachedFiles(latest => {
         const urls = latest.filter(f => f.status === "success" && f.blobUrl).map(f => f.blobUrl!);
         setValue("mediaUrls", urls);
@@ -174,13 +238,10 @@ export default function NewProjectPage() {
     }
   };
 
-  // Sürükle-bırak veya Seçim Sonrası Tetiklenen Metot
   const handleFileSelection = (files: FileList | null) => {
     if (!files) return;
-
     const fileList = Array.from(files);
     
-    // Toplam dosya adedi sınırını aşma kontrolü
     if (attachedFiles.length + fileList.length > MAX_FILES) {
       toast.error(`En fazla ${MAX_FILES} dosya ekleyebilirsiniz.`);
       return;
@@ -197,29 +258,22 @@ export default function NewProjectPage() {
         return;
       }
 
-      const newAttach: AttachedFile = {
+      newAttachments.push({
         id: fileId,
         file,
         name: file.name,
         size: file.size,
         status: "idle",
         progress: 0
-      };
-
-      newAttachments.push(newAttach);
+      });
     });
 
     if (newAttachments.length === 0) return;
 
     setAttachedFiles(prev => [...prev, ...newAttachments]);
-
-    // Her bir yeni dosyayı sırayla yükle
-    newAttachments.forEach(attach => {
-      uploadToAzure(attach.file, attach.id);
-    });
+    newAttachments.forEach(attach => uploadToAzure(attach.file, attach.id));
   };
 
-  // Ekli Dosyayı Kaldırma
   const removeAttachedFile = (fileId: string) => {
     setAttachedFiles(prev => {
       const filtered = prev.filter(f => f.id !== fileId);
@@ -238,7 +292,6 @@ export default function NewProjectPage() {
   };
 
   const onSubmit = async (data: ProjectInput) => {
-    // Yüklemesi devam eden dosya kontrolü
     const isUploading = attachedFiles.some(f => f.status === "uploading");
     if (isUploading) {
       toast.error("Lütfen tüm dosyaların yüklenmesini bekleyin.");
@@ -250,24 +303,53 @@ export default function NewProjectPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    const { error } = await supabase.from("projects").insert({
+    const teamMemberIds = selectedMembers.map(m => m.id);
+
+    const { data: insertedProject, error } = await supabase.from("projects").insert({
       user_id: user.id,
       title: data.title,
       description: data.description,
       technologies: data.technologies,
-      github_url: data.githubUrl || null,
-      youtube_url: data.youtubeUrl || null,
+      project_type: data.projectType,
+      github_url: data.githubUrl,
+      youtube_url: data.youtubeUrl,
       behance_url: data.behanceUrl || null,
-      external_url: data.externalUrl || null,
-      semester: data.semester || null,
-      year: data.year || null,
+      external_url: data.externalUrl,
+      semester: data.semester,
+      year: data.year,
+      team_members: teamMemberIds,
+      license: data.license || "none",
       media_urls: data.mediaUrls || [],
-    });
+    }).select().single();
 
     if (error) {
-      toast.error("Proje eklenirken bir hata oluştu");
+      toast.error("Proje eklenirken bir hata oluştu: " + error.message);
       setLoading(false);
       return;
+    }
+
+    // Etiketlenen Takım Arkadaşlarina Sistem Bildirimi Gönder
+    if (teamMemberIds.length > 0 && insertedProject) {
+      const { data: currentProfile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .single();
+
+      const authorName = currentProfile
+        ? `${currentProfile.first_name} ${currentProfile.last_name}`
+        : "Bir topluluk üyesi";
+
+      for (const memberId of teamMemberIds) {
+        await supabase.from("notifications").insert({
+          recipient_id: memberId,
+          type: "system",
+          title: "Grup Projesinde Etiketlendiniz 🚀",
+          message: `${authorName} seni '${data.title}' projesine takım arkadaşı olarak ekledi. Profilinde görüntüleyebilirsin. (İstersen profilin üzerinden etiketi kaldırabilirsin).`,
+          metadata: { link: `/u/${user.id}`, project_id: insertedProject.id },
+          is_read: false,
+        });
+      }
     }
 
     toast.success("Proje başarıyla eklendi!");
@@ -275,34 +357,276 @@ export default function NewProjectPage() {
     router.refresh();
   };
 
+  const filteredProfiles = allProfiles.filter(p => {
+    const q = memberSearch.toLowerCase();
+    return (
+      (p.first_name || "").toLowerCase().includes(q) ||
+      (p.last_name || "").toLowerCase().includes(q) ||
+      (p.edu_email || "").toLowerCase().includes(q)
+    );
+  });
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <Link href="/profile" className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <Link href="/profile" className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors">
         <ArrowLeft className="h-4 w-4" /> {t("common.back")}
       </Link>
 
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 shadow-lg animate-fade-in">
-        <h1 className="mb-6 text-2xl font-bold text-[var(--color-foreground)]">Yeni Proje Ekle</h1>
+      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 sm:p-8 shadow-lg animate-fade-in">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-[var(--color-border)]">
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Yeni Proje Paylaş</h1>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+              Akademik ve kişisel projelerinizi toplulukla buluşturun, portfolyonuzu zenginleştirin.
+            </p>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {/* BİLİNÇLENDİRME & UYARI KARTLARI */}
+        <div className="mb-8 space-y-3">
+          {/* GitHub Gizlilik Uyarısı */}
+          <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-4 text-xs">
+            <div className="flex items-start gap-3">
+              <Globe className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-blue-900 dark:text-blue-300">
+                  🔓 GitHub Deposu Herkese Açık (Public) Olmalıdır!
+                </p>
+                <p className="mt-1 text-blue-800/80 dark:text-blue-300/80 leading-relaxed">
+                  GitHub deponuz varsayılan olarak "Private" (Gizli) açılmış olabilir. Diğer öğrenci arkadaşlarımızın ve akademisyenlerin projenizi görebilmesi için GitHub depo ayarlarınızdan reponuzu **Public** olarak değiştirdiğinizden emin olun. (Gizli kalınca diğer kullanıcılar 404 hatası alır).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Kod & Veri Güvenliği Uyarısı */}
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-amber-900 dark:text-amber-300">
+                  ⚠️ Hassas Veri & Kod Güvenliği Hatırlatması
+                </p>
+                <p className="mt-1 text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                  GitHub deponuzu herkese açık yaptığınızda, kodlarınız dünyadaki herkes tarafından görüntülenebilir ve kopyalanabilir. Lütfen `.env` dosyalarınızı, veritabanı şifrelerinizi, API Secret Key anahtarlarınızı veya özel verilerinizi deponuza **YÜKLEMEYİN**.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Proje Başlığı */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Proje Başlığı *</label>
             <input 
               {...register("title")} 
               className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" 
-              placeholder="Örn: E-Ticaret Web Uygulaması" 
+              placeholder="Örn: Yapay Zeka Destekli Akıllı Kampüs Rehberi" 
             />
             {errors.title && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.title.message}</p>}
           </div>
 
+          {/* Proje Türü (Kategori) */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Proje Türü (Kategori) *</label>
+            <select 
+              {...register("projectType")} 
+              className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none"
+            >
+              {PROJECT_TYPES.map((pt) => (
+                <option key={pt.value} value={pt.value}>{pt.label}</option>
+              ))}
+            </select>
+            {errors.projectType && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.projectType.message}</p>}
+          </div>
+
+          {/* Açıklama */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Açıklama *</label>
             <RichTextEditor
               content={descriptionValue || ""}
               onChange={handleEditorChange}
-              minHeight="min-h-[160px]"
+              minHeight="min-h-[180px]"
             />
             {errors.description && <p className="mt-1.5 text-xs text-[var(--color-error)]">{errors.description.message}</p>}
+          </div>
+
+          {/* Dönem ve Yıl (Zorunlu ve Select) */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Dönem *</label>
+              <select {...register("semester")} className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none">
+                <option value="fall">Güz Dönemi</option>
+                <option value="spring">Bahar Dönemi</option>
+                <option value="summer">Yaz Okulu</option>
+              </select>
+              {errors.semester && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.semester.message}</p>}
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Yıl *</label>
+              <select {...register("year", { valueAsNumber: true })} className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none">
+                {YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              {errors.year && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.year.message}</p>}
+            </div>
+          </div>
+
+          {/* ZORUNLU URL ALANLARI VE ÖRNEKLİ HATA MESAJLARI */}
+          <div className="space-y-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/20 p-5">
+            <h3 className="text-xs font-bold text-[var(--color-foreground)] uppercase tracking-wider flex items-center gap-1.5">
+              <Code2 className="h-4 w-4 text-indigo-600" />
+              Proje Bağlantıları (Zorunlu Alanlar)
+            </h3>
+
+            {/* GitHub URL */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-[var(--color-foreground)]">GitHub Repo URL *</label>
+              <input 
+                {...register("githubUrl")} 
+                placeholder="https://github.com/kullanici/proje-adi" 
+                className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" 
+              />
+              <p className="mt-1 text-[11px] text-[var(--color-muted-foreground)]">
+                Örnek doğru format: <span className="font-mono text-indigo-600">https://github.com/kullanici/proje-repo</span>
+              </p>
+              {errors.githubUrl && <p className="mt-1 text-xs font-medium text-[var(--color-error)]">{errors.githubUrl.message}</p>}
+            </div>
+
+            {/* YouTube URL */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-[var(--color-foreground)]">YouTube Tanıtım/Demo Video URL *</label>
+              <input 
+                {...register("youtubeUrl")} 
+                placeholder="https://www.youtube.com/watch?v=..." 
+                className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" 
+              />
+              <p className="mt-1 text-[11px] text-[var(--color-muted-foreground)]">
+                Örnek doğru format: <span className="font-mono text-indigo-600">https://www.youtube.com/watch?v=dQw4w9WgXcQ</span> veya <span className="font-mono text-indigo-600">https://youtu.be/dQw4w9WgXcQ</span>
+              </p>
+              {errors.youtubeUrl && <p className="mt-1 text-xs font-medium text-[var(--color-error)]">{errors.youtubeUrl.message}</p>}
+            </div>
+
+            {/* Demo / Harici URL */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-[var(--color-foreground)]">Canlı Demo / Web Sitesi URL *</label>
+              <input 
+                {...register("externalUrl")} 
+                placeholder="https://proje-demo.vercel.app" 
+                className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" 
+              />
+              <p className="mt-1 text-[11px] text-[var(--color-muted-foreground)]">
+                Örnek doğru format: <span className="font-mono text-indigo-600">https://proje-demo.vercel.app</span> veya <span className="font-mono text-indigo-600">https://benimprojem.com</span>
+              </p>
+              {errors.externalUrl && <p className="mt-1 text-xs font-medium text-[var(--color-error)]">{errors.externalUrl.message}</p>}
+            </div>
+
+            {/* Behance / Tasarım URL (Opsiyonel) */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[var(--color-muted-foreground)]">Behance / Tasarım Portfolyo URL (İsteğe Bağlı)</label>
+              <input 
+                {...register("behanceUrl")} 
+                placeholder="https://behance.net/gallery/..." 
+                className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" 
+              />
+              {errors.behanceUrl && <p className="mt-1 text-xs font-medium text-[var(--color-error)]">{errors.behanceUrl.message}</p>}
+            </div>
+          </div>
+
+          {/* TAKIM ARKADAŞLARI (GRUP PROJESİ ETİKETLEME) */}
+          <div className="rounded-xl border border-[var(--color-border)] p-5 bg-[var(--color-card)]">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <label className="text-sm font-semibold text-[var(--color-foreground)] flex items-center gap-2">
+                  <Users className="h-4 w-4 text-indigo-600" />
+                  Takım Arkadaşları (Grup Projesi)
+                </label>
+                <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+                  Projede birlikte çalıştığınız topluluk üyelerini etiketleyin. Proje onların profillerinde de listelenecektir. (İsterlerse etiketi kendileri kaldırabilirler).
+                </p>
+              </div>
+            </div>
+
+            {/* Seçilen Takım Arkadaşlar */}
+            {selectedMembers.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3 p-2 rounded-lg bg-[var(--color-muted)]/40">
+                {selectedMembers.map(m => (
+                  <span key={m.id} className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 border border-indigo-200">
+                    {m.first_name} {m.last_name}
+                    <button type="button" onClick={() => toggleTeamMember(m)} className="hover:text-red-500">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <input
+              type="text"
+              value={memberSearch}
+              onChange={(e) => setMemberSearch(e.target.value)}
+              placeholder="Öğrenci / Üye adı veya e-posta ile ara..."
+              className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-xs focus:border-indigo-500 focus:outline-none mb-2"
+            />
+
+            {memberSearch.trim().length > 0 && (
+              <div className="max-h-40 overflow-y-auto divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-1 text-xs">
+                {filteredProfiles.length > 0 ? (
+                  filteredProfiles.slice(0, 5).map(p => {
+                    const isSelected = selectedMembers.some(m => m.id === p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => toggleTeamMember(p)}
+                        className={`flex w-full items-center justify-between p-2 rounded-lg text-left transition-colors ${
+                          isSelected ? "bg-indigo-500/10 text-indigo-600 font-bold" : "hover:bg-[var(--color-muted)]"
+                        }`}
+                      >
+                        <div>
+                          <p className="font-semibold">{p.first_name} {p.last_name}</p>
+                          <p className="text-[10px] text-[var(--color-muted-foreground)]">{p.department || p.edu_email}</p>
+                        </div>
+                        {isSelected ? <CheckCircle2 className="h-4 w-4 text-indigo-600" /> : <Plus className="h-4 w-4" />}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="p-2 text-center text-[11px] text-[var(--color-muted-foreground)]">Üye bulunamadı</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* LİSANS SEÇİMİ VE İPUCU REHBERİ */}
+          <div className="rounded-xl border border-[var(--color-border)] p-5 bg-[var(--color-card)]">
+            <label className="mb-2 block text-sm font-semibold text-[var(--color-foreground)] flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-600" />
+              Açık Kaynak Lisansı (İsteğe Bağlı)
+            </label>
+            <select 
+              {...register("license")} 
+              className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-3 text-sm focus:border-indigo-500 focus:outline-none mb-3"
+            >
+              {LICENSES.map((lic) => (
+                <option key={lic.value} value={lic.value}>{lic.label}</option>
+              ))}
+            </select>
+
+            {/* Seçilen lisans bilgi rehberi */}
+            {selectedLicense && (
+              <div className="rounded-lg bg-purple-500/5 border border-purple-500/20 p-3 text-xs text-purple-900 dark:text-purple-300">
+                <p className="font-bold flex items-center gap-1.5">
+                  <Info className="h-3.5 w-3.5 text-purple-600" />
+                  Lisans Rehberi:
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed">
+                  {LICENSES.find(l => l.value === selectedLicense)?.desc}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Dosya & Fotoğraf Ekleme Alanı */}
@@ -336,7 +660,7 @@ export default function NewProjectPage() {
               />
             </div>
 
-            {/* Dosya Yükleme İlerleme Listesi */}
+            {/* Yüklenen Dosyalar */}
             {attachedFiles.length > 0 && (
               <div className="mt-4 space-y-2">
                 {attachedFiles.map((file) => {
@@ -397,7 +721,7 @@ export default function NewProjectPage() {
             )}
           </div>
 
-          {/* Technologies */}
+          {/* Teknolojiler */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Teknolojiler *</label>
             <div className="flex gap-2">
@@ -406,7 +730,7 @@ export default function NewProjectPage() {
                 onChange={(e) => setTechInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTech(); } }}
                 className="flex-1 rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none"
-                placeholder="React, TypeScript..."
+                placeholder="React, TypeScript, Next.js..."
               />
               <button type="button" onClick={addTech} className="rounded-xl bg-indigo-500 hover:bg-indigo-600 px-4 text-sm font-medium text-white transition-colors">
                 <Plus className="h-4 w-4" />
@@ -427,42 +751,12 @@ export default function NewProjectPage() {
             {errors.technologies && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.technologies.message}</p>}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Dönem</label>
-              <select {...register("semester")} className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none">
-                <option value="">Seçiniz</option>
-                <option value="fall">Güz</option>
-                <option value="spring">Bahar</option>
-                <option value="summer">Yaz</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Yıl</label>
-              <input {...register("year", { valueAsNumber: true })} type="number" min="2000" max="2030" className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" placeholder="2025" />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">GitHub URL</label>
-            <input {...register("githubUrl")} placeholder="https://github.com/..." className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">YouTube URL</label>
-            <input {...register("youtubeUrl")} placeholder="https://youtube.com/watch?v=..." className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Demo / Harici URL</label>
-            <input {...register("externalUrl")} placeholder="https://..." className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] p-2.5 text-sm focus:border-indigo-500 focus:outline-none" />
-          </div>
-
-          <button type="submit" disabled={loading} className="w-full rounded-xl bg-indigo-500 hover:bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50">
-            {loading ? t("common.loading") : "Projeyi Ekle"}
+          <button type="submit" disabled={loading} className="w-full rounded-xl bg-indigo-500 hover:bg-indigo-600 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50">
+            {loading ? t("common.loading") : "Projeyi Paylaş ve Yayınla 🚀"}
           </button>
         </form>
       </div>
     </div>
   );
 }
+

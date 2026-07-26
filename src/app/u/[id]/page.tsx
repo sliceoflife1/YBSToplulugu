@@ -39,7 +39,7 @@ export default async function UserProfilePage({
   const { data: projects } = await supabase
     .from("projects")
     .select("*")
-    .eq("user_id", id)
+    .or(`user_id.eq.${id},team_members.cs.{${id}}`)
     .order("year", { ascending: false })
     .order("created_at", { ascending: false });
 

@@ -66,7 +66,7 @@ export async function upvoteProject(projectId: string) {
 /**
  * Projeyi düzenleyen Server Action.
  */
-export async function editProject(projectId: string, data: ProjectInput) {
+export async function editProject(projectId: string, data: Partial<ProjectInput>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Yetkisiz erişim" };

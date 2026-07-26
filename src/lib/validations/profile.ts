@@ -23,12 +23,36 @@ export const projectSchema = z.object({
   title: z.string().min(3, 'Proje başlığı en az 3 karakter olmalıdır'),
   description: z.string().min(10, 'Açıklama en az 10 karakter olmalıdır'),
   technologies: z.array(z.string()).min(1, 'En az bir teknoloji giriniz'),
-  githubUrl: z.string().url('Geçerli bir GitHub URL giriniz').optional().or(z.literal('')),
-  youtubeUrl: z.string().url('Geçerli bir YouTube URL giriniz').optional().or(z.literal('')),
+  projectType: z.enum(['graduation_thesis', 'term_project', 'hackathon', 'personal', 'course_assignment', 'other'], {
+    message: 'Lütfen proje türünü seçiniz',
+  }),
+  semester: z.enum(['fall', 'spring', 'summer'], {
+    message: 'Lütfen projenin ait olduğu dönemi seçiniz',
+  }),
+  year: z.number({
+    message: 'Lütfen geçerli bir yıl seçiniz',
+  }).min(2000, 'Geçersiz yıl').max(2030, 'Geçersiz yıl'),
+  githubUrl: z
+    .string()
+    .min(1, 'GitHub URL adresi doldurulması zorunludur')
+    .regex(
+      /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/?$/,
+      'Geçersiz GitHub URL adresi! Örnek doğru format: https://github.com/kullanici-adi/proje-adi'
+    ),
+  youtubeUrl: z
+    .string()
+    .min(1, 'YouTube URL adresi doldurulması zorunludur')
+    .regex(
+      /^https:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[A-Za-z0-9_-]+/,
+      'Geçersiz YouTube URL adresi! Örnek doğru format: https://www.youtube.com/watch?v=dQw4w9WgXcQ veya https://youtu.be/dQw4w9WgXcQ'
+    ),
+  externalUrl: z
+    .string()
+    .min(1, 'Demo / Harici URL adresi doldurulması zorunludur')
+    .url('Geçersiz URL adresi! Örnek doğru format: https://proje-demo.vercel.app veya https://benimprojem.com'),
   behanceUrl: z.string().url('Geçerli bir Behance URL giriniz').optional().or(z.literal('')),
-  externalUrl: z.string().url('Geçerli bir URL giriniz').optional().or(z.literal('')),
-  semester: z.enum(['fall', 'spring', 'summer']).optional(),
-  year: z.number().min(2000).max(2030).optional(),
+  teamMembers: z.array(z.string()).optional(),
+  license: z.string().optional(),
   mediaUrls: z.array(z.string()).optional(),
 });
 
