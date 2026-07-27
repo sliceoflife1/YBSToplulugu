@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     // Logları çek
     let query = adminSupabase
       .from("activity_logs")
-      .select("*, profiles!activity_logs_user_id_fkey(first_name, last_name, edu_email, role)")
+      .select("*, profiles:user_id(first_name, last_name, edu_email, role)")
       .gte("created_at", startDate)
       .lte("created_at", endDate)
       .order("created_at", { ascending: false });

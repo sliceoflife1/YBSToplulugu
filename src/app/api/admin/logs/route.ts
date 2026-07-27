@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
     let query = adminSupabase
       .from("activity_logs")
-      .select("*, profiles!activity_logs_user_id_fkey(id, first_name, last_name, edu_email, role)", { count: "exact" })
+      .select("*, profiles:user_id(id, first_name, last_name, edu_email, role)", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -44,6 +44,10 @@ export async function GET(request: Request) {
     const { data: logs, count, error } = await query;
 
     if (error) {
+      const msg = error.message || "";
+      if (msg.includes("relation") && msg.includes("does not exist")) {
+        return NextResponse.json({ error: "activity_logs tablosu henüz oluşturulmamış. Lütfen Supabase Dashboard > SQL Editor üzerinden migration 024'ü çalıştırın." }, { status: 500 });
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -58,3 +62,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
