@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity-logger"
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -109,10 +110,34 @@ export async function GET(request: Request) {
       const isLocalEnv = process.env.NODE_ENV === "development";
 
       if (isLocalEnv) {
+        logActivity({
+          userId: user.id,
+          actionType: "auth.email_verified",
+          actionCategory: "auth",
+          entityType: "profile",
+          status: "success",
+          request
+        })
         return NextResponse.redirect(`${origin}${next}`);
       } else if (forwardedHost) {
+        logActivity({
+          userId: user.id,
+          actionType: "auth.email_verified",
+          actionCategory: "auth",
+          entityType: "profile",
+          status: "success",
+          request
+        })
         return NextResponse.redirect(`https://${forwardedHost}${next}`);
       } else {
+        logActivity({
+          userId: user.id,
+          actionType: "auth.email_verified",
+          actionCategory: "auth",
+          entityType: "profile",
+          status: "success",
+          request
+        })
         return NextResponse.redirect(`${origin}${next}`);
       }
     }

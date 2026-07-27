@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { logActivity } from "@/lib/activity-logger"
 
 export async function GET(request: Request) {
   try {
@@ -94,8 +95,28 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Job listing create error:', error)
+      logActivity({
+        userId: user.id,
+        actionType: "job.create",
+        actionCategory: "job",
+        entityType: "job_listing",
+        status: "error",
+        metadata: { error: error.message },
+        request
+      })
       return NextResponse.json({ error: 'İlan oluşturulamadı.' }, { status: 500 })
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "job.create",
+      actionCategory: "job",
+      entityType: "job_listing",
+      entityId: data.id,
+      status: "success",
+      metadata: { title },
+      request
+    })
 
     return NextResponse.json({ data }, { status: 201 })
   } catch (err) {

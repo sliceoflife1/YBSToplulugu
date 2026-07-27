@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
+import { logActivity } from "@/lib/activity-logger"
 
 export async function GET() {
   try {
@@ -83,8 +84,26 @@ export async function POST(request: Request) {
 
     if (insertError) {
       console.error('Consent insert error:', insertError)
+      logActivity({
+        userId: user.id,
+        actionType: "legal.consent_given",
+        actionCategory: "legal",
+        entityType: "consent",
+        status: "error",
+        metadata: { error: insertError.message },
+        request
+      })
       return NextResponse.json({ error: 'Onaylar kaydedilemedi.' }, { status: 500 })
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "legal.consent_given",
+      actionCategory: "legal",
+      entityType: "consent",
+      status: "success",
+      request
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

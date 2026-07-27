@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(request: Request) {
   try {
@@ -67,8 +68,28 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Interview request notification error:', error)
+      logActivity({
+        userId: user.id,
+        actionType: "job.interview_request",
+        actionCategory: "job",
+        entityType: "notification",
+        status: "error",
+        metadata: { error: error.message, recipientId: recipient_id },
+        request
+      })
       return NextResponse.json({ error: 'Görüşme talebi gönderilemedi.' }, { status: 500 })
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "job.interview_request",
+      actionCategory: "job",
+      entityType: "notification",
+      entityId: data.id,
+      status: "success",
+      metadata: { recipientId: recipient_id },
+      request
+    })
 
     return NextResponse.json({ data }, { status: 201 })
   } catch (err) {

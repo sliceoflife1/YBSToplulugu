@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity-logger";
 import { projectCommentSchema, type ProjectCommentInput, type ProjectInput } from "@/lib/validations/profile";
 
 /**
@@ -39,6 +40,15 @@ export async function upvoteProject(projectId: string) {
 
     if (deleteError) {
       console.error("Upvote silme hatası:", deleteError);
+      logActivity({
+        userId: user.id,
+        actionType: "project.upvote",
+        actionCategory: "project",
+        entityType: "project",
+        entityId: projectId,
+        status: "error",
+        metadata: { error: deleteError.message, action: "unvote" }
+      });
       return { error: "Oy iptal edilirken hata oluştu." };
     }
   } else {
@@ -52,6 +62,15 @@ export async function upvoteProject(projectId: string) {
 
     if (insertError) {
       console.error("Upvote ekleme hatası:", insertError);
+      logActivity({
+        userId: user.id,
+        actionType: "project.upvote",
+        actionCategory: "project",
+        entityType: "project",
+        entityId: projectId,
+        status: "error",
+        metadata: { error: insertError.message, action: "upvote" }
+      });
       return { error: "Oy verilirken hata oluştu." };
     }
   }
@@ -59,6 +78,16 @@ export async function upvoteProject(projectId: string) {
   // Önbellekleri temizle
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "project.upvote",
+    actionCategory: "project",
+    entityType: "project",
+    entityId: projectId,
+    status: "success",
+    metadata: { hasUpvoted: !existingUpvote }
+  });
 
   return { success: true, hasUpvoted: !existingUpvote };
 }
@@ -103,11 +132,30 @@ export async function editProject(projectId: string, data: Partial<ProjectInput>
 
   if (error) {
     console.error("Proje düzenleme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "project.edit",
+      actionCategory: "project",
+      entityType: "project",
+      entityId: projectId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Proje güncellenirken hata oluştu." };
   }
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "project.edit",
+    actionCategory: "project",
+    entityType: "project",
+    entityId: projectId,
+    status: "success",
+    metadata: { title: data.title }
+  });
 
   return { success: true };
 }
@@ -137,10 +185,28 @@ export async function deleteProject(projectId: string) {
 
   if (error) {
     console.error("Proje silme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "project.delete",
+      actionCategory: "project",
+      entityType: "project",
+      entityId: projectId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Proje silinirken hata oluştu." };
   }
 
   revalidatePath("/projects");
+
+  logActivity({
+    userId: user.id,
+    actionType: "project.delete",
+    actionCategory: "project",
+    entityType: "project",
+    entityId: projectId,
+    status: "success"
+  });
 
   return { success: true };
 }
@@ -174,10 +240,27 @@ export async function createProjectComment(data: ProjectCommentInput) {
 
   if (error) {
     console.error("Yorum ekleme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "project_comment.create",
+      actionCategory: "project",
+      entityType: "project_comment",
+      status: "error",
+      metadata: { error: error.message, projectId: parsed.data.projectId }
+    });
     return { error: "Yorum eklenirken bir hata oluştu." };
   }
 
   revalidatePath(`/projects/${parsed.data.projectId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "project_comment.create",
+    actionCategory: "project",
+    entityType: "project_comment",
+    status: "success",
+    metadata: { projectId: parsed.data.projectId }
+  });
 
   return { success: true };
 }
@@ -210,10 +293,29 @@ export async function editProjectComment(commentId: string, content: string, pro
 
   if (error) {
     console.error("Proje yorumu düzenleme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "project_comment.edit",
+      actionCategory: "project",
+      entityType: "project_comment",
+      entityId: commentId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Yorum güncellenirken hata oluştu." };
   }
 
   revalidatePath(`/projects/${projectId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "project_comment.edit",
+    actionCategory: "project",
+    entityType: "project_comment",
+    entityId: commentId,
+    status: "success",
+    metadata: { projectId }
+  });
 
   return { success: true };
 }
@@ -243,10 +345,29 @@ export async function deleteProjectComment(commentId: string, projectId: string)
 
   if (error) {
     console.error("Proje yorumu silme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "project_comment.delete",
+      actionCategory: "project",
+      entityType: "project_comment",
+      entityId: commentId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Yorum silinirken hata oluştu." };
   }
 
   revalidatePath(`/projects/${projectId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "project_comment.delete",
+    actionCategory: "project",
+    entityType: "project_comment",
+    entityId: commentId,
+    status: "success",
+    metadata: { projectId }
+  });
 
   return { success: true };
 }

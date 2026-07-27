@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity-logger"
 import { 
   BlobServiceClient, 
   BlobSASPermissions, 
@@ -63,6 +64,16 @@ export async function POST(request: Request) {
     const uploadUrl = `${blobClient.url}?${sasToken}`;
     const blobUrl = blobClient.url;
 
+    logActivity({
+      userId: user.id,
+      actionType: "storage.file_upload",
+      actionCategory: "storage",
+      entityType: "file",
+      status: "success",
+      metadata: { filename, contentType, blobName },
+      request
+    })
+
     return NextResponse.json({
       uploadUrl,
       blobUrl,
@@ -70,6 +81,15 @@ export async function POST(request: Request) {
     });
   } catch (err: any) {
     console.error("SAS Token Generation Error:", err);
+    logActivity({
+      userId: null,
+      actionType: "storage.file_upload",
+      actionCategory: "storage",
+      entityType: "file",
+      status: "error",
+      metadata: { error: err.message || "Failed to generate SAS token" },
+      request
+    })
     return NextResponse.json({ error: err.message || "Failed to generate SAS token" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity-logger"
 
 export async function DELETE(
   request: Request,
@@ -90,11 +91,32 @@ export async function DELETE(
         ? deleteProfileError 
         : deleteProfileError.message || JSON.stringify(deleteProfileError);
 
+      logActivity({
+        userId: currentUser.id,
+        actionType: "admin.user_delete",
+        actionCategory: "admin",
+        entityType: "profile",
+        entityId: targetUserId,
+        status: "error",
+        metadata: { error: errMsg },
+        request
+      })
+
       return NextResponse.json(
         { error: errMsg || "Kullanıcı veritabanından silinemedi" },
         { status: 500 }
       );
     }
+
+    logActivity({
+      userId: currentUser.id,
+      actionType: "admin.user_delete",
+      actionCategory: "admin",
+      entityType: "profile",
+      entityId: targetUserId,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({ success: true, message: "Kullanıcı başarıyla silindi." });
   } catch (error: any) {
@@ -174,8 +196,29 @@ export async function PATCH(
       .single();
 
     if (profileUpdateError) {
+      logActivity({
+        userId: currentUser.id,
+        actionType: "admin.user_role_change",
+        actionCategory: "admin",
+        entityType: "profile",
+        entityId: targetUserId,
+        status: "error",
+        metadata: { error: profileUpdateError.message },
+        request
+      })
       return NextResponse.json({ error: profileUpdateError.message }, { status: 500 });
     }
+
+    logActivity({
+      userId: currentUser.id,
+      actionType: "admin.user_role_change",
+      actionCategory: "admin",
+      entityType: "profile",
+      entityId: targetUserId,
+      status: "success",
+      metadata: { role: updateData.role },
+      request
+    })
 
     return NextResponse.json({ success: true, profile: updatedProfile });
   } catch (error: any) {

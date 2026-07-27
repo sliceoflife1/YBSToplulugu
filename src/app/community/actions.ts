@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity-logger";
 import { postSchema, commentSchema, type PostInput, type CommentInput } from "@/lib/validations/community";
 
 /**
@@ -31,6 +32,14 @@ export async function createPost(data: PostInput, slug: string) {
 
   if (error) {
     console.error("Supabase gönderi oluşturma hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "post.create",
+      actionCategory: "community",
+      entityType: "post",
+      status: "error",
+      metadata: { error: error.message, subredditId: parsed.data.subredditId }
+    });
     return { error: "Gönderi oluşturulurken bir hata oluştu." };
   }
 
@@ -50,6 +59,15 @@ export async function createPost(data: PostInput, slug: string) {
 
   revalidatePath("/community");
   revalidatePath(`/community/${slug}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "post.create",
+    actionCategory: "community",
+    entityType: "post",
+    status: "success",
+    metadata: { subredditId: parsed.data.subredditId, title: parsed.data.title }
+  });
 
   return { success: true };
 }
@@ -92,12 +110,30 @@ export async function editPost(
 
   if (error) {
     console.error("Gönderi düzenleme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "post.edit",
+      actionCategory: "community",
+      entityType: "post",
+      entityId: postId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Gönderi güncellenirken hata oluştu." };
   }
 
   revalidatePath("/community");
   revalidatePath(`/community/${slug}`);
   revalidatePath(`/community/${slug}/${postId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "post.edit",
+    actionCategory: "community",
+    entityType: "post",
+    entityId: postId,
+    status: "success"
+  });
 
   return { success: true };
 }
@@ -127,6 +163,15 @@ export async function deletePost(postId: string, subredditId: string, slug: stri
 
   if (error) {
     console.error("Gönderi silme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "post.delete",
+      actionCategory: "community",
+      entityType: "post",
+      entityId: postId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Gönderi silinirken hata oluştu." };
   }
 
@@ -146,6 +191,16 @@ export async function deletePost(postId: string, subredditId: string, slug: stri
 
   revalidatePath("/community");
   revalidatePath(`/community/${slug}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "post.delete",
+    actionCategory: "community",
+    entityType: "post",
+    entityId: postId,
+    status: "success",
+    metadata: { subredditId }
+  });
 
   return { success: true };
 }
@@ -175,10 +230,27 @@ export async function createComment(data: CommentInput, slug: string) {
 
   if (error) {
     console.error("Supabase yorum ekleme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "comment.create",
+      actionCategory: "community",
+      entityType: "comment",
+      status: "error",
+      metadata: { error: error.message, postId: parsed.data.postId }
+    });
     return { error: "Yorum eklenirken bir hata oluştu." };
   }
 
   revalidatePath(`/community/${slug}/${parsed.data.postId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "comment.create",
+    actionCategory: "community",
+    entityType: "comment",
+    status: "success",
+    metadata: { postId: parsed.data.postId }
+  });
 
   return { success: true };
 }
@@ -211,10 +283,29 @@ export async function editComment(commentId: string, content: string, slug: stri
 
   if (error) {
     console.error("Yorum düzenleme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "comment.edit",
+      actionCategory: "community",
+      entityType: "comment",
+      entityId: commentId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Yorum güncellenirken hata oluştu." };
   }
 
   revalidatePath(`/community/${slug}/${postId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "comment.edit",
+    actionCategory: "community",
+    entityType: "comment",
+    entityId: commentId,
+    status: "success",
+    metadata: { postId }
+  });
 
   return { success: true };
 }
@@ -244,10 +335,29 @@ export async function deleteComment(commentId: string, postId: string, slug: str
 
   if (error) {
     console.error("Yorum silme hatası:", error);
+    logActivity({
+      userId: user.id,
+      actionType: "comment.delete",
+      actionCategory: "community",
+      entityType: "comment",
+      entityId: commentId,
+      status: "error",
+      metadata: { error: error.message }
+    });
     return { error: "Yorum silinirken hata oluştu." };
   }
 
   revalidatePath(`/community/${slug}/${postId}`);
+
+  logActivity({
+    userId: user.id,
+    actionType: "comment.delete",
+    actionCategory: "community",
+    entityType: "comment",
+    entityId: commentId,
+    status: "success",
+    metadata: { postId }
+  });
 
   return { success: true };
 }

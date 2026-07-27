@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -66,6 +67,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: 'Bu ilana daha önce başvurdunuz.' }, { status: 400 })
       }
       console.error('Job apply error:', applyError)
+      logActivity({
+        userId: user.id,
+        actionType: "job.apply",
+        actionCategory: "job",
+        entityType: "job_application",
+        status: "error",
+        metadata: { error: applyError.message, jobId: job_id },
+        request
+      })
       return NextResponse.json({ error: 'Başvuru yapılamadı.' }, { status: 500 })
     }
 
@@ -88,6 +98,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       title: 'Başvurunuz Alındı',
       message: `"${job.title}" ilanına başvurunuz başarıyla tamamlandı. CV içeriğinizde yer alan iletişim bilgilerinden işverenler sizinle iletişime geçebilecektir.`,
       metadata: { job_listing_id: job_id }
+    })
+
+    logActivity({
+      userId: user.id,
+      actionType: "job.apply",
+      actionCategory: "job",
+      entityType: "job_application",
+      entityId: application.id,
+      status: "success",
+      metadata: { jobId: job_id },
+      request
     })
 
     return NextResponse.json({ data: application }, { status: 201 })

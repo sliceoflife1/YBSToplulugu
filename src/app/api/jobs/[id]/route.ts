@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { logActivity } from "@/lib/activity-logger"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -72,8 +73,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     if (error) {
       console.error('Job listing update error:', error)
+      logActivity({
+        userId: user.id,
+        actionType: "job.edit",
+        actionCategory: "job",
+        entityType: "job_listing",
+        entityId: id,
+        status: "error",
+        metadata: { error: error.message },
+        request
+      })
       return NextResponse.json({ error: 'İlan güncellenemedi.' }, { status: 500 })
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "job.edit",
+      actionCategory: "job",
+      entityType: "job_listing",
+      entityId: id,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({ data })
   } catch (err) {
@@ -122,8 +143,28 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     if (error) {
       console.error('Job listing delete error:', error)
+      logActivity({
+        userId: user.id,
+        actionType: "job.delete",
+        actionCategory: "job",
+        entityType: "job_listing",
+        entityId: id,
+        status: "error",
+        metadata: { error: error.message },
+        request
+      })
       return NextResponse.json({ error: 'İlan silinemedi.' }, { status: 500 })
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "job.delete",
+      actionCategory: "job",
+      entityType: "job_listing",
+      entityId: id,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

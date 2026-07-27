@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { logActivity } from "@/lib/activity-logger"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -106,8 +107,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     if (error) {
       console.error('Job application update error:', error)
+      logActivity({
+        userId: user.id,
+        actionType: "job.application_status_change",
+        actionCategory: "job",
+        entityType: "job_application",
+        entityId: application_id,
+        status: "error",
+        metadata: { error: error.message, newStatus: status },
+        request
+      })
       return NextResponse.json({ error: 'Başvuru durumu güncellenemedi.' }, { status: 500 })
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "job.application_status_change",
+      actionCategory: "job",
+      entityType: "job_application",
+      entityId: application_id,
+      status: "success",
+      metadata: { newStatus: status, jobId: job_id },
+      request
+    })
 
     return NextResponse.json({ data })
   } catch (err) {

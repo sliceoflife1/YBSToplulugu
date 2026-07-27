@@ -8,6 +8,7 @@ import {
   parseJsonArray,
 } from "@/lib/cv/normalize";
 import type { Profile, CvData } from "@/types/database";
+import { logActivity } from "@/lib/activity-logger";
 
 // @react-pdf/renderer, fontkit üzerinden dosya sistemine (Node.js) ihtiyaç duyar
 // ve tarayıcıya özel şifreleme kısayolları (SHA224 vb.) production build'lerinde
@@ -119,6 +120,18 @@ export async function GET(request: NextRequest) {
       primaryColor={activeColor}
     />
   );
+
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+  logActivity({
+    userId: currentUser?.id || null,
+    actionType: "cv.generate_pdf",
+    actionCategory: "profile",
+    entityType: "cv",
+    status: "success",
+    metadata: { profileId: userId },
+    request
+  });
 
   return pdfResponse(buffer, profile);
 }

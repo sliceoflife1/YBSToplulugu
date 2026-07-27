@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(request: Request) {
   try {
@@ -46,6 +47,15 @@ export async function POST(request: Request) {
 
     if (upsertError) {
       console.error('Update version error:', upsertError)
+      logActivity({
+        userId: user.id,
+        actionType: "admin.legal_update",
+        actionCategory: "admin",
+        entityType: "legal_document",
+        status: "error",
+        metadata: { error: upsertError.message },
+        request
+      })
       return NextResponse.json({ error: 'Versiyon güncellenemedi.' }, { status: 500 })
     }
 
@@ -76,6 +86,16 @@ export async function POST(request: Request) {
          return NextResponse.json({ success: true, warning: 'Versiyon güncellendi fakat bazı bildirimler atılamadı.' })
       }
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "admin.legal_update",
+      actionCategory: "admin",
+      entityType: "legal_document",
+      status: "success",
+      metadata: { documentType: document_type, newVersion: new_version },
+      request
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

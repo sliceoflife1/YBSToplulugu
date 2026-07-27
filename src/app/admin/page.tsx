@@ -16,6 +16,8 @@ import {
   Megaphone,
   BookOpen,
   Briefcase,
+  Activity,
+  BarChart2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -214,7 +216,7 @@ export default async function AdminPage() {
           </div>
 
           {/* Quick links */}
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Link
               href="/admin/users"
               className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
@@ -299,6 +301,34 @@ export default async function AdminPage() {
                 Mezuniyet andıç yıllarını yönet
               </p>
             </Link>
+            {profile.role === "admin" && (
+              <>
+                <Link
+                  href="/admin/logs"
+                  className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <Activity className="h-6 w-6 text-blue-600" />
+                  <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                    Log Kayıtları
+                  </h3>
+                  <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                    Tüm kullanıcı eylemlerini görüntüle
+                  </p>
+                </Link>
+                <Link
+                  href="/admin/statistics"
+                  className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <BarChart2 className="h-6 w-6 text-emerald-600" />
+                  <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                    İstatistikler
+                  </h3>
+                  <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                    Platform analizleri ve raporlar
+                  </p>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </main>

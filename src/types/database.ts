@@ -285,3 +285,22 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
 }
+
+export type LogStatus = 'success' | 'error' | 'unauthorized' | 'blocked';
+export type LogActionCategory = 'auth' | 'community' | 'project' | 'job' | 'admin' | 'profile' | 'yearbook' | 'storage' | 'legal';
+
+export interface ActivityLog {
+  id: string;
+  user_id: string | null;
+  action_type: string;
+  action_category: LogActionCategory;
+  entity_type: string | null;
+  entity_id: string | null;
+  status: LogStatus;
+  ip_address: string | null;
+  user_agent: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  profiles?: Pick<Profile, 'id' | 'first_name' | 'last_name' | 'edu_email' | 'role'>;
+}
+

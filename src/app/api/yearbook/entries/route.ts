@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { logActivity } from "@/lib/activity-logger"
 
 // 1. Yeni Arkadaş Yazısı Gönder (POST)
 export async function POST(request: Request) {
@@ -45,8 +46,27 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
+      logActivity({
+        userId: user.id,
+        actionType: "yearbook.entry_create",
+        actionCategory: "yearbook",
+        entityType: "yearbook_entry",
+        status: "error",
+        metadata: { error: error.message },
+        request
+      })
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "yearbook.entry_create",
+      actionCategory: "yearbook",
+      entityType: "yearbook_entry",
+      entityId: data.id,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({ data });
   } catch (err: any) {
@@ -111,8 +131,28 @@ export async function PUT(request: Request) {
       .single();
 
     if (error) {
+      logActivity({
+        userId: user.id,
+        actionType: "yearbook.entry_update",
+        actionCategory: "yearbook",
+        entityType: "yearbook_entry",
+        entityId: entryId,
+        status: "error",
+        metadata: { error: error.message },
+        request
+      })
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "yearbook.entry_update",
+      actionCategory: "yearbook",
+      entityType: "yearbook_entry",
+      entityId: entryId,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({ data });
   } catch (err: any) {
@@ -158,8 +198,28 @@ export async function DELETE(request: Request) {
       .eq("id", entryId);
 
     if (error) {
+      logActivity({
+        userId: user.id,
+        actionType: "yearbook.entry_delete",
+        actionCategory: "yearbook",
+        entityType: "yearbook_entry",
+        entityId: entryId,
+        status: "error",
+        metadata: { error: error.message },
+        request
+      })
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "yearbook.entry_delete",
+      actionCategory: "yearbook",
+      entityType: "yearbook_entry",
+      entityId: entryId,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

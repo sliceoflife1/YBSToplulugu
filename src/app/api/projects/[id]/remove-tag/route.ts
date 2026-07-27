@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(
   request: Request,
@@ -40,8 +41,28 @@ export async function POST(
       .eq("id", projectId);
 
     if (updateError) {
+      logActivity({
+        userId: user.id,
+        actionType: "project.remove_tag",
+        actionCategory: "project",
+        entityType: "project",
+        entityId: projectId,
+        status: "error",
+        metadata: { error: updateError.message },
+        request
+      })
       return NextResponse.json({ error: "Etiket kaldırılırken hata oluştu." }, { status: 500 });
     }
+
+    logActivity({
+      userId: user.id,
+      actionType: "project.remove_tag",
+      actionCategory: "project",
+      entityType: "project",
+      entityId: projectId,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({
       success: true,

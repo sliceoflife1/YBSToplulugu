@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(
   request: Request,
@@ -56,8 +57,28 @@ export async function POST(
     );
 
     if (resetError) {
+      logActivity({
+        userId: currentUser.id,
+        actionType: "admin.password_reset",
+        actionCategory: "admin",
+        entityType: "profile",
+        entityId: targetUserId,
+        status: "error",
+        metadata: { error: resetError.message },
+        request
+      })
       return NextResponse.json({ error: resetError.message }, { status: 500 });
     }
+
+    logActivity({
+      userId: currentUser.id,
+      actionType: "admin.password_reset",
+      actionCategory: "admin",
+      entityType: "profile",
+      entityId: targetUserId,
+      status: "success",
+      request
+    })
 
     return NextResponse.json({
       success: true,
