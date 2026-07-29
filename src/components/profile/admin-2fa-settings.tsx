@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, QrCode, Key, Lock, CheckCircle2, AlertTriangle, Copy, Loader2, RefreshCw } from "lucide-react";
+import { ShieldCheck, QrCode, Key, Lock, CheckCircle2, AlertTriangle, Copy, Loader2, Check } from "lucide-react";
 import { saveAdminGmail, setupAdminTOTP, verifyAndEnableAdminTOTP, disableAdminTOTP } from "@/app/actions/totp-actions";
 
 interface Admin2FASettingsProps {
@@ -19,8 +19,10 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
 
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [secretKey, setSecretKey] = useState("");
+  const [formattedSecret, setFormattedSecret] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [copied, setCopied] = useState(false);
 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -56,6 +58,7 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
     } else if (res.qrCodeUrl && res.secret) {
       setQrCodeUrl(res.qrCodeUrl);
       setSecretKey(res.secret);
+      setFormattedSecret(res.formattedSecret || res.secret);
     }
   }
 
@@ -79,6 +82,13 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
       if (res.backupCodes) setBackupCodes(res.backupCodes);
       setMessage({ type: "success", text: res.message || "2FA başarıyla aktifleştirildi." });
     }
+  }
+
+  function handleCopySecret() {
+    if (!secretKey) return;
+    navigator.clipboard.writeText(secretKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -124,7 +134,7 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
         </div>
       )}
 
-      {/* 1. Step: Admin Gmail Setup (DIV container to prevent nested form submit) */}
+      {/* 1. Step: Admin Gmail Setup */}
       <div className="mb-6 space-y-3 border-b border-[var(--color-border)] pb-6">
         <label className="block text-xs font-semibold text-[var(--color-foreground)]">
           İkincil Admin @gmail.com Adresi <span className="text-red-500">*</span>
@@ -162,7 +172,7 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
                 Google Authenticator (2FA) Kurulumunu Başlat
               </h4>
               <p className="text-xs text-[var(--color-muted-foreground)] max-w-md mt-1 mb-4">
-                Telefonunuzdaki Google Authenticator (veya 2FA) uygulaması ile QR kodu taratarak 2 adımlı doğrulamanızı aktifleştirin.
+                Telefonunuzdaki Google Authenticator uygulaması ile QR kodu taratarak 2 adımlı doğrulamanızı aktifleştirin.
               </p>
               <button
                 type="button"
@@ -177,29 +187,47 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
           ) : (
             <div className="space-y-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 animate-in fade-in">
               <h4 className="text-sm font-bold text-[var(--color-foreground)] border-b border-[var(--color-border)] pb-2">
-                QR Kodu Taratın ve 6 Haneli Kodu Girin
+                QR Kodu Taratın veya Manuel Anahtarı Girin
               </h4>
               
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="p-3 bg-white rounded-xl shadow-md border border-gray-200 shrink-0">
-                  <img src={qrCodeUrl} alt="Google Authenticator QR Code" className="h-40 w-40" />
+                {/* Offline Data URI PNG Image */}
+                <div className="p-2 bg-white rounded-2xl shadow-md border border-gray-200 shrink-0">
+                  <img src={qrCodeUrl} alt="Google Authenticator QR Code" className="h-48 w-48 rounded-xl object-contain" />
                 </div>
-                <div className="space-y-2 text-xs text-[var(--color-foreground)]">
-                  <p className="font-semibold">Adım 1: Uygulama ile Tarayın</p>
-                  <p className="text-[var(--color-muted-foreground)]">
-                    Google Authenticator uygulamasını açıp <strong>"+"</strong> butonuna basın ve QR kodu taratın.
-                  </p>
-                  <p className="font-semibold pt-2">Manuel Kurulum Anahtarı:</p>
-                  <div className="flex items-center gap-2 bg-[var(--color-background)] border border-[var(--color-border)] p-2 rounded-lg font-mono text-xs text-red-600">
-                    <span>{secretKey}</span>
+                <div className="space-y-3 text-xs text-[var(--color-foreground)] flex-1">
+                  <div>
+                    <p className="font-bold text-sm text-[var(--color-foreground)]">Adım 1: Uygulama ile Tarayın veya Anahtarı Ekleyin</p>
+                    <p className="text-[var(--color-muted-foreground)] mt-1">
+                      Telefonunuzdaki Google Authenticator uygulamasını açıp <strong>"+"</strong> butonuna basın:
+                    </p>
+                    <ul className="list-disc list-inside text-[var(--color-muted-foreground)] mt-1 space-y-0.5">
+                      <li><strong>QR kodunu tarayın</strong> seçeneği ile görseli taratın.</li>
+                      <li>Veya <strong>Kurulum anahtarı girin</strong> seçeneğiyle aşağıdaki anahtarı yapıştırın.</li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-2">
+                    <p className="font-semibold text-xs text-[var(--color-foreground)] mb-1">Manuel Kurulum Anahtarı (Secret Key):</p>
+                    <div className="flex items-center gap-2 bg-[var(--color-background)] border border-[var(--color-border)] p-2.5 rounded-xl font-mono text-sm font-bold text-red-600 tracking-wider">
+                      <span className="flex-1 select-all">{formattedSecret}</span>
+                      <button
+                        type="button"
+                        onClick={handleCopySecret}
+                        className="flex items-center gap-1 rounded-lg bg-red-600/10 px-2.5 py-1 text-xs font-sans text-red-600 hover:bg-red-600/20 transition-colors"
+                      >
+                        {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copied ? "Kopyalandı" : "Kopyala"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Verification code container (DIV instead of FORM) */}
+              {/* Verification code container */}
               <div className="space-y-3 pt-3 border-t border-[var(--color-border)]">
                 <label className="block text-xs font-semibold text-[var(--color-foreground)]">
-                  Adım 2: Uygulamanın Ürettiği 6 Haneli Kod
+                  Adım 2: Google Authenticator'ın Ürettiği Canlı 6 Haneli Kod
                 </label>
                 <div className="flex gap-2">
                   <input

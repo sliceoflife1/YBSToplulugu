@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { generateBase32Secret, verifyTOTP, generateBackupCodes } from "@/lib/totp";
 import { logActivity } from "@/lib/activity-logger";
 import { revalidatePath } from "next/cache";
+import QRCode from "qrcode";
 
 export async function saveAdminGmail(gmail: string) {
   try {
@@ -45,7 +46,7 @@ export async function saveAdminGmail(gmail: string) {
       metadata: { adminGmail: cleanGmail },
     });
 
-    return { success: true, message: "İkincil @gmail.com adresi başarıyla kaydedildi." };
+    return { success: true, message: "İkincil @gmail.com adresi başarıyla kaydedildi. Şimdi QR kod oluşturabilirsiniz!" };
   } catch (err: any) {
     return { success: false, error: err.message || "Sunucu hatası." };
   }
@@ -74,12 +75,23 @@ export async function setupAdminTOTP() {
     }
 
     const secret = generateBase32Secret(20);
-    const issuer = "DEU_YBS_Toplulugu";
-    const label = `${issuer}:${profile.admin_gmail}`;
-    const otpauthUrl = `otpauth://totp/${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`;
+    const issuer = "DEU YBS Toplulugu";
+    const label = profile.admin_gmail;
+    
+    // Standard Google Authenticator TOTP URI
+    const otpauthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
 
-    // Gecici secret kaydet
+    // Generate base64 Data URI PNG directly on server (Offline, 100% reliable)
+    const qrCodeUrl = await QRCode.toDataURL(otpauthUrl, {
+      width: 260,
+      margin: 2,
+      color: {
+        dark: "#000000",
+        light: "#ffffff",
+      },
+    });
+
+    // Save secret in database
     await adminSupabase
       .from("profiles")
       .update({ totp_secret: secret })
@@ -88,6 +100,7 @@ export async function setupAdminTOTP() {
     return {
       success: true,
       secret,
+      formattedSecret: secret.match(/.{1,4}/g)?.join(" ") || secret,
       otpauthUrl,
       qrCodeUrl,
       adminGmail: profile.admin_gmail,
@@ -121,7 +134,7 @@ export async function verifyAndEnableAdminTOTP(code: string) {
 
     const isValid = verifyTOTP(profile.totp_secret, code);
     if (!isValid) {
-      return { success: false, error: "Girdiğiniz 6 haneli doğrulama kodu geçersiz." };
+      return { success: false, error: "Girdiğiniz 6 haneli doğrulama kodu geçersiz. Lütfen telefonunuzdaki canlı kodu kontrol edin." };
     }
 
     const backupCodes = generateBackupCodes(8);
@@ -134,6 +147,8 @@ export async function verifyAndEnableAdminTOTP(code: string) {
         backup_codes: backupCodes,
       })
       .eq("id", user.id);
+
+    revalidatePath("/profile/edit");
 
     logActivity({
       userId: user.id,
@@ -187,6 +202,8 @@ export async function disableAdminTOTP(code: string) {
         totp_verified_at: null,
       })
       .eq("id", user.id);
+
+    revalidatePath("/profile/edit");
 
     logActivity({
       userId: user.id,
