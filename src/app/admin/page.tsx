@@ -18,6 +18,7 @@ import {
   Briefcase,
   Activity,
   BarChart2,
+  ShieldAlert,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -303,6 +304,18 @@ export default async function AdminPage() {
             </Link>
             {profile.role === "admin" && (
               <>
+                <Link
+                  href="/admin/reports"
+                  className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <ShieldAlert className="h-6 w-6 text-red-600" />
+                  <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                    İçerik Bildirimleri
+                  </h3>
+                  <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                    Bildirilen gönderi ve projeleri incele
+                  </p>
+                </Link>
                 <Link
                   href="/admin/logs"
                   className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"

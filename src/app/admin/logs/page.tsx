@@ -146,15 +146,17 @@ function getCategoryColor(category: string) {
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
-  return date.toLocaleString("tr-TR", {
+  if (isNaN(date.getTime())) return dateStr;
+  const formatted = date.toLocaleString("tr-TR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    timeZone: "Europe/Istanbul",
+    timeZone: "UTC",
   });
+  return `${formatted} UTC`;
 }
 
 export default function AdminLogsPage() {
@@ -414,7 +416,7 @@ export default function AdminLogsPage() {
                     <th className="px-4 py-3 text-left font-medium text-[var(--color-muted-foreground)]">Eylem</th>
                     <th className="px-4 py-3 text-left font-medium text-[var(--color-muted-foreground)]">Kategori</th>
                     <th className="px-4 py-3 text-left font-medium text-[var(--color-muted-foreground)]">Durum</th>
-                    <th className="px-4 py-3 text-left font-medium text-[var(--color-muted-foreground)]">IP</th>
+                    <th className="px-4 py-3 text-left font-medium text-[var(--color-muted-foreground)]">IP : Port</th>
                     <th className="px-4 py-3 text-left font-medium text-[var(--color-muted-foreground)]">Detay</th>
                   </tr>
                 </thead>

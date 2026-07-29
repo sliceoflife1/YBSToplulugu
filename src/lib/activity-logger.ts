@@ -27,17 +27,41 @@ function sanitizeMetadata(data: Record<string, any>): Record<string, any> {
 }
 
 /**
- * Request nesnesinden IP adresini çıkarır.
+ * Request nesnesinden IP adresi ve Port bilgisini çıkarır.
  */
-function extractIp(request?: Request | { headers: { get: (name: string) => string | null } }): string | null {
+function extractIpAndPort(request?: Request | { headers: { get: (name: string) => string | null } }): string | null {
   if (!request) return null;
   const headers = request.headers;
-  return (
-    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+
+  const xForwardedFor = headers.get("x-forwarded-for");
+  let rawIp =
+    xForwardedFor?.split(",")[0]?.trim() ||
     headers.get("x-real-ip") ||
     headers.get("cf-connecting-ip") ||
-    null
-  );
+    null;
+
+  if (!rawIp) return null;
+
+  let ip = rawIp;
+  let portFromIp: string | null = null;
+
+  if (rawIp.includes(":") && !rawIp.includes("[")) {
+    const parts = rawIp.split(":");
+    if (parts.length === 2 && !isNaN(Number(parts[1]))) {
+      ip = parts[0];
+      portFromIp = parts[1];
+    }
+  }
+
+  const port =
+    portFromIp ||
+    headers.get("x-forwarded-port") ||
+    headers.get("x-client-port") ||
+    headers.get("remote-port") ||
+    "443";
+
+  const formattedIp = ip.includes(":") && !ip.startsWith("[") ? `[${ip}]` : ip;
+  return `${formattedIp}:${port}`;
 }
 
 /**
@@ -113,7 +137,7 @@ async function _writeLog(params: LogActivityParams): Promise<void> {
   const adminSupabase = createAdminClient();
 
   const sanitizedMeta = sanitizeMetadata(metadata);
-  const ipAddress = extractIp(request);
+  const ipAddress = extractIpAndPort(request);
   const userAgent = extractUserAgent(request);
 
   await adminSupabase.from("activity_logs").insert({

@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       // CSV formatı
       const headers = [
         "Tarih (UTC)", "Kullanıcı", "E-posta", "Rol", "Eylem Türü", "Kategori",
-        "Varlık Türü", "Varlık ID", "Durum", "IP Adresi", "Tarayıcı", "Detay"
+        "Varlık Türü", "Varlık ID", "Durum", "IP : Port", "Tarayıcı", "Detay"
       ];
       const rows = logs.map((log: any) => {
         const p = log.profiles;

@@ -19,12 +19,14 @@ import {
   GitBranch,
   PlayCircle,
   Globe,
-  Plus
+  Plus,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import ProjectUpvoteButton from "./project-upvote-button";
 import RichTextEditor from "@/components/community/RichTextEditor";
 import { editProject, deleteProject } from "@/app/projects/actions";
+import { ReportModal } from "@/components/report-modal";
 
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"];
 const DOCUMENT_EXTENSIONS = [".zip", ".rar", ".odt", ".txt", ".rtf", ".docx", ".xls", ".pptx", ".pdf"];
@@ -78,6 +80,7 @@ export default function ProjectDetailClient({
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Edit form states
   const [editTitle, setEditTitle] = useState(project.title);
@@ -645,28 +648,41 @@ export default function ProjectDetailClient({
                 </span>
               </div>
 
-              {/* Edit / Delete Buttons */}
-              {canManage && (
-                <div className="flex items-center gap-1.5 shrink-0">
+              {/* Action Buttons (Edit / Delete / Report) */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {canManage && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="p-1.5 rounded-lg text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-indigo-500 transition-colors"
+                      title="Düzenle"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={deleting}
+                      onClick={handleDelete}
+                      className="p-1.5 rounded-lg text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-red-500 transition-colors"
+                      title="Sil"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
+                {currentUser && !isAuthor && (
                   <button
                     type="button"
-                    onClick={() => setIsEditing(true)}
-                    className="p-1.5 rounded-lg text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-indigo-500 transition-colors"
-                    title="Düzenle"
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="flex items-center gap-1 p-1.5 rounded-lg text-xs font-medium text-[var(--color-muted-foreground)] hover:bg-red-500/10 hover:text-red-600 transition-colors"
+                    title="Yöneticilere Bildir"
                   >
-                    <Edit2 className="h-4 w-4" />
+                    <ShieldAlert className="h-4 w-4 text-red-500" />
+                    <span className="hidden sm:inline">Yöneticiye Bildir</span>
                   </button>
-                  <button
-                    type="button"
-                    disabled={deleting}
-                    onClick={handleDelete}
-                    className="p-1.5 rounded-lg text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-red-500 transition-colors"
-                    title="Sil"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Başlık */}
@@ -838,6 +854,15 @@ export default function ProjectDetailClient({
           </div>
         </div>
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        contentType="project"
+        contentId={project.id}
+        contentTitle={project.title}
+      />
     </div>
   );
 }
