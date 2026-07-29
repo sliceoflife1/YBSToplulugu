@@ -25,6 +25,11 @@ export async function saveAdminGmail(gmail: string) {
       .eq("id", user.id)
       .single();
 
+    if (profile?.role !== "admin") {
+      return { success: false, error: "Bu işlem sadece Admin rolü için geçerlidir." };
+    }
+
+    // 1. Profiles tablosuna ikincil gmail adresini yaz
     const { error: updateError } = await adminSupabase
       .from("profiles")
       .update({ admin_gmail: cleanGmail })
@@ -32,6 +37,17 @@ export async function saveAdminGmail(gmail: string) {
 
     if (updateError) {
       return { success: false, error: updateError.message };
+    }
+
+    // 2. Supabase Auth (auth.users) tablosundaki e-postayı da Gmail ile senkronize et
+    // Böylece mevcut şifresi aynen korunan Gmail ile Supabase Auth girişi sağlanır.
+    try {
+      await adminSupabase.auth.admin.updateUserById(user.id, {
+        email: cleanGmail,
+        email_confirm: true,
+      });
+    } catch (authSyncErr: any) {
+      console.warn("Auth e-posta senkronizasyon uyarısı:", authSyncErr?.message);
     }
 
     revalidatePath("/profile/edit");
@@ -46,7 +62,7 @@ export async function saveAdminGmail(gmail: string) {
       metadata: { adminGmail: cleanGmail },
     });
 
-    return { success: true, message: "İkincil @gmail.com adresi başarıyla kaydedildi. Şimdi QR kod oluşturabilirsiniz!" };
+    return { success: true, message: "İkincil @gmail.com adresi başarıyla kaydedildi. Şifreniz korunmuştur. Şimdi QR kod oluşturabilirsiniz!" };
   } catch (err: any) {
     return { success: false, error: err.message || "Sunucu hatası." };
   }
@@ -147,6 +163,18 @@ export async function verifyAndEnableAdminTOTP(code: string) {
         backup_codes: backupCodes,
       })
       .eq("id", user.id);
+
+    // Supabase Auth e-postasının Gmail olduğundan emin ol
+    if (profile.admin_gmail) {
+      try {
+        await adminSupabase.auth.admin.updateUserById(user.id, {
+          email: profile.admin_gmail,
+          email_confirm: true,
+        });
+      } catch (e) {
+        console.warn("Auth email sync notice:", e);
+      }
+    }
 
     revalidatePath("/profile/edit");
 

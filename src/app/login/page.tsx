@@ -30,7 +30,7 @@ export default function LoginPage() {
     const supabase = createClient();
     const inputEmail = data.email.trim().toLowerCase();
 
-    // 1. Giriş yapılmadan önce Admin 2FA kuralını kontrol et
+    // 1. Giriş yapılmadan önce Admin ve e-posta eşleşmelerini kontrol et
     const { data: profile } = await supabase
       .from("profiles")
       .select("id, role, edu_email, admin_gmail, is_2fa_enabled")
@@ -48,28 +48,42 @@ export default function LoginPage() {
       }
     }
 
-    // 2. Supabase Auth şifre doğrulaması yap
-    const { data: authData, error } = await supabase.auth.signInWithPassword({
-      email: data.email,
+    // 2. Akıllı E-posta Eşleme: Gmail ile girilse bile Supabase Auth'taki hesabı bulup mevcut şifresiyle oturum açtırır
+    let primaryEmail = inputEmail;
+    if (profile) {
+      primaryEmail = profile.edu_email || inputEmail;
+    }
+
+    // İlk olarak varsayılan/eşleşen e-posta ile dene
+    let authRes = await supabase.auth.signInWithPassword({
+      email: inputEmail,
       password: data.password,
     });
 
-    if (error) {
+    // Eğer doğrudan girilen mail başaramazsa, senkronize hesabı dene
+    if (authRes.error && primaryEmail !== inputEmail) {
+      authRes = await supabase.auth.signInWithPassword({
+        email: primaryEmail,
+        password: data.password,
+      });
+    }
+
+    if (authRes.error) {
       toast.error(
-        error.message === "Invalid login credentials"
+        authRes.error.message === "Invalid login credentials"
           ? "E-posta veya şifre hatalı"
-          : error.message
+          : authRes.error.message
       );
       setLoading(false);
       return;
     }
 
     // 3. Giriş yapan kullanıcının 2FA zorunluluğu var mı?
-    if (authData.user) {
+    if (authRes.data.user) {
       const { data: loggedProfile } = await supabase
         .from("profiles")
         .select("role, is_2fa_enabled")
-        .eq("id", authData.user.id)
+        .eq("id", authRes.data.user.id)
         .single();
 
       if (loggedProfile?.role === "admin" && loggedProfile?.is_2fa_enabled) {
