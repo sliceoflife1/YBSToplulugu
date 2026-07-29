@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>DEÜ YBS Topluluğu - Şifre Sıfırlama Talebi</title>
+  <style>
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; background-color: #f1f5f9; margin: 0; padding: 40px 0; }
+    .wrapper { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #b91c1c 100%); padding: 36px 30px; text-align: center; color: #ffffff; }
+    .brand-title { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .brand-sub { margin: 4px 0 0 0; font-size: 13px; color: #cbd5e1; font-weight: 500; }
+    .content { padding: 40px 32px; color: #334155; line-height: 1.7; font-size: 15px; }
+    .greeting { font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 16px; }
+    .badge { display: inline-block; padding: 6px 14px; background: #fef2f2; color: #991b1b; font-size: 12px; font-weight: 700; border-radius: 9999px; margin-bottom: 20px; text-transform: uppercase; border: 1px solid #fecaca; }
+    .btn-container { text-align: center; margin: 32px 0; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff !important; padding: 14px 36px; font-weight: 700; text-decoration: none; border-radius: 12px; font-size: 15px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35); }
+    .warning-box { background: #f8fafc; border-left: 4px solid #cbd5e1; padding: 16px; border-radius: 8px; margin-top: 28px; font-size: 13px; color: #64748b; }
+    .link-alt { font-size: 12px; color: #94a3b8; word-break: break-all; margin-top: 24px; line-height: 1.5; }
+    .footer { background: #f8fafc; padding: 24px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1 class="brand-title">Dokuz Eylül Üniversitesi</h1>
+      <p class="brand-sub">Yönetim Bilişim Sistemleri Topluluğu</p>
+    </div>
+    <div class="content">
+      <span class="badge">Güvenlik Bildirimi</span>
+      <h2 class="greeting">Merhaba,</h2>
+      <p>DEÜ YBS Topluluğu platform hesabınız için bir <strong>şifre sıfırlama talebi</strong> aldık.</p>
+      <p>Yeni ve güvenli bir şifre oluşturarak hesabınıza erişmek için lütfen aşağıdaki düğmeye tıklayın:</p>
+      
+      <div class="btn-container">
+        <a href="{{ .ConfirmationURL }}" target="_blank" class="btn">Şifremi Sıfırla</a>
+      </div>
+
+      <div class="warning-box">
+        <strong>⚠️ Güvenlik Uyarısı:</strong> Bu talebi siz başlatmadıysanız lütfen bu e-postayı dikkate almayınız. Mevcut şifreniz tam olarak korunmaktadır.
+      </div>
+
+      <p class="link-alt">
+        Düğme çalışmıyorsa aşağıdaki adresi kopyalayıp tarayıcınızın adres çubuğuna yapıştırabilirsiniz:<br>
+        <a href="{{ .ConfirmationURL }}" style="color: #dc2626;">{{ .ConfirmationURL }}</a>
+      </p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 DEÜ YBS Topluluğu. Tüm hakları saklıdır.</p>
+      <p>Dokuz Eylül Üniversitesi İktisadi ve İdari Bilimler Fakültesi, İzmir</p>
+    </div>
+  </div>
+</body>
+</html>
