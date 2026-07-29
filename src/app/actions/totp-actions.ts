@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { generateBase32Secret, verifyTOTP, generateBackupCodes } from "@/lib/totp";
 import { logActivity } from "@/lib/activity-logger";
+import { revalidatePath } from "next/cache";
 
 export async function saveAdminGmail(gmail: string) {
   try {
@@ -31,6 +32,8 @@ export async function saveAdminGmail(gmail: string) {
     if (updateError) {
       return { success: false, error: updateError.message };
     }
+
+    revalidatePath("/profile/edit");
 
     logActivity({
       userId: user.id,

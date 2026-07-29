@@ -24,8 +24,13 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  async function handleSaveGmail(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSaveGmail(e?: React.MouseEvent | React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!adminGmail || !adminGmail.trim().endsWith("@gmail.com")) {
+      setMessage({ type: "error", text: "Lütfen geçerli bir @gmail.com adresi giriniz." });
+      return;
+    }
+
     setSavingGmail(true);
     setMessage(null);
 
@@ -35,7 +40,7 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
     if (!res.success) {
       setMessage({ type: "error", text: res.error || "E-posta kaydedilemedi." });
     } else {
-      setMessage({ type: "success", text: res.message || "İkincil e-posta kaydedildi." });
+      setMessage({ type: "success", text: res.message || "İkincil e-posta kaydedildi. Şimdi QR kod oluşturabilirsiniz!" });
     }
   }
 
@@ -54,8 +59,8 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
     }
   }
 
-  async function handleVerify(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleVerify(e?: React.MouseEvent | React.FormEvent) {
+    if (e) e.preventDefault();
     if (verificationCode.trim().length !== 6) {
       setMessage({ type: "error", text: "Lütfen 6 haneli doğrulama kodunu giriniz." });
       return;
@@ -119,8 +124,8 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
         </div>
       )}
 
-      {/* 1. Step: Admin Gmail Setup */}
-      <form onSubmit={handleSaveGmail} className="mb-6 space-y-3 border-b border-[var(--color-border)] pb-6">
+      {/* 1. Step: Admin Gmail Setup (DIV container to prevent nested form submit) */}
+      <div className="mb-6 space-y-3 border-b border-[var(--color-border)] pb-6">
         <label className="block text-xs font-semibold text-[var(--color-foreground)]">
           İkincil Admin @gmail.com Adresi <span className="text-red-500">*</span>
         </label>
@@ -134,7 +139,8 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
             className="flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3.5 py-2 text-xs text-[var(--color-foreground)] placeholder:text-[var(--color-muted-foreground)] focus:border-[var(--color-primary)] focus:outline-none"
           />
           <button
-            type="submit"
+            type="button"
+            onClick={handleSaveGmail}
             disabled={savingGmail}
             className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50"
           >
@@ -144,7 +150,7 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
         <p className="text-[11px] text-[var(--color-muted-foreground)]">
           * Admin rolüne sahip kullanıcılar 2FA kurulumundan sonra sisteme yalnızca tanımlı @gmail.com adresleri ile giriş yapabilirler.
         </p>
-      </form>
+      </div>
 
       {/* 2. Step: Google Authenticator Setup */}
       {!is2FAEnabled ? (
@@ -161,7 +167,7 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
               <button
                 type="button"
                 onClick={handleStartSetup}
-                disabled={setupLoading || !adminGmail.endsWith("@gmail.com")}
+                disabled={setupLoading || !adminGmail.trim().endsWith("@gmail.com")}
                 className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 shadow-md"
               >
                 {setupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
@@ -190,8 +196,8 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
                 </div>
               </div>
 
-              {/* Verification code form */}
-              <form onSubmit={handleVerify} className="space-y-3 pt-3 border-t border-[var(--color-border)]">
+              {/* Verification code container (DIV instead of FORM) */}
+              <div className="space-y-3 pt-3 border-t border-[var(--color-border)]">
                 <label className="block text-xs font-semibold text-[var(--color-foreground)]">
                   Adım 2: Uygulamanın Ürettiği 6 Haneli Kod
                 </label>
@@ -203,10 +209,10 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
                     onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ""))}
                     placeholder="123456"
                     className="w-48 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3.5 py-2.5 text-center text-sm font-mono tracking-widest text-[var(--color-foreground)] focus:border-red-600 focus:outline-none"
-                    required
                   />
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleVerify}
                     disabled={verifyLoading || verificationCode.length !== 6}
                     className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
                   >
@@ -214,7 +220,7 @@ export function Admin2FASettings({ initialAdminGmail, initialIs2FAEnabled }: Adm
                     Doğrula ve Aktifleştir
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           )}
         </div>
