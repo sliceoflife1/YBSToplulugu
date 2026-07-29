@@ -107,7 +107,11 @@ export async function sendCustomPasswordResetEmail(targetEmail: string) {
 
       if (resetError) {
         console.error("Supabase resetPasswordForEmail hatası:", resetError);
-        return { success: false, error: "E-posta gönderilemedi: " + resetError.message };
+        let errorMsg = resetError.message;
+        if (errorMsg.includes("security purposes") || errorMsg.includes("rate limit") || errorMsg.includes("request this after")) {
+          errorMsg = "Güvenlik nedeniyle ardı ardına şifre sıfırlama e-postası gönderilemez. Lütfen 15-30 saniye bekleyip tekrar deneyiniz.";
+        }
+        return { success: false, error: errorMsg };
       }
     }
 
