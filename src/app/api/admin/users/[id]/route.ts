@@ -162,6 +162,23 @@ export async function PATCH(
     const body = await request.json();
     const { first_name, last_name, edu_email, role, department, phone, student_no, is_active } = body;
 
+    // Admin rolü verilmek isteniyorsa @gmail.com zorunluluğu kontrolü
+    if (role === "admin") {
+      const { data: targetProfile } = await adminSupabase
+        .from("profiles")
+        .select("admin_gmail")
+        .eq("id", targetUserId)
+        .single();
+
+      const adminGmail = targetProfile?.admin_gmail;
+      if (!adminGmail || !adminGmail.toLowerCase().endsWith("@gmail.com")) {
+        return NextResponse.json(
+          { error: "Bu kullanıcı henüz ikincil @gmail.com adresini profilinde tanımlamadığı için Admin rolüne yükseltilemez." },
+          { status: 400 }
+        );
+      }
+    }
+
     // 2. Eğer edu_email güncellendiyse auth.users e-postasını da güncelle
     if (edu_email) {
       const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(

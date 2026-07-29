@@ -32,6 +32,11 @@ export interface Profile {
   location: string | null;
   website_url: string | null;
   is_open_to_work: boolean;
+  admin_gmail?: string | null;
+  is_2fa_enabled?: boolean;
+  totp_secret?: string | null;
+  backup_codes?: string[];
+  totp_verified_at?: string | null;
   created_at: string;
   updated_at: string;
 }

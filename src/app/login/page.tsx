@@ -28,8 +28,28 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginInput) => {
     setLoading(true);
     const supabase = createClient();
+    const inputEmail = data.email.trim().toLowerCase();
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // 1. Giriş yapılmadan önce Admin 2FA kuralını kontrol et
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, role, edu_email, admin_gmail, is_2fa_enabled")
+      .or(`edu_email.eq.${inputEmail},admin_gmail.eq.${inputEmail}`)
+      .maybeSingle();
+
+    if (profile && profile.role === "admin" && profile.is_2fa_enabled) {
+      // 2FA kurulmuş admin kullanıcı .edu.tr ile girmeye çalışıyorsa engelle
+      if (!inputEmail.endsWith("@gmail.com")) {
+        toast.error(
+          "Admin 2FA kurulumunuz tamamlanmıştır. Lütfen tanımlı @gmail.com adresiniz ve Google Authenticator kodunuz ile giriş yapınız."
+        );
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 2. Supabase Auth şifre doğrulaması yap
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     });
@@ -42,6 +62,21 @@ export default function LoginPage() {
       );
       setLoading(false);
       return;
+    }
+
+    // 3. Giriş yapan kullanıcının 2FA zorunluluğu var mı?
+    if (authData.user) {
+      const { data: loggedProfile } = await supabase
+        .from("profiles")
+        .select("role, is_2fa_enabled")
+        .eq("id", authData.user.id)
+        .single();
+
+      if (loggedProfile?.role === "admin" && loggedProfile?.is_2fa_enabled) {
+        toast.info("2FA doğrulaması bekleniyor...");
+        router.push("/auth/2fa-challenge");
+        return;
+      }
     }
 
     toast.success("Giriş başarılı! Yönlendiriliyorsunuz...");
