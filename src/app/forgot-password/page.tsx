@@ -29,16 +29,13 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotPasswordInput) => {
     setLoading(true);
-    const supabase = createClient();
 
-    // Supabase Auth e-posta ile şifre sıfırlama talebi
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    });
+    const { sendCustomPasswordResetEmail } = await import("@/app/actions/email-actions");
+    const result = await sendCustomPasswordResetEmail(data.email);
 
-    if (error) {
-      console.error("Şifre sıfırlama e-postası gönderme hatası:", error);
-      toast.error(t("common.error"));
+    if (!result.success) {
+      console.error("Şifre sıfırlama hatası:", result.error);
+      toast.error(result.error || t("common.error"));
       setLoading(false);
       return;
     }

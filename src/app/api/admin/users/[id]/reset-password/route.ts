@@ -47,16 +47,11 @@ export async function POST(
       );
     }
 
-    // 3. Supabase Auth reset password e-postası gönder
-    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ybs-toplulugu.vercel.app";
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-      targetProfile.edu_email,
-      {
-        redirectTo: `${siteUrl}/reset-password`,
-      }
-    );
+    // 3. Özel Türkçe HTML şablonumuz ve Resend ile şifre sıfırlama e-postası gönder
+    const { sendCustomPasswordResetEmail } = await import("@/app/actions/email-actions");
+    const result = await sendCustomPasswordResetEmail(targetProfile.edu_email);
 
-    if (resetError) {
+    if (!result.success) {
       logActivity({
         userId: currentUser.id,
         actionType: "admin.password_reset",
@@ -64,10 +59,10 @@ export async function POST(
         entityType: "profile",
         entityId: targetUserId,
         status: "error",
-        metadata: { error: resetError.message },
+        metadata: { error: result.error },
         request
-      })
-      return NextResponse.json({ error: resetError.message }, { status: 500 });
+      });
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
     logActivity({
