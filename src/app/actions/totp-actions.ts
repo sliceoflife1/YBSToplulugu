@@ -75,15 +75,15 @@ export async function setupAdminTOTP() {
     }
 
     const secret = generateBase32Secret(20);
-    const issuer = "DEU YBS Toplulugu";
+    const issuer = "YBSToplulugu";
     const label = profile.admin_gmail;
     
-    // Standard Google Authenticator TOTP URI
-    const otpauthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+    // iOS / iPhone Google Authenticator %100 uyumlu temiz TOTP URI şablonu
+    const otpauthUrl = `otpauth://totp/${issuer}:${label}?secret=${secret}&issuer=${issuer}`;
 
-    // Generate base64 Data URI PNG directly on server (Offline, 100% reliable)
+    // Server-side base64 Data URI PNG üretimi
     const qrCodeUrl = await QRCode.toDataURL(otpauthUrl, {
-      width: 260,
+      width: 280,
       margin: 2,
       color: {
         dark: "#000000",
@@ -91,7 +91,7 @@ export async function setupAdminTOTP() {
       },
     });
 
-    // Save secret in database
+    // Secret'ı veritabanına kaydet
     await adminSupabase
       .from("profiles")
       .update({ totp_secret: secret })
