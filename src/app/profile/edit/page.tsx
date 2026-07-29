@@ -607,6 +607,16 @@ export default function ProfileEditPage() {
           </button>
         </div>
 
+        {/* Admin 2FA Güvenlik Ayarları (Sadece Admin için, Form Dışında) */}
+        {activeTab === "personal" && profile?.role === "admin" && (
+          <div className="mb-6">
+            <Admin2FASettings
+              initialAdminGmail={profile.admin_gmail}
+              initialIs2FAEnabled={profile.is_2fa_enabled}
+            />
+          </div>
+        )}
+
         {/* Form İçeriği */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -797,16 +807,6 @@ export default function ProfileEditPage() {
                   <div className="h-6 w-11 rounded-full bg-[var(--color-border)] transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-emerald-500 peer-checked:after:translate-x-full" />
                 </label>
               </div>
-
-              {/* Admin 2FA Güvenlik Ayarları (Sadece Admin için) */}
-              {profile?.role === "admin" && (
-                <div className="pt-2">
-                  <Admin2FASettings
-                    initialAdminGmail={profile.admin_gmail}
-                    initialIs2FAEnabled={profile.is_2fa_enabled}
-                  />
-                </div>
-              )}
 
               {/* CV Görünürlük Kontrolü */}
               <div className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]/50 p-4">
