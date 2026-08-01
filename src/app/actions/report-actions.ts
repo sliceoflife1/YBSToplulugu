@@ -34,7 +34,7 @@ export async function submitContentReport(params: ReportSubmitParams) {
       .eq("reporter_id", user.id)
       .eq("content_type", contentType)
       .eq("content_id", contentId)
-      .single();
+      .maybeSingle();
 
     if (existingReport) {
       return { success: false, error: "Bu içeriği daha önce bildirdiniz. Bildiriminiz değerlendirme aşamasındadır." };
@@ -54,7 +54,10 @@ export async function submitContentReport(params: ReportSubmitParams) {
 
     if (insertError) {
       console.error("[ReportActions] Ekleme hatası:", insertError);
-      return { success: false, error: "Şikayet kaydedilirken bir hata oluştu." };
+      if (insertError.code === "42P01" || insertError.message?.includes("does not exist")) {
+        return { success: false, error: "Şikayet tablosu henüz veritabanında kurulmamış. Lütfen Supabase SQL Editor üzerinden migration 036'yı çalıştırınız." };
+      }
+      return { success: false, error: "Şikayet kaydedilirken bir hata oluştu: " + (insertError.message || "") };
     }
 
     // Log kaydı
