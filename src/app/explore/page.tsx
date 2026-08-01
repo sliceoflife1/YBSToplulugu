@@ -31,12 +31,12 @@ export default async function ExplorePage({
   let filteredOrgs: Organization[] = [];
 
   if (activeTab === "students") {
-    // Öğrencileri çek (admin, moderator ve mezunlar da buraya dahil edilir - en yeniler en üstte)
+    // Tüm aktif kullanıcı ve öğrencileri çek (en yeniler en üstte, pasifler hariç)
     const { data: profiles } = await adminSupabase
       .from("profiles")
       .select("*")
-      .eq("is_active", true)
-      .in("role", ["student", "alumni", "admin", "moderator"])
+      .neq("is_active", false)
+      .in("role", ["student", "alumni", "user", "admin", "moderator", "employer"])
       .order("karma_points", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -51,11 +51,11 @@ export default async function ExplorePage({
       );
     }
   } else if (activeTab === "academics") {
-    // Akademisyenleri çek
+    // Aktif Akademisyenleri çek (pasifler hariç)
     const { data: profiles } = await adminSupabase
       .from("profiles")
       .select("*")
-      .eq("is_active", true)
+      .neq("is_active", false)
       .eq("role", "faculty")
       .order("karma_points", { ascending: false })
       .order("created_at", { ascending: false });
@@ -71,14 +71,27 @@ export default async function ExplorePage({
       );
     }
   } else if (activeTab === "organizations") {
-    // Onaylı Kurumları çek
-    const { data: orgs } = await adminSupabase
-      .from("organizations")
-      .select("*")
-      .eq("approval_status", "approved")
-      .order("created_at", { ascending: false });
+    // Onaylı Kurumları ve Aktif İşveren Profillerini çek
+    const [orgsRes, employerProfilesRes] = await Promise.all([
+      adminSupabase
+        .from("organizations")
+        .select("*")
+        .eq("approval_status", "approved")
+        .order("created_at", { ascending: false }),
+      adminSupabase
+        .from("profiles")
+        .select("*")
+        .neq("is_active", false)
+        .eq("role", "employer")
+        .order("created_at", { ascending: false }),
+    ]);
 
-    filteredOrgs = orgs || [];
+    filteredOrgs = orgsRes.data || [];
+    const employerProfiles = employerProfilesRes.data || [];
+
+    // İşveren profillerini de görüntülenecek profillere ekle
+    filteredProfiles = employerProfiles;
+
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       filteredOrgs = filteredOrgs.filter(
@@ -86,13 +99,20 @@ export default async function ExplorePage({
           (o.name && o.name.toLowerCase().includes(q)) ||
           (o.description && o.description.toLowerCase().includes(q))
       );
+      filteredProfiles = filteredProfiles.filter(
+        (p) =>
+          (p.first_name && p.first_name.toLowerCase().includes(q)) ||
+          (p.last_name && p.last_name.toLowerCase().includes(q)) ||
+          (p.headline && p.headline.toLowerCase().includes(q)) ||
+          (p.department && p.department.toLowerCase().includes(q))
+      );
     }
   } else if (activeTab === "mentors") {
-    // Mentörleri çek
+    // Aktif Mentörleri çek
     const { data: profiles } = await adminSupabase
       .from("profiles")
       .select("*")
-      .eq("is_active", true)
+      .neq("is_active", false)
       .eq("is_mentor", true)
       .order("karma_points", { ascending: false })
       .order("created_at", { ascending: false });
@@ -110,7 +130,7 @@ export default async function ExplorePage({
   }
 
   const tabs = [
-    { value: "students", label: "Öğrenciler", icon: GraduationCap },
+    { value: "students", label: "Öğrenciler & Üyeler", icon: GraduationCap },
     { value: "academics", label: "Akademisyenler", icon: BookOpen },
     { value: "organizations", label: "Kurumlar & İşverenler", icon: Building2 },
     { value: "mentors", label: "Mentörler", icon: UserCheck },
@@ -275,8 +295,10 @@ export default async function ExplorePage({
                           {p.role === "student" && "Öğrenci"}
                           {p.role === "alumni" && "Mezun"}
                           {p.role === "faculty" && "Akademisyen"}
+                          {p.role === "employer" && "İşveren"}
                           {p.role === "admin" && "Yönetici"}
                           {p.role === "moderator" && "Moderatör"}
+                          {(!p.role || (p.role as string) === "user") && "Üye"}
                         </span>
                         {p.karma_points > 0 && (
                           <span className="flex items-center gap-1">
