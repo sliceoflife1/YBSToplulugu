@@ -39,9 +39,9 @@ export async function GET(request: Request) {
         if (report.content_type === "post") {
           const { data: post } = await adminSupabase
             .from("community_posts")
-            .select("id, title, content, author_id, slug")
+            .select("id, title, content, author_id, slug, subreddits:subreddit_id(slug)")
             .eq("id", report.content_id)
-            .single();
+            .maybeSingle();
           contentDetails = post;
         } else if (report.content_type === "project") {
           const { data: project } = await adminSupabase

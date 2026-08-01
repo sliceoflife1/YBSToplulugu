@@ -87,7 +87,7 @@ export async function submitContentReport(params: ReportSubmitParams) {
           type: "system",
           title: "Yeni İçerik Bildirimi",
           message: `${contentType === "post" ? "Bir topluluk gönderisi" : "Bir proje"} hakkında yeni bir şikayet bildirildi.`,
-          metadata: { contentType, contentId },
+          metadata: { contentType, contentId, link: "/admin/reports" },
         }));
         await adminSupabase.from("notifications").insert(notifications);
       }

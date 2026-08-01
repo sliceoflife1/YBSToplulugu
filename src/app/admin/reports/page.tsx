@@ -42,6 +42,7 @@ interface ReportEntry {
     content?: string;
     description?: string;
     slug?: string;
+    subreddits?: { slug?: string } | null;
   } | null;
 }
 
@@ -276,21 +277,25 @@ export default function AdminReportsPage() {
                               <h4 className="font-semibold text-sm text-[var(--color-foreground)]">
                                 {report.contentDetails.title}
                               </h4>
-                              {isPost && report.contentDetails.slug ? (
+                              {isPost ? (
                                 <Link
-                                  href={`/community`}
+                                  href={
+                                    report.contentDetails?.subreddits?.slug
+                                      ? `/community/${report.contentDetails.subreddits.slug}/${report.content_id}`
+                                      : `/community`
+                                  }
                                   target="_blank"
-                                  className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 shrink-0"
+                                  className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 shrink-0 font-semibold"
                                 >
-                                  Görüntüle <ExternalLink className="h-3 w-3" />
+                                  Gönderiyi Görüntüle <ExternalLink className="h-3 w-3" />
                                 </Link>
                               ) : (
                                 <Link
                                   href={`/projects/${report.content_id}`}
                                   target="_blank"
-                                  className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 shrink-0"
+                                  className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 shrink-0 font-semibold"
                                 >
-                                  Görüntüle <ExternalLink className="h-3 w-3" />
+                                  Projeyi Görüntüle <ExternalLink className="h-3 w-3" />
                                 </Link>
                               )}
                             </div>
