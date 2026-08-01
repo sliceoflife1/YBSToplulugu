@@ -14,6 +14,37 @@
 -- ============================================================
 
 -- ---------------------------------------------------------------
+-- 0. notifications tablosunun varlığını garanti et (yoksa oluştur)
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipient_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  dedup_key TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient_id ON public.notifications(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(recipient_id, is_read) WHERE is_read = false;
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(created_at DESC);
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'notifications_select') THEN
+    CREATE POLICY notifications_select ON public.notifications FOR SELECT USING (recipient_id = auth.uid());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications' AND policyname = 'notifications_update') THEN
+    CREATE POLICY notifications_update ON public.notifications FOR UPDATE USING (recipient_id = auth.uid());
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------
 -- 1. notifications tablosuna atomik mükerrer önleme anahtarı ekle
 -- ---------------------------------------------------------------
 ALTER TABLE public.notifications
