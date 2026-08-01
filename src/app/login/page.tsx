@@ -93,6 +93,9 @@ export default function LoginPage() {
       }
     }
 
+    // Başarılı giriş logunu yazdır (fire-and-forget)
+    fetch("/api/auth/log-login", { method: "POST" }).catch(() => {});
+
     toast.success("Giriş başarılı! Yönlendiriliyorsunuz...");
     router.push("/dashboard");
     router.refresh();

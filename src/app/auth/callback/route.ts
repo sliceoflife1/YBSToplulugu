@@ -112,6 +112,17 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
 
+      logActivity({
+        userId: user.id,
+        actionType: "auth.login.success",
+        actionCategory: "auth",
+        entityType: "profile",
+        entityId: user.id,
+        status: "success",
+        metadata: { method: "oauth_callback" },
+        request,
+      });
+
       if (isLocalEnv) {
         logActivity({
           userId: user.id,

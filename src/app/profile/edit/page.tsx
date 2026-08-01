@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, User, Mail, Phone, BookOpen, Link2, Globe, Eye, EyeOff,
   GraduationCap, Briefcase, Award, Languages, Plus, Trash2, Award as CertificateIcon, Save,
-  MapPin, Briefcase as HeadlineIcon, FolderGit2, Users, FileStack
+  MapPin, Briefcase as HeadlineIcon, FolderGit2, Users, FileStack, ShieldCheck
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -21,6 +21,7 @@ import { normalizeEducationList, normalizeExperienceList, parseJsonArray } from 
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "@/lib/cv/crop";
 import { Admin2FASettings } from "@/components/profile/admin-2fa-settings";
+import { LoginHistory } from "@/components/profile/login-history";
 
 export default function ProfileEditPage() {
   const t = useTranslations();
@@ -34,7 +35,7 @@ export default function ProfileEditPage() {
   const [selectedFaculty, setSelectedFaculty] = useState<string>("");
 
   // Sekme yönetimi
-  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "extra" | "mentorship" | "yearbook">("personal");
+  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "extra" | "mentorship" | "yearbook" | "security">("personal");
 
   // Dinamik CV Dizileri ve Mentorlük
   const [mentorTopics, setMentorTopics] = useState<string[]>([]);
@@ -604,6 +605,17 @@ export default function ProfileEditPage() {
             }`}
           >
             <FileStack className="h-4 w-4" /> {isEn ? "Yearbook" : "Andıç Ayarları"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("security")}
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === "security"
+                ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+            }`}
+          >
+            <ShieldCheck className="h-4 w-4" /> {isEn ? "Security & Sessions" : "Giriş & Güvenlik"}
           </button>
         </div>
 
@@ -1460,8 +1472,15 @@ export default function ProfileEditPage() {
             </div>
           )}
 
+          {/* TAB 7: GİRİŞ & GÜVENLİK (OTURUM GEÇMİŞİ) */}
+          {activeTab === "security" && (
+            <div className="space-y-5 animate-fade-in">
+              <LoginHistory />
+            </div>
+          )}
+
           {/* Kaydetme Butonu (Alt Kısım) */}
-          {activeTab !== "yearbook" && (
+          {activeTab !== "yearbook" && activeTab !== "security" && (
             <div className="border-t border-[var(--color-border)] pt-5">
               <button
                 type="submit"

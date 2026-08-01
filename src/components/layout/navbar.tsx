@@ -81,6 +81,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     const supabase = createClient();
+    await fetch("/api/auth/log-logout", { method: "POST" }).catch(() => {});
     await supabase.auth.signOut();
     window.location.href = "/";
   };
