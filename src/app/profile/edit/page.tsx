@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, User, Mail, Phone, BookOpen, Link2, Globe, Eye, EyeOff,
   GraduationCap, Briefcase, Award, Languages, Plus, Trash2, Award as CertificateIcon, Save,
-  MapPin, Briefcase as HeadlineIcon, FolderGit2, Users, FileStack, ShieldCheck
+  MapPin, Briefcase as HeadlineIcon, FolderGit2, Users, FileStack, ShieldCheck, Building2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -22,6 +22,7 @@ import Cropper from "react-easy-crop";
 import { getCroppedImg } from "@/lib/cv/crop";
 import { Admin2FASettings } from "@/components/profile/admin-2fa-settings";
 import { LoginHistory } from "@/components/profile/login-history";
+import { EmployerOrganizationSettings } from "@/components/profile/employer-organization-settings";
 
 export default function ProfileEditPage() {
   const t = useTranslations();
@@ -35,7 +36,7 @@ export default function ProfileEditPage() {
   const [selectedFaculty, setSelectedFaculty] = useState<string>("");
 
   // Sekme yönetimi
-  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "extra" | "mentorship" | "yearbook" | "security">("personal");
+  const [activeTab, setActiveTab] = useState<"personal" | "edu-exp" | "skills-more" | "extra" | "mentorship" | "yearbook" | "security" | "organization">("personal");
 
   // Dinamik CV Dizileri ve Mentorlük
   const [mentorTopics, setMentorTopics] = useState<string[]>([]);
@@ -617,6 +618,19 @@ export default function ProfileEditPage() {
           >
             <ShieldCheck className="h-4 w-4" /> {isEn ? "Security & Sessions" : "Giriş & Güvenlik"}
           </button>
+          {profile?.role === "employer" && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("organization")}
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "organization"
+                  ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                  : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              }`}
+            >
+              <Building2 className="h-4 w-4 text-blue-600" /> Kurum &amp; Şirket Profili
+            </button>
+          )}
         </div>
 
         {/* Admin 2FA Güvenlik Ayarları (Sadece Admin için, Form Dışında) */}
@@ -1479,8 +1493,13 @@ export default function ProfileEditPage() {
             </div>
           )}
 
+          {/* TAB 8: KURUM & ŞİRKET PROFİLİ (SADECE İŞVEREN ROLÜ İÇİN) */}
+          {activeTab === "organization" && profile?.role === "employer" && (
+            <EmployerOrganizationSettings />
+          )}
+
           {/* Kaydetme Butonu (Alt Kısım) */}
-          {activeTab !== "yearbook" && activeTab !== "security" && (
+          {activeTab !== "yearbook" && activeTab !== "security" && activeTab !== "organization" && (
             <div className="border-t border-[var(--color-border)] pt-5">
               <button
                 type="submit"
