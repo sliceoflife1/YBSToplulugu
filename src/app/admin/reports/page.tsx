@@ -14,8 +14,8 @@ import {
   AlertCircle,
   ExternalLink,
   Trash2,
-  Check,
-  Filter,
+  FileText,
+  Edit3,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -26,6 +26,7 @@ interface ReportEntry {
   content_id: string;
   reason_category: string;
   reason_details: string;
+  admin_note?: string | null;
   status: "pending" | "actioned" | "dismissed";
   created_at: string;
   resolved_at: string | null;
@@ -78,6 +79,13 @@ export default function AdminReportsPage() {
   const [authorized, setAuthorized] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Modal State'leri
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [targetReport, setTargetReport] = useState<ReportEntry | null>(null);
+  const [pendingAction, setPendingAction] = useState<"actioned" | "dismissed" | "edit">("actioned");
+  const [pendingDeleteContent, setPendingDeleteContent] = useState(false);
+  const [adminNoteInput, setAdminNoteInput] = useState("");
+
   useEffect(() => {
     async function checkAuth() {
       const supabase = createClient();
@@ -109,6 +117,46 @@ export default function AdminReportsPage() {
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
+
+  function openNoteModal(
+    report: ReportEntry,
+    actionType: "actioned" | "dismissed" | "edit",
+    deleteContent: boolean = false
+  ) {
+    setTargetReport(report);
+    setPendingAction(actionType);
+    setPendingDeleteContent(deleteContent);
+    const existingNote = report.admin_note || (report.reason_details?.includes("[YÖNETİCİ NOTU]:") ? report.reason_details.split("[YÖNETİCİ NOTU]:")[1]?.trim() : "");
+    setAdminNoteInput(existingNote || "");
+    setNoteModalOpen(true);
+  }
+
+  async function submitReportActionWithNote() {
+    if (!targetReport) return;
+    const reportId = targetReport.id;
+    setActionLoading(reportId);
+    try {
+      const res = await fetch("/api/admin/reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reportId,
+          action: pendingAction === "dismissed" ? "dismiss" : "resolve",
+          deleteContent: pendingDeleteContent,
+          adminNote: adminNoteInput,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "İşlem başarısız");
+      setNoteModalOpen(false);
+      setTargetReport(null);
+      fetchReports();
+    } catch (err: unknown) {
+      alert("Hata: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setActionLoading(null);
+    }
+  }
 
   async function handleAction(reportId: string, action: "resolve" | "dismiss", deleteContent: boolean = false) {
     if (deleteContent && !confirm("Bu içeriği kalıcı olarak silmek istediğinizden emin misiniz?")) {
@@ -160,7 +208,7 @@ export default function AdminReportsPage() {
                 İçerik Bildirimleri (Şikayetler)
               </h1>
               <p className="text-sm text-[var(--color-muted-foreground)]">
-                Kullanıcılar tarafından bildirilen içeriklerin modülasyonu
+                Kullanıcılar tarafından bildirilen içeriklerin moderasyonu ve yönetimi
               </p>
             </div>
           </div>
@@ -178,52 +226,42 @@ export default function AdminReportsPage() {
           </div>
         </div>
 
-        {/* Filter tabs */}
-        <div className="mb-6 flex items-center gap-2 border-b border-[var(--color-border)] pb-2">
+        {/* Filter Tabs */}
+        <div className="mb-6 flex border-b border-[var(--color-border)]">
           <button
-            onClick={() => {
-              setLoading(true);
-              setStatusFilter("pending");
-            }}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+            onClick={() => setStatusFilter("pending")}
+            className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               statusFilter === "pending"
-                ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
-                : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+                ? "border-red-600 text-red-600"
+                : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             }`}
           >
             Bekleyenler
           </button>
           <button
-            onClick={() => {
-              setLoading(true);
-              setStatusFilter("actioned");
-            }}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+            onClick={() => setStatusFilter("actioned")}
+            className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               statusFilter === "actioned"
-                ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
-                : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+                ? "border-emerald-600 text-emerald-600"
+                : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             }`}
           >
             İşlem Yapılanlar
           </button>
           <button
-            onClick={() => {
-              setLoading(true);
-              setStatusFilter("dismissed");
-            }}
-            className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+            onClick={() => setStatusFilter("dismissed")}
+            className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               statusFilter === "dismissed"
-                ? "bg-gray-500/10 text-gray-600 border border-gray-500/20"
-                : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+                ? "border-gray-500 text-gray-500"
+                : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             }`}
           >
             Yoksayılanlar
           </button>
         </div>
 
-        {/* Error */}
         {error && (
-          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-600">
+          <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
             {error}
           </div>
         )}
@@ -247,6 +285,8 @@ export default function AdminReportsPage() {
               const isActioned = report.status === "actioned";
               const isDismissed = report.status === "dismissed";
               const isPost = report.content_type === "post";
+              const cleanReasonDetails = (report.reason_details || "").split("\n\n[YÖNETİCİ NOTU]:")[0];
+              const displayAdminNote = report.admin_note || (report.reason_details?.includes("[YÖNETİCİ NOTU]:") ? report.reason_details.split("[YÖNETİCİ NOTU]:")[1]?.trim() : null);
 
               return (
                 <div
@@ -254,7 +294,7 @@ export default function AdminReportsPage() {
                   className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:border-[var(--color-border)]/80"
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-2 max-w-3xl">
+                    <div className="space-y-3 max-w-3xl flex-1">
                       {/* Badge and Metadata */}
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         <span className="rounded-full bg-red-500/10 text-red-600 px-2.5 py-0.5 font-semibold">
@@ -317,18 +357,34 @@ export default function AdminReportsPage() {
                           Şikayet Sebebi:
                         </p>
                         <p className="rounded-lg bg-amber-500/5 border border-amber-500/10 p-2.5 text-[var(--color-foreground)] break-words">
-                          &quot;{report.reason_details}&quot;
+                          &quot;{cleanReasonDetails}&quot;
                         </p>
                       </div>
+
+                      {/* Display Admin Note if present */}
+                      {displayAdminNote && (
+                        <div className="text-xs">
+                          <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
+                            <FileText className="h-3.5 w-3.5" /> Yönetici Notu / Açıklaması:
+                          </p>
+                          <p className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-2.5 text-[var(--color-foreground)] break-words font-medium">
+                            &quot;{displayAdminNote}&quot;
+                          </p>
+                        </div>
+                      )}
 
                       {/* Reporter info */}
                       <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)] pt-1">
                         <User className="h-3.5 w-3.5" />
                         <span>Bildiren Kullanıcı: </span>
                         {report.reporter ? (
-                          <span className="font-medium text-[var(--color-foreground)]">
+                          <Link
+                            href={`/profile/${report.reporter.id}`}
+                            target="_blank"
+                            className="font-medium text-[var(--color-primary)] hover:underline"
+                          >
                             {report.reporter.first_name} {report.reporter.last_name} ({report.reporter.edu_email})
-                          </span>
+                          </Link>
                         ) : (
                           <span className="italic">Bilinmiyor</span>
                         )}
@@ -341,21 +397,21 @@ export default function AdminReportsPage() {
                         <>
                           {report.contentDetails && (
                             <button
-                              onClick={() => handleAction(report.id, "resolve", true)}
+                              onClick={() => openNoteModal(report, "actioned", true)}
                               disabled={actionLoading === report.id}
-                              className="flex items-center gap-1.5 rounded-xl bg-red-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                              className="flex items-center gap-1.5 rounded-xl bg-red-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 shadow-sm"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
-                              İçeriği Sil & Onayla
+                              İçeriği Sil &amp; İşlem Yap
                             </button>
                           )}
                           <button
-                            onClick={() => handleAction(report.id, "resolve", false)}
+                            onClick={() => openNoteModal(report, "actioned", false)}
                             disabled={actionLoading === report.id}
-                            className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm"
                           >
-                            <Check className="h-3.5 w-3.5" />
-                            İçeriği Koru & Onayla
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            İşlem Yapıldı &amp; Not Ekle
                           </button>
                           <button
                             onClick={() => handleAction(report.id, "dismiss", false)}
@@ -367,19 +423,27 @@ export default function AdminReportsPage() {
                           </button>
                         </>
                       ) : (
-                        <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-[var(--color-muted)] text-[var(--color-muted-foreground)]">
-                          {isActioned && (
-                            <>
-                              <CheckCircle className="h-4 w-4 text-emerald-500" />
-                              <span>İşlem Yapıldı</span>
-                            </>
-                          )}
-                          {isDismissed && (
-                            <>
-                              <XCircle className="h-4 w-4 text-gray-400" />
-                              <span>Yoksayıldı</span>
-                            </>
-                          )}
+                        <div className="flex flex-col gap-2 items-end">
+                          <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium bg-[var(--color-muted)] text-[var(--color-muted-foreground)]">
+                            {isActioned && (
+                              <>
+                                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                <span>İşlem Yapıldı</span>
+                              </>
+                            )}
+                            {isDismissed && (
+                              <>
+                                <XCircle className="h-4 w-4 text-gray-400" />
+                                <span>Yoksayıldı</span>
+                              </>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => openNoteModal(report, "edit", false)}
+                            className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline font-semibold"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" /> Notu Düzenle
+                          </button>
                         </div>
                       )}
                     </div>
@@ -390,6 +454,59 @@ export default function AdminReportsPage() {
           </div>
         )}
       </div>
+
+      {/* Admin Note Modal */}
+      {noteModalOpen && targetReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-[var(--color-card)] border border-[var(--color-border)] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+              <h3 className="font-bold text-base text-[var(--color-foreground)] flex items-center gap-2">
+                <FileText className="h-5 w-5 text-[var(--color-primary)]" />
+                {pendingAction === "edit" ? "Yönetici Notunu Düzenle" : "Şikayet İşlem Notu Ekle"}
+              </h3>
+              <button
+                onClick={() => setNoteModalOpen(false)}
+                className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] text-sm font-bold px-2 py-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed">
+                {pendingAction === "edit"
+                  ? "Bu şikayet kaydı için daha önce yazılan yönetici notunu aşağıdan güncelleyebilirsiniz."
+                  : "Bu şikayeti 'İşlem Yapılanlar' listesine taşımak için yapılan işlemi ve alınan kararı açıklayınız:"}
+              </p>
+              <textarea
+                rows={4}
+                value={adminNoteInput}
+                onChange={(e) => setAdminNoteInput(e.target.value)}
+                placeholder="Örn: Kullanıcı uyarıldı, gönderideki ihlal içeren kısım kaldırıldı / incelendi..."
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm text-[var(--color-foreground)] focus:border-[var(--color-primary)] focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--color-border)]">
+              <button
+                type="button"
+                onClick={() => setNoteModalOpen(false)}
+                className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-xs font-semibold hover:bg-[var(--color-muted)] transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                onClick={submitReportActionWithNote}
+                disabled={actionLoading === targetReport.id}
+                className="rounded-xl bg-[var(--color-primary)] px-5 py-2 text-xs font-semibold text-white shadow-md hover:opacity-90 transition-all disabled:opacity-50"
+              >
+                {actionLoading === targetReport.id ? "Kaydediliyor..." : "Kaydet & İşlem Yapılanlara Taşı"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

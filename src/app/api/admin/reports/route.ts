@@ -38,8 +38,8 @@ export async function GET(request: Request) {
         let contentDetails = null;
         if (report.content_type === "post") {
           const { data: post } = await adminSupabase
-            .from("community_posts")
-            .select("id, title, content, author_id, slug, subreddits:subreddit_id(slug)")
+            .from("posts")
+            .select("id, title, content, author_id, subreddits:subreddit_id(slug)")
             .eq("id", report.content_id)
             .maybeSingle();
           contentDetails = post;
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
             .from("projects")
             .select("id, title, description, owner_id")
             .eq("id", report.content_id)
-            .single();
+            .maybeSingle();
           contentDetails = project;
         }
         return { ...report, contentDetails };
@@ -75,7 +75,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 403 });
     }
 
-    const { reportId, action, deleteContent } = await request.json();
+    const { reportId, action, deleteContent, adminNote } = await request.json();
 
     if (!reportId || !action) {
       return NextResponse.json({ error: "Eksik parametre" }, { status: 400 });
@@ -97,7 +97,7 @@ export async function PATCH(request: Request) {
     if (deleteContent && report.content_id) {
       if (report.content_type === "post") {
         await adminSupabase
-          .from("community_posts")
+          .from("posts")
           .delete()
           .eq("id", report.content_id);
       } else if (report.content_type === "project") {
@@ -108,15 +108,35 @@ export async function PATCH(request: Request) {
       }
     }
 
+    const updatePayload: Record<string, any> = {
+      status: newStatus,
+      resolved_at: new Date().toISOString(),
+      resolved_by: user.id,
+    };
+
+    if (typeof adminNote === "string") {
+      updatePayload.admin_note = adminNote.trim();
+    }
+
     // Şikayet durumunu güncelle
-    const { error: updateErr } = await adminSupabase
+    let { error: updateErr } = await adminSupabase
       .from("content_reports")
-      .update({
-        status: newStatus,
-        resolved_at: new Date().toISOString(),
-        resolved_by: user.id,
-      })
+      .update(updatePayload)
       .eq("id", reportId);
+
+    // Eğer admin_note kolonu veritabanında yoksa, kolon hatası verir; fallback olarak nedene ekle
+    if (updateErr && updateErr.message?.includes("admin_note")) {
+      delete updatePayload.admin_note;
+      if (typeof adminNote === "string") {
+        const cleanDetails = (report.reason_details || "").split("\n\n[YÖNETİCİ NOTU]:")[0];
+        updatePayload.reason_details = `${cleanDetails}\n\n[YÖNETİCİ NOTU]: ${adminNote.trim()}`;
+      }
+      const fallbackRes = await adminSupabase
+        .from("content_reports")
+        .update(updatePayload)
+        .eq("id", reportId);
+      updateErr = fallbackRes.error;
+    }
 
     if (updateErr) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 });
