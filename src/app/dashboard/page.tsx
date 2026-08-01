@@ -33,6 +33,7 @@ import type { Profile, JobListing } from "@/types/database";
 import { SAMPLE_JOB_LISTINGS } from "@/constants/sample-jobs";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function formatTimeAgo(dateString?: string | null) {
   if (!dateString) return "";

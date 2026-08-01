@@ -19,13 +19,16 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomePage() {
   const t = await getTranslations("landing");
   const tc = await getTranslations("common");
 
-  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
 
   const [
     studentsRes,
@@ -36,13 +39,13 @@ export default async function HomePage() {
     cvsRes,
     announcementsRes
   ] = await Promise.all([
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student"),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "faculty"),
-    supabase.from("projects").select("id", { count: "exact", head: true }),
-    supabase.from("organizations").select("id", { count: "exact", head: true }).eq("type", "employer").eq("approval_status", "approved"),
-    supabase.from("organizations").select("id", { count: "exact", head: true }).in("type", ["foundation", "association", "other"]).eq("approval_status", "approved"),
-    supabase.from("cv_data").select("certifications"),
-    supabase.from("announcements").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(3),
+    adminSupabase.from("profiles").select("id", { count: "exact", head: true }).in("role", ["student", "alumni", "user"]),
+    adminSupabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "faculty"),
+    adminSupabase.from("projects").select("id", { count: "exact", head: true }),
+    adminSupabase.from("organizations").select("id", { count: "exact", head: true }).eq("type", "employer"),
+    adminSupabase.from("organizations").select("id", { count: "exact", head: true }).in("type", ["foundation", "association", "other"]),
+    adminSupabase.from("cv_data").select("certifications"),
+    adminSupabase.from("announcements").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(3),
   ]);
 
   const announcements = announcementsRes?.data || [];

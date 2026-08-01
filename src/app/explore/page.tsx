@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Search, Users, Star, GraduationCap, BookOpen, Building2, Globe, ArrowRight, UserCheck, Calendar } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import type { Profile } from "@/types/database";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface Organization {
   id: string;
@@ -21,7 +22,7 @@ export default async function ExplorePage({
 }: {
   searchParams: Promise<{ tab?: string; query?: string }>;
 }) {
-  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
   const params = await searchParams;
   const activeTab = params.tab || "students";
   const searchQuery = params.query || "";
@@ -30,13 +31,14 @@ export default async function ExplorePage({
   let filteredOrgs: Organization[] = [];
 
   if (activeTab === "students") {
-    // Öğrencileri çek (admin, moderator ve mezunlar da buraya dahil edilir)
-    const { data: profiles } = await supabase
+    // Öğrencileri çek (admin, moderator ve mezunlar da buraya dahil edilir - en yeniler en üstte)
+    const { data: profiles } = await adminSupabase
       .from("profiles")
       .select("*")
       .eq("is_active", true)
       .in("role", ["student", "alumni", "admin", "moderator"])
-      .order("karma_points", { ascending: false });
+      .order("karma_points", { ascending: false })
+      .order("created_at", { ascending: false });
 
     filteredProfiles = profiles || [];
     if (searchQuery) {
@@ -50,12 +52,13 @@ export default async function ExplorePage({
     }
   } else if (activeTab === "academics") {
     // Akademisyenleri çek
-    const { data: profiles } = await supabase
+    const { data: profiles } = await adminSupabase
       .from("profiles")
       .select("*")
       .eq("is_active", true)
       .eq("role", "faculty")
-      .order("karma_points", { ascending: false });
+      .order("karma_points", { ascending: false })
+      .order("created_at", { ascending: false });
 
     filteredProfiles = profiles || [];
     if (searchQuery) {
@@ -69,7 +72,7 @@ export default async function ExplorePage({
     }
   } else if (activeTab === "organizations") {
     // Onaylı Kurumları çek
-    const { data: orgs } = await supabase
+    const { data: orgs } = await adminSupabase
       .from("organizations")
       .select("*")
       .eq("approval_status", "approved")
@@ -86,12 +89,13 @@ export default async function ExplorePage({
     }
   } else if (activeTab === "mentors") {
     // Mentörleri çek
-    const { data: profiles } = await supabase
+    const { data: profiles } = await adminSupabase
       .from("profiles")
       .select("*")
       .eq("is_active", true)
       .eq("is_mentor", true)
-      .order("karma_points", { ascending: false });
+      .order("karma_points", { ascending: false })
+      .order("created_at", { ascending: false });
 
     filteredProfiles = profiles || [];
     if (searchQuery) {
