@@ -23,6 +23,7 @@ import {
   organizationRegisterSchema,
   type OrganizationRegisterInput,
 } from "@/lib/validations/auth";
+import { notifyNewRegistration } from "@/lib/notifications/client";
 
 const ORG_TYPES = [
   { value: "employer", label: "İşveren / Şirket" },
@@ -58,7 +59,7 @@ export default function OrganizationRegisterPage() {
       : "https://ybs-toplulugu.vercel.app/auth/callback";
 
     // Signup organization (with role "employer" and user metadata)
-    const { error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -80,6 +81,14 @@ export default function OrganizationRegisterPage() {
       toast.error(authError.message);
       setLoading(false);
       return;
+    }
+
+    // Yöneticilere anında bildirim gönder (e-posta doğrulamasını beklemeden).
+    // Bu, veritabanı tetikleyicilerinden bağımsız çalışır ve hata alınsa/ağ
+    // sorunu yaşansa bile kullanıcının kaydını tamamlamasını ASLA engellemez
+    // (retry mantığı notifyNewRegistration içinde yönetiliyor).
+    if (authData.user?.id) {
+      void notifyNewRegistration(authData.user.id);
     }
 
     setEmailSent(true);

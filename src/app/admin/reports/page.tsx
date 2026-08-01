@@ -92,15 +92,14 @@ export default function AdminReportsPage() {
 
   const fetchReports = useCallback(async () => {
     if (!authorized) return;
-    setLoading(true);
     setError("");
     try {
       const res = await fetch(`/api/admin/reports?status=${statusFilter}`);
       if (!res.ok) throw new Error("Şikayetler yüklenirken hata oluştu");
       const data = await res.json();
       setReports(data.reports || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Bilinmeyen bir hata oluştu");
     } finally {
       setLoading(false);
     }
@@ -125,8 +124,8 @@ export default function AdminReportsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "İşlem başarısız");
       fetchReports();
-    } catch (err: any) {
-      alert("Hata: " + err.message);
+    } catch (err: unknown) {
+      alert("Hata: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setActionLoading(null);
     }
@@ -166,7 +165,10 @@ export default function AdminReportsPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => fetchReports()}
+              onClick={() => {
+                setLoading(true);
+                fetchReports();
+              }}
               className="flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm font-medium text-[var(--color-foreground)] hover:bg-[var(--color-muted)] transition-colors"
             >
               <RefreshCw className="h-4 w-4" />
@@ -178,7 +180,10 @@ export default function AdminReportsPage() {
         {/* Filter tabs */}
         <div className="mb-6 flex items-center gap-2 border-b border-[var(--color-border)] pb-2">
           <button
-            onClick={() => setStatusFilter("pending")}
+            onClick={() => {
+              setLoading(true);
+              setStatusFilter("pending");
+            }}
             className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
               statusFilter === "pending"
                 ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
@@ -188,7 +193,10 @@ export default function AdminReportsPage() {
             Bekleyenler
           </button>
           <button
-            onClick={() => setStatusFilter("actioned")}
+            onClick={() => {
+              setLoading(true);
+              setStatusFilter("actioned");
+            }}
             className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
               statusFilter === "actioned"
                 ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
@@ -198,7 +206,10 @@ export default function AdminReportsPage() {
             İşlem Yapılanlar
           </button>
           <button
-            onClick={() => setStatusFilter("dismissed")}
+            onClick={() => {
+              setLoading(true);
+              setStatusFilter("dismissed");
+            }}
             className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
               statusFilter === "dismissed"
                 ? "bg-gray-500/10 text-gray-600 border border-gray-500/20"
@@ -301,7 +312,7 @@ export default function AdminReportsPage() {
                           Şikayet Sebebi:
                         </p>
                         <p className="rounded-lg bg-amber-500/5 border border-amber-500/10 p-2.5 text-[var(--color-foreground)] break-words">
-                          "{report.reason_details}"
+                          &quot;{report.reason_details}&quot;
                         </p>
                       </div>
 

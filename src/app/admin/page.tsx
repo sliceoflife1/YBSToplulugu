@@ -19,6 +19,7 @@ import {
   Activity,
   BarChart2,
   ShieldAlert,
+  BellRing,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -326,6 +327,18 @@ export default async function AdminPage() {
                   </h3>
                   <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
                     Tüm kullanıcı eylemlerini görüntüle
+                  </p>
+                </Link>
+                <Link
+                  href="/admin/notifications-health"
+                  className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <BellRing className="h-6 w-6 text-indigo-600" />
+                  <h3 className="mt-3 font-semibold text-[var(--color-foreground)] truncate">
+                    Bildirim Sistemi Sağlığı
+                  </h3>
+                  <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                    Tetikleyici ve tablo kurulumunu doğrula
                   </p>
                 </Link>
                 <Link

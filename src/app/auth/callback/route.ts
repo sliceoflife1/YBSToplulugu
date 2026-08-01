@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { logActivity } from "@/lib/activity-logger"
+import { insertNotificationIdempotent } from "@/lib/notifications/idempotent-insert"
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
             .maybeSingle();
 
           if (!existingOrg) {
-            await adminSupabase.from("organizations").insert({
+            const { error: orgInsertError } = await adminSupabase.from("organizations").insert({
               owner_id: user.id,
               name: companyOrName,
               type: user.user_metadata?.org_type || "employer",
@@ -47,62 +48,64 @@ export async function GET(request: Request) {
               approval_status: "pending",
               is_active: false,
             });
+            if (orgInsertError) {
+              console.error("[auth/callback] organizations insert error:", orgInsertError);
+            }
           }
         }
 
         // 2. Insert welcome / verification pending notification for the user
-        const { data: userExistingNotif } = await adminSupabase
-          .from("notifications")
-          .select("id")
-          .eq("recipient_id", user.id)
-          .eq("type", "system")
-          .filter("metadata->>link", "eq", "/dashboard")
-          .maybeSingle();
-
-        if (!userExistingNotif) {
-          await adminSupabase.from("notifications").insert({
+        //    (atomik: (recipient_id, dedup_key) UNIQUE INDEX + yedekli SELECT-then-INSERT)
+        await insertNotificationIdempotent(
+          adminSupabase,
+          {
             recipient_id: user.id,
             type: "system",
             title: "E-posta Adresiniz Doğrulandı",
             message: "E-posta adresiniz başarıyla doğrulandı. Hesabınız ve başvuru detaylarınız şu an yönetici onayındadır. Onaylandığında bilgilendirileceksiniz.",
             metadata: { link: "/dashboard", role: profile.role },
-            is_read: false,
-          });
-        }
+            dedup_key: `user_pending_confirmation:${user.id}`,
+          },
+          { column: "metadata->>link", value: "/dashboard" },
+          "[auth/callback:user]"
+        );
 
-        // 3. Notify all admins and moderators
-        const { data: admins } = await adminSupabase
+        // 3. Notify all admins and moderators (aynı dedup_key: /api/auth/notify-registration
+        //    ve DB trigger'ıyla mukerrer bildirim oluşmasını engeller)
+        const { data: admins, error: adminsFetchError } = await adminSupabase
           .from("profiles")
           .select("id")
           .in("role", ["admin", "moderator"]);
 
-        if (admins && admins.length > 0) {
-          for (const adminRecord of admins) {
-            // Prevent duplicate notifications
-            const { data: existingNotif } = await adminSupabase
-              .from("notifications")
-              .select("id")
-              .eq("recipient_id", adminRecord.id)
-              .eq("type", "system")
-              .filter("metadata->>user_id", "eq", user.id)
-              .maybeSingle();
+        if (adminsFetchError) {
+          console.error("[auth/callback] admins fetch error:", adminsFetchError);
+        }
 
-            if (!existingNotif) {
-              await adminSupabase.from("notifications").insert({
-                recipient_id: adminRecord.id,
-                type: "system",
-                title: `Yeni ${roleTitle} Kaydı (E-posta Doğrulandı): ${companyOrName}`,
-                message: `${nowStr} tarihinde yeni bir ${roleTitle} e-posta adresini doğruladı ve onay bekliyor. Şirket/İsim: ${companyOrName}, E-posta: ${user.email}. İncelemek için tıklayın.`,
-                metadata: {
-                  link: `/admin/users?role=${profile.role}&status=pending`,
-                  user_id: user.id,
-                  role: profile.role,
-                  email: user.email,
+        if (admins && admins.length > 0) {
+          await Promise.all(
+            admins.map((adminRecord) =>
+              insertNotificationIdempotent(
+                adminSupabase,
+                {
+                  recipient_id: adminRecord.id,
+                  type: "system",
+                  title: `Yeni ${roleTitle} Kaydı (E-posta Doğrulandı): ${companyOrName}`,
+                  message: `${nowStr} tarihinde yeni bir ${roleTitle} e-posta adresini doğruladı ve onay bekliyor. Şirket/İsim: ${companyOrName}, E-posta: ${user.email}. İncelemek için tıklayın.`,
+                  metadata: {
+                    link: `/admin/users?role=${profile.role}&status=pending`,
+                    user_id: user.id,
+                    role: profile.role,
+                    email: user.email,
+                  },
+                  dedup_key: `admin_new_registration:${user.id}`,
                 },
-                is_read: false,
-              });
-            }
-          }
+                { column: "metadata->>user_id", value: user.id },
+                "[auth/callback:admin]"
+              )
+            )
+          );
+        } else {
+          console.warn("[auth/callback] Bildirim gönderilecek admin/moderator bulunamadı.");
         }
       }
 

@@ -20,6 +20,7 @@ import {
   facultyRegisterSchema,
   type FacultyRegisterInput,
 } from "@/lib/validations/auth";
+import { notifyNewRegistration } from "@/lib/notifications/client";
 
 import { DEU_FACULTIES } from "@/constants/deu-departments";
 import { useLocale } from "next-intl";
@@ -62,7 +63,7 @@ export default function FacultyRegisterPage() {
       ? `${window.location.origin}/auth/callback`
       : "https://ybs-toplulugu.vercel.app/auth/callback";
 
-    const { error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -81,6 +82,12 @@ export default function FacultyRegisterPage() {
       toast.error(authError.message);
       setLoading(false);
       return;
+    }
+
+    // Yöneticilere anında bildirim gönder (e-posta doğrulamasını beklemeden);
+    // hata alınsa bile kayıt akışını engellemez (retry mantığı dahilidir).
+    if (authData.user?.id) {
+      void notifyNewRegistration(authData.user.id);
     }
 
     setEmailSent(true);
