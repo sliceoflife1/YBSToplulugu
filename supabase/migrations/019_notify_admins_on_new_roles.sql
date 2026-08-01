@@ -10,8 +10,9 @@ DECLARE
   formatted_date TEXT;
   user_full_name TEXT;
 BEGIN
-  -- Sadece employer veya faculty rollerinde tetiklenir
-  IF NEW.role IN ('employer', 'faculty') THEN
+  IF (TG_OP = 'INSERT' AND NEW.role IN ('employer', 'faculty')) OR
+     (TG_OP = 'UPDATE' AND NEW.role IN ('employer', 'faculty') AND (OLD.role IS DISTINCT FROM NEW.role)) THEN
+
     IF NEW.role = 'employer' THEN
       role_title := 'İşveren';
     ELSE
@@ -25,7 +26,6 @@ BEGIN
 
     formatted_date := to_char(now() AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI');
 
-    -- Tüm admin ve moderator rolündeki kullanıcılara bildirim gönder
     FOR admin_record IN
       SELECT id FROM public.profiles WHERE role IN ('admin', 'moderator')
     LOOP
@@ -58,5 +58,4 @@ DROP TRIGGER IF EXISTS trg_notify_admins_on_new_employer_or_faculty ON public.pr
 CREATE TRIGGER trg_notify_admins_on_new_employer_or_faculty
   AFTER INSERT OR UPDATE OF role ON public.profiles
   FOR EACH ROW
-  WHEN (NEW.role IN ('employer', 'faculty') AND (OLD IS NULL OR OLD.role IS DISTINCT FROM NEW.role))
   EXECUTE FUNCTION public.notify_admins_on_new_employer_or_faculty();

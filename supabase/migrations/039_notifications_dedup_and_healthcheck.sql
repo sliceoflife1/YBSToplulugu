@@ -128,7 +128,9 @@ DECLARE
   formatted_date TEXT;
   user_full_name TEXT;
 BEGIN
-  IF NEW.role IN ('employer', 'faculty') THEN
+  IF (TG_OP = 'INSERT' AND NEW.role IN ('employer', 'faculty')) OR
+     (TG_OP = 'UPDATE' AND NEW.role IN ('employer', 'faculty') AND (OLD.role IS DISTINCT FROM NEW.role)) THEN
+
     IF NEW.role = 'employer' THEN
       role_title := 'İşveren';
     ELSE
