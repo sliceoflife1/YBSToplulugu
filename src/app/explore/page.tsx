@@ -31,12 +31,12 @@ export default async function ExplorePage({
   let filteredOrgs: Organization[] = [];
 
   if (activeTab === "students") {
-    // Tüm aktif kullanıcı ve öğrencileri çek (en yeniler en üstte, pasifler hariç)
+    // Tüm aktif kullanıcı ve öğrencileri çek (işverenler hariç - en yeniler en üstte)
     const { data: profiles } = await adminSupabase
       .from("profiles")
       .select("*")
       .neq("is_active", false)
-      .in("role", ["student", "alumni", "user", "admin", "moderator", "employer"])
+      .in("role", ["student", "alumni", "user", "admin", "moderator"])
       .order("karma_points", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -195,68 +195,126 @@ export default async function ExplorePage({
           {/* Sonuç Alanı */}
           <div className="mt-8">
             {activeTab === "organizations" ? (
-              // Kurum Listesi
-              filteredOrgs.length > 0 ? (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredOrgs.map((org) => (
-                    <div
-                      key={org.id}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-lg"
-                    >
-                      <div>
-                        {/* Logo & Başlık */}
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--color-muted)]/50 p-1.5 border border-[var(--color-border)]">
-                            {org.logo_url ? (
-                              <img
-                                src={org.logo_url}
-                                alt={org.name}
-                                className="h-full w-full object-contain rounded-lg"
-                              />
-                            ) : (
-                              <Building2 className="h-6 w-6 text-[var(--color-primary)]" />
+              // Kurumlar & İşverenler Listesi
+              filteredOrgs.length > 0 || filteredProfiles.length > 0 ? (
+                <div className="space-y-10">
+                  {/* Şirketler & Kurumlar */}
+                  {filteredOrgs.length > 0 && (
+                    <div>
+                      <h2 className="mb-4 text-base font-bold text-[var(--color-foreground)] flex items-center gap-2">
+                        <Building2 className="h-5 w-5 text-teal-600" />
+                        Kayıtlı Şirketler & Kurumlar
+                      </h2>
+                      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {filteredOrgs.map((org) => (
+                          <div
+                            key={org.id}
+                            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-lg"
+                          >
+                            <div>
+                              {/* Logo & Başlık */}
+                              <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--color-muted)]/50 p-1.5 border border-[var(--color-border)]">
+                                  {org.logo_url ? (
+                                    <img
+                                      src={org.logo_url}
+                                      alt={org.name}
+                                      className="h-full w-full object-contain rounded-lg"
+                                    />
+                                  ) : (
+                                    <Building2 className="h-6 w-6 text-[var(--color-primary)]" />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <h3 className="font-bold text-sm text-[var(--color-foreground)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                                    {org.name}
+                                  </h3>
+                                  <span className="rounded bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)] uppercase">
+                                    {org.type === "employer" && "İşveren"}
+                                    {org.type === "foundation" && "Vakıf"}
+                                    {org.type === "association" && "Dernek"}
+                                    {org.type === "other" && "Diğer Kurum"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Açıklama */}
+                              {org.description && (
+                                <p className="mt-4 text-xs text-[var(--color-muted-foreground)] line-clamp-3 leading-relaxed whitespace-pre-wrap">
+                                  {org.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Alt Bağlantı */}
+                            {org.website_url && (
+                              <div className="mt-4 border-t border-[var(--color-border)]/50 pt-3 flex items-center justify-end">
+                                <a
+                                  href={org.website_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-primary)] hover:underline"
+                                >
+                                  Web Sitesini Ziyaret Et
+                                  <Globe className="h-3.5 w-3.5" />
+                                </a>
+                              </div>
                             )}
                           </div>
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-sm text-[var(--color-foreground)] truncate group-hover:text-[var(--color-primary)] transition-colors">
-                              {org.name}
-                            </h3>
-                            <span className="rounded bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)] uppercase">
-                              {org.type === "employer" && "İşveren"}
-                              {org.type === "foundation" && "Vakıf"}
-                              {org.type === "association" && "Dernek"}
-                              {org.type === "other" && "Diğer Kurum"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Açıklama */}
-                        {org.description && (
-                          <p className="mt-4 text-xs text-[var(--color-muted-foreground)] line-clamp-3 leading-relaxed whitespace-pre-wrap">
-                            {org.description}
-                          </p>
-                        )}
+                        ))}
                       </div>
-
-                      {/* Alt Bağlantı */}
-                      {org.website_url && (
-                        <div className="mt-4 border-t border-[var(--color-border)]/50 pt-3 flex items-center justify-end">
-                          <a
-                            href={org.website_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-primary)] hover:underline"
-                          >
-                            Web Sitesini Ziyaret Et
-                            <Globe className="h-3.5 w-3.5" />
-                          </a>
-                        </div>
-                      )}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Bireysel İşveren Temsilcileri & Profilleri */}
+                  {filteredProfiles.length > 0 && (
+                    <div>
+                      <h2 className="mb-4 text-base font-bold text-[var(--color-foreground)] flex items-center gap-2">
+                        <UserCheck className="h-5 w-5 text-amber-600" />
+                        Kayıtlı İşveren Temsilcileri
+                      </h2>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {filteredProfiles.map((p) => (
+                          <Link
+                            key={p.id}
+                            href={`/u/${p.id}`}
+                            className="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5"
+                          >
+                            <div className="flex items-center gap-4">
+                              {p.avatar_url ? (
+                                <img
+                                  src={p.avatar_url}
+                                  alt={`${p.first_name} ${p.last_name}`}
+                                  className="h-12 w-12 rounded-xl object-cover border border-[var(--color-border)]"
+                                />
+                              ) : (
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-lg font-bold text-white shadow-sm shrink-0">
+                                  {(p.first_name || "?").charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-sm text-[var(--color-foreground)] group-hover:text-[var(--color-primary)] transition-colors truncate">
+                                  {p.first_name} {p.last_name}
+                                </h3>
+                                <p className="text-xs text-[var(--color-muted-foreground)] truncate">
+                                  {p.headline || p.department || "İşveren Temsilcisi"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 flex items-center gap-2 text-[10px]">
+                              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 font-bold text-amber-600 uppercase">
+                                İşveren
+                              </span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <EmptyState icon={Building2} label="Kayıtlı kurum bulunmuyor" />
+                <EmptyState icon={Building2} label="Kayıtlı kurum veya işveren bulunmuyor" />
               )
             ) : (
               // Profil Listesi (Öğrenci veya Akademisyen)
