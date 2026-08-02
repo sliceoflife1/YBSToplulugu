@@ -19,7 +19,7 @@ export default async function MyListingsPage() {
     .eq('id', user.id)
     .single()
     
-  if (profile?.role !== 'employer' && profile?.role !== 'admin' && profile?.role !== 'moderator') {
+  if (profile?.role !== 'employer') {
     redirect('/dashboard')
   }
   

@@ -91,10 +91,18 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
     setLoading(true);
 
     try {
+      const payload = {
+        ...editFormData,
+        student_no:
+          editFormData.student_no && editFormData.student_no.trim() !== ""
+            ? editFormData.student_no.trim()
+            : null,
+      };
+
       const res = await fetch(`/api/admin/users/${userToEdit.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();

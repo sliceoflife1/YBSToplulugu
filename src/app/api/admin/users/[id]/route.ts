@@ -202,7 +202,12 @@ export async function PATCH(
     if (role !== undefined) updateData.role = role;
     if (department !== undefined) updateData.department = department;
     if (phone !== undefined) updateData.phone = phone;
-    if (student_no !== undefined) updateData.student_no = student_no;
+    if (student_no !== undefined) {
+      updateData.student_no =
+        student_no && typeof student_no === "string" && student_no.trim() !== ""
+          ? student_no.trim()
+          : null;
+    }
     if (is_active !== undefined) updateData.is_active = is_active;
 
     const { data: updatedProfile, error: profileUpdateError } = await adminSupabase
