@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
@@ -220,13 +221,23 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
                   <tr key={user.id} className="hover:bg-[var(--color-muted)]/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg gradient-primary text-white font-bold">
+                        <Link
+                          href={`/u/${user.id}`}
+                          target="_blank"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg gradient-primary text-white font-bold transition-transform hover:scale-105"
+                          title="Profilini görüntüle"
+                        >
                           {(user.first_name || "?").charAt(0).toUpperCase()}
-                        </div>
+                        </Link>
                         <div className="min-w-0">
-                          <p className="font-semibold text-[var(--color-foreground)] truncate">
+                          <Link
+                            href={`/u/${user.id}`}
+                            target="_blank"
+                            className="font-semibold text-[var(--color-foreground)] hover:text-[var(--color-primary)] transition-colors truncate block"
+                            title="Profilini görüntüle"
+                          >
                             {user.first_name} {user.last_name}
-                          </p>
+                          </Link>
                           <p className="text-xs truncate">{user.department || "Bölüm Yok"}</p>
                         </div>
                       </div>
