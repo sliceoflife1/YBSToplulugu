@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { logActivity } from "@/lib/activity-logger"
+import { logActivity } from "@/lib/activity-logger";
 
 // 1. Yeni Arkadaş Yazısı Gönder (POST)
 export async function POST(request: Request) {
@@ -66,7 +66,36 @@ export async function POST(request: Request) {
       entityId: data.id,
       status: "success",
       request
-    })
+    });
+
+    // Alıcıya bildirim gönder
+    try {
+      const adminSupabase = createAdminClient();
+      const { data: senderProfile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .single();
+
+      const senderName =
+        `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() ||
+        "Bir kullanıcı";
+
+      await adminSupabase.from("notifications").insert({
+        recipient_id: recipientId,
+        type: "yearbook_entry",
+        title: "Yeni Yıllık Yazısı",
+        message: `${senderName} senin yıllık sayfana yeni bir yazı yazdı. İncelemek veya onaylamak için tıklayın.`,
+        metadata: {
+          link: `/yearbook/${recipientId}`,
+          entry_id: data.id,
+          sender_id: user.id,
+          sender_name: senderName,
+        },
+      });
+    } catch (notifErr) {
+      console.error("Yearbook notification insert error:", notifErr);
+    }
 
     return NextResponse.json({ data });
   } catch (err: any) {
@@ -152,7 +181,38 @@ export async function PUT(request: Request) {
       entityId: entryId,
       status: "success",
       request
-    })
+    });
+
+    // Gönderen yazıyı güncellediyse ve tekrar onay bekliyorsa alıcıya bildirim gönder
+    if (content !== undefined && entry.recipient_id) {
+      try {
+        const adminSupabase = createAdminClient();
+        const { data: senderProfile } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", user.id)
+          .single();
+
+        const senderName =
+          `${senderProfile?.first_name || ""} ${senderProfile?.last_name || ""}`.trim() ||
+          "Bir kullanıcı";
+
+        await adminSupabase.from("notifications").insert({
+          recipient_id: entry.recipient_id,
+          type: "yearbook_entry",
+          title: "Yıllık Yazısı Güncellendi",
+          message: `${senderName} senin yıllık sayfandaki yazısını güncelledi. İncelemek için tıklayın.`,
+          metadata: {
+            link: `/yearbook/${entry.recipient_id}`,
+            entry_id: entryId,
+            sender_id: user.id,
+            sender_name: senderName,
+          },
+        });
+      } catch (notifErr) {
+        console.error("Yearbook notification update insert error:", notifErr);
+      }
+    }
 
     return NextResponse.json({ data });
   } catch (err: any) {

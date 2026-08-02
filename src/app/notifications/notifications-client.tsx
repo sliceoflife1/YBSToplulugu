@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale'
-import { Bell, ClipboardList, Handshake, CheckCircle, Check } from 'lucide-react'
+import { Bell, ClipboardList, Handshake, CheckCircle, Check, BookOpen } from 'lucide-react'
 import type { Notification } from '@/types/database'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -63,6 +63,8 @@ export default function NotificationsClient({ notifications: initialNotification
         return <Handshake className="h-5 w-5 text-green-500" />
       case 'application_success':
         return <CheckCircle className="h-5 w-5 text-emerald-500" />
+      case 'yearbook_entry':
+        return <BookOpen className="h-5 w-5 text-indigo-500" />
       case 'system':
       default:
         return <Bell className="h-5 w-5 text-orange-500" />
