@@ -21,7 +21,7 @@ export default async function AdminOpportunitiesPage() {
     .eq("id", user.id)
     .single<Profile>();
 
-  if (!profile || (profile.role !== "admin" && profile.role !== "moderator")) {
+  if (!profile || profile.role !== "admin") {
     redirect("/dashboard");
   }
 

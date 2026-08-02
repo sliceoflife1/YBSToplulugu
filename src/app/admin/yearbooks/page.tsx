@@ -32,7 +32,7 @@ export default function AdminYearbooksPage() {
         .eq("id", user.id)
         .single();
 
-      if (!profile || !["admin", "moderator", "faculty"].includes(profile.role)) {
+      if (!profile || profile.role !== "admin") {
         toast.error("Bu sayfaya erişim yetkiniz bulunmamaktadır.");
         router.push("/dashboard");
         return;

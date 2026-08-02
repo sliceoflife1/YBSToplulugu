@@ -49,7 +49,7 @@ export default function AdminStatisticsPage() {
           .eq("id", user.id)
           .single();
 
-        if (!profile || (profile.role !== "admin" && profile.role !== "moderator" && profile.role !== "faculty")) {
+        if (!profile || profile.role !== "admin") {
           router.push("/dashboard");
           return;
         }

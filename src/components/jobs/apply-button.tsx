@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import CvPreviewModal from './cv-preview-modal';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
 import type { CvData, Profile } from '@/types/database';
 
 interface ApplyButtonProps {
@@ -15,16 +15,35 @@ interface ApplyButtonProps {
   isActive: boolean;
 }
 
+/**
+ * Temel CV alanlarını kontrol eder ve eksik olanları döndürür.
+ * Başvuru yapabilmek için en az eğitim ve yetenek bilgisi gereklidir.
+ */
+function getMissingCvFields(cv: CvData): string[] {
+  const missing: string[] = [];
+
+  if (!cv.education || cv.education.length === 0) {
+    missing.push('Eğitim bilgisi');
+  }
+
+  if (!cv.skills || cv.skills.length === 0) {
+    missing.push('Yetenek/beceri bilgisi');
+  }
+
+  return missing;
+}
+
 export default function ApplyButton({ listingId, deadline, isActive }: ApplyButtonProps) {
   const router = useRouter();
   const supabase = createClient();
   
   const [loading, setLoading] = useState(true);
   const [isApplying, setIsApplying] = useState(false);
-  const [status, setStatus] = useState<'guest' | 'employer' | 'applied' | 'no-cv' | 'can-apply'>('guest');
+  const [status, setStatus] = useState<'guest' | 'employer' | 'applied' | 'no-cv' | 'incomplete-cv' | 'can-apply'>('guest');
   const [cvData, setCvData] = useState<CvData | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   useEffect(() => {
     async function checkStatus() {
@@ -65,15 +84,23 @@ export default function ApplyButton({ listingId, deadline, isActive }: ApplyButt
 
         const { data: cv } = await supabase
           .from('cv_data')
-          .select('data')
-          .eq('profile_id', session.user.id)
+          .select('*')
+          .eq('user_id', session.user.id)
           .single();
 
-        if (!cv || !cv.data) {
+        if (!cv) {
           setStatus('no-cv');
         } else {
-          setCvData(cv.data as CvData);
-          setStatus('can-apply');
+          const typedCv = cv as unknown as CvData;
+          setCvData(typedCv);
+
+          const missing = getMissingCvFields(typedCv);
+          if (missing.length > 0) {
+            setMissingFields(missing);
+            setStatus('incomplete-cv');
+          } else {
+            setStatus('can-apply');
+          }
         }
       } catch (error) {
         console.error('Error checking application status:', error);
@@ -146,9 +173,38 @@ export default function ApplyButton({ listingId, deadline, isActive }: ApplyButt
 
   if (status === 'no-cv') {
     return (
-      <Link href="/cv" className="block w-full text-center py-2.5 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:bg-[var(--color-accent)]/90 transition-colors shadow-sm">
-        Önce CV Bilgilerinizi Doldurun
-      </Link>
+      <div className="space-y-2">
+        <Link href="/cv" className="block w-full text-center py-2.5 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:bg-[var(--color-accent)]/90 transition-colors shadow-sm">
+          Önce CV Bilgilerinizi Doldurun
+        </Link>
+        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-2.5 dark:border-amber-700 dark:bg-amber-950/30">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <p className="text-xs text-amber-700 dark:text-amber-400">
+            Başvuru yapabilmek için CV sayfasından en az <strong>eğitim</strong> ve <strong>yetenek</strong> bilgilerinizi doldurmanız gerekmektedir.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'incomplete-cv') {
+    return (
+      <div className="space-y-2">
+        <Link href="/cv" className="block w-full text-center py-2.5 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:bg-[var(--color-accent)]/90 transition-colors shadow-sm">
+          CV Bilgilerinizi Tamamlayın
+        </Link>
+        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-2.5 dark:border-amber-700 dark:bg-amber-950/30">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <div className="text-xs text-amber-700 dark:text-amber-400">
+            <p className="mb-1">Başvuru yapabilmek için aşağıdaki bilgileri tamamlamanız gerekmektedir:</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              {missingFields.map((field) => (
+                <li key={field}>{field}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
     );
   }
 

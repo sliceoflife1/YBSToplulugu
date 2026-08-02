@@ -22,7 +22,7 @@ export default async function AdminJobsPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'moderator', 'faculty'].includes(profile.role)) {
+  if (!profile || profile.role !== 'admin') {
     redirect('/dashboard')
   }
 

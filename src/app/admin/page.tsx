@@ -42,7 +42,7 @@ export default async function AdminPage() {
     .eq("id", user.id)
     .single<Profile>();
 
-  if (!profile || (profile.role !== "admin" && profile.role !== "moderator" && profile.role !== "faculty")) {
+  if (!profile || profile.role !== "admin") {
     redirect("/dashboard");
   }
 

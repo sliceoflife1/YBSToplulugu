@@ -27,7 +27,7 @@ export async function GET() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || (profile.role !== "admin" && profile.role !== "moderator")) {
+  if (!profile || profile.role !== "admin") {
     return NextResponse.json({ error: "Bu işlem için yetkiniz yok." }, { status: 403 });
   }
 

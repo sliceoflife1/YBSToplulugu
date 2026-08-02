@@ -113,6 +113,7 @@ export default function Navbar() {
   const isAdmin = user?.role === "admin" || user?.role === "moderator";
   const isFaculty = user?.role === "faculty";
   const isEmployer = user?.role === "employer";
+  const canAccessAdmin = user?.role === "admin";
 
   if (isAdmin || isEmployer) {
     navLinks.push({ href: "/talent", label: "Yetenek Havuzu", icon: Compass });
@@ -152,7 +153,7 @@ export default function Navbar() {
               </Link>
             );
           })}
-          {(isAdmin || isFaculty) && (
+          {canAccessAdmin && (
             <Link
               href="/admin"
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -287,7 +288,7 @@ export default function Navbar() {
                   <Settings className="h-5 w-5" />
                   {t("nav.settings")}
                 </Link>
-                {(isAdmin || isFaculty) && (
+                {canAccessAdmin && (
                   <Link
                     href="/admin"
                     onClick={() => setIsOpen(false)}

@@ -51,6 +51,19 @@ export default function StudentRegisterPage() {
     setLoading(true);
     const supabase = createClient();
 
+    // Mükerrer e-posta kontrolü
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("edu_email", data.email)
+      .maybeSingle();
+
+    if (existingProfile) {
+      toast.error("Bu e-posta adresi ile zaten kayıtlı bir hesap bulunmaktadır.");
+      setLoading(false);
+      return;
+    }
+
     const redirectUrl = typeof window !== "undefined"
       ? `${window.location.origin}/auth/callback`
       : "https://ybs-toplulugu.vercel.app/auth/callback";

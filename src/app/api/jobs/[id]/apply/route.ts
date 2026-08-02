@@ -41,14 +41,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     // CV kontrolü
-    const { data: cvData } = await supabase
+    const { data: cvRecord } = await supabase
       .from('cv_data')
-      .select('id')
+      .select('id, education, skills')
       .eq('user_id', user.id)
       .single()
 
-    if (!cvData) {
-      return NextResponse.json({ error: 'CV veriniz bulunamadı. Lütfen profilinizden CV bilgilerinizi doldurun.' }, { status: 400 })
+    if (!cvRecord) {
+      return NextResponse.json({ error: 'CV veriniz bulunamadı. Lütfen CV sayfasından bilgilerinizi doldurun.' }, { status: 400 })
+    }
+
+    // Temel CV alanları doğrulaması
+    const missingFields: string[] = []
+    const education = cvRecord.education as unknown[]
+    const skills = cvRecord.skills as unknown[]
+
+    if (!education || !Array.isArray(education) || education.length === 0) {
+      missingFields.push('Eğitim bilgisi')
+    }
+    if (!skills || !Array.isArray(skills) || skills.length === 0) {
+      missingFields.push('Yetenek/beceri bilgisi')
+    }
+
+    if (missingFields.length > 0) {
+      return NextResponse.json({
+        error: `CV'nizde eksik bilgiler var: ${missingFields.join(', ')}. Lütfen CV sayfasından bu bilgileri tamamlayın.`
+      }, { status: 400 })
     }
 
     // Başvuru kaydı oluştur

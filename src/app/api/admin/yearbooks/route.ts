@@ -15,7 +15,7 @@ async function checkAdminAuth() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || !["admin", "moderator", "faculty"].includes(profile.role)) {
+  if (!profile || profile.role !== "admin") {
     return { error: "Forbidden", status: 403 };
   }
 
