@@ -25,14 +25,22 @@ export default async function CreateJobPage() {
     redirect('/dashboard')
   }
   
-  // Get employer's organization
-  const { data: organization } = await supabase
+  // Get employer's organization (must be approved)
+  const { data: approvedOrg } = await supabase
     .from('organizations')
     .select('*')
     .eq('owner_id', user.id)
-    .eq('status', 'approved')
-    .single()
-    
+    .eq('approval_status', 'approved')
+    .maybeSingle()
+
+  const { data: anyOrg } = approvedOrg
+    ? { data: approvedOrg }
+    : await supabase
+        .from('organizations')
+        .select('id, approval_status, name')
+        .eq('owner_id', user.id)
+        .maybeSingle()
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -47,23 +55,29 @@ export default async function CreateJobPage() {
           </Link>
         </div>
         
-        {!organization && profile?.role === 'employer' ? (
+        {!approvedOrg && profile?.role === 'employer' ? (
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-6 flex flex-col items-center justify-center text-center">
             <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Onaylı Organizasyon Bulunamadı</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {anyOrg?.approval_status === 'pending'
+                ? 'Organizasyonunuz Admin Onayındadır'
+                : 'Onaylı Organizasyon Bulunamadı'}
+            </h2>
             <p className="text-muted-foreground mb-4 max-w-md">
-              İş ilanı yayınlayabilmek için onaylanmış bir şirket veya topluluk hesabınızın olması gerekmektedir.
+              {anyOrg?.approval_status === 'pending'
+                ? `${anyOrg.name || 'Şirket'} başvurunuz yönetici onayındadır. Onaylandıktan sonra iş ilanı yayınlayabilirsiniz.`
+                : 'İş ilanı yayınlayabilmek için onaylanmış bir şirket veya topluluk hesabınızın olması gerekmektedir.'}
             </p>
             <Link 
-              href="/organizations/create" 
+              href="/profile/edit" 
               className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
-              Organizasyon Başvurusu Yap
+              Şirket / Kuruluş Bilgilerini Düzenle
             </Link>
           </div>
         ) : (
           <div className="bg-card rounded-xl border shadow-sm p-6">
-            <CreateForm employerId={user.id} organizationId={organization?.id} />
+            <CreateForm employerId={user.id} organizationId={approvedOrg?.id} />
           </div>
         )}
       </main>
