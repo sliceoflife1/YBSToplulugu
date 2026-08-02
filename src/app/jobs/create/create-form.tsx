@@ -58,15 +58,17 @@ export default function CreateForm({ employerId, organizationId }: { employerId:
         body: JSON.stringify(payload)
       })
       
+      const data = await response.json()
+      
       if (!response.ok) {
-        throw new Error('İlan oluşturulurken bir hata oluştu')
+        throw new Error(data.error || 'İlan oluşturulurken bir hata oluştu')
       }
       
       toast.success('İş ilanı başarıyla oluşturuldu')
       router.push('/jobs/my-listings')
       router.refresh()
-    } catch (error) {
-      toast.error('Hata oluştu. Lütfen tekrar deneyin.')
+    } catch (error: any) {
+      toast.error(error.message || 'Hata oluştu. Lütfen tekrar deneyin.')
       console.error(error)
     } finally {
       setIsSubmitting(false)

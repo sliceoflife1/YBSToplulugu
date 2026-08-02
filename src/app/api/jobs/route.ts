@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { logActivity } from "@/lib/activity-logger"
 
@@ -45,8 +45,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Oturum açmanız gerekiyor.' }, { status: 401 })
     }
 
+    const adminSupabase = createAdminClient()
+
     // Yetki kontrolü (employer rolü)
-    const { data: profile } = await supabase
+    const { data: profile } = await adminSupabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -57,15 +59,15 @@ export async function POST(request: Request) {
     }
 
     // Organizasyon kontrolü
-    const { data: organization } = await supabase
+    const { data: organization } = await adminSupabase
       .from('organizations')
       .select('id, approval_status')
       .eq('owner_id', user.id)
       .eq('approval_status', 'approved')
-      .single()
+      .maybeSingle()
 
     if (!organization) {
-      return NextResponse.json({ error: 'Onaylı bir organizasyonunuz bulunmuyor. İlan vermek için organizasyon oluşturmalı ve onay almalısınız.' }, { status: 403 })
+      return NextResponse.json({ error: 'Onaylı bir organizasyonunuz bulunmuyor. İlan vermek için organizasyonunuzun admin tarafından onaylanması gerekmektedir.' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -75,19 +77,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Gerekli alanları doldurunuz.' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    // Tarih alanını temizleme / dönüştürme
+    let formattedDeadline: string | null = null
+    if (deadline && typeof deadline === 'string' && deadline.trim() !== '') {
+      const parsedDate = new Date(deadline)
+      if (!isNaN(parsedDate.getTime())) {
+        formattedDeadline = parsedDate.toISOString()
+      }
+    }
+
+    const { data, error } = await adminSupabase
       .from('job_listings')
       .insert({
         employer_id: user.id,
         organization_id: organization.id,
-        title,
-        description,
+        title: title.trim(),
+        description: description ? description.trim() : null,
         category,
         employment_type,
         work_mode,
-        location,
-        requirements,
-        deadline,
+        location: location ? location.trim() : null,
+        requirements: Array.isArray(requirements) ? requirements : [],
+        deadline: formattedDeadline,
         is_active: true
       })
       .select()
@@ -104,7 +115,7 @@ export async function POST(request: Request) {
         metadata: { error: error.message },
         request
       })
-      return NextResponse.json({ error: 'İlan oluşturulamadı.' }, { status: 500 })
+      return NextResponse.json({ error: `İlan oluşturulamadı: ${error.message}` }, { status: 500 })
     }
 
     logActivity({
@@ -119,8 +130,8 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({ data }, { status: 201 })
-  } catch (err) {
+  } catch (err: any) {
     console.error('Unexpected error:', err)
-    return NextResponse.json({ error: 'Beklenmeyen bir hata oluştu.' }, { status: 500 })
+    return NextResponse.json({ error: err?.message || 'Beklenmeyen bir hata oluştu.' }, { status: 500 })
   }
 }
