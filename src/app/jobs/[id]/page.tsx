@@ -40,7 +40,7 @@ export default async function JobDetailPage({
   const { data: dbListing } = await supabase
     .from("job_listings")
     .select(
-      "*, profiles!employer_id(id, first_name, last_name, avatar_url), organizations(id, name, logo_url, website_url, contact_email, contact_phone, description)"
+      "*, profiles!employer_id(id, first_name, last_name, avatar_url), organizations(id, name, logo_url, website_url, contact_email, contact_phone, description, owner_id)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -72,8 +72,9 @@ export default async function JobDetailPage({
     currentProfile?.role === "admin" || currentProfile?.role === "moderator";
   const canManage = isOwner || isAdmin;
   const isEmployer = currentProfile?.role === "employer";
+  const canSeeApplicants = isEmployer && canManage;
 
-  // Başvuranları çek (sadece ilan sahibi ve admin)
+  // Başvuranları çek (sadece işveren rolünde olan yetkili kullanıcılar)
   let applicants: Array<{
     id: string;
     applicant_id: string;
@@ -82,7 +83,7 @@ export default async function JobDetailPage({
     profiles: { id: string; first_name: string; last_name: string; department: string | null; avatar_url: string | null; is_cv_public: boolean };
   }> = [];
 
-  if (canManage) {
+  if (canSeeApplicants) {
     const { data } = await supabase
       .from("job_applications")
       .select(
@@ -275,7 +276,16 @@ export default async function JobDetailPage({
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-[var(--color-foreground)]">
-                    {(listing.organizations as { name: string }).name}
+                    {(listing.organizations as { name: string; owner_id?: string }).owner_id ? (
+                      <Link
+                        href={`/u/${(listing.organizations as { owner_id: string }).owner_id}`}
+                        className="hover:text-[var(--color-primary)] hover:underline transition-colors"
+                      >
+                        {(listing.organizations as { name: string }).name}
+                      </Link>
+                    ) : (
+                      (listing.organizations as { name: string }).name
+                    )}
                   </h3>
                   {(listing.organizations as { description?: string }).description && (
                     <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
@@ -300,8 +310,8 @@ export default async function JobDetailPage({
             </div>
           )}
 
-          {/* Başvuranlar (Sadece İlan Sahibi / Admin) */}
-          {canManage && (
+          {/* Başvuranlar (Sadece İşveren Rolündekiler) */}
+          {canSeeApplicants && (
             <div className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-[var(--color-foreground)]">
                 <Users className="h-5 w-5 text-[var(--color-primary)]" />

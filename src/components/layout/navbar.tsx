@@ -82,6 +82,8 @@ export default function Navbar() {
   const handleLogout = async () => {
     const supabase = createClient();
     await fetch("/api/auth/log-logout", { method: "POST" }).catch(() => {});
+    // Admin 2FA pending cookie'sini temizle
+    await fetch("/api/auth/clear-2fa-pending", { method: "POST" }).catch(() => {});
     await supabase.auth.signOut();
     window.location.href = "/";
   };

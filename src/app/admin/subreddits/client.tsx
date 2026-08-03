@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Check, X, Loader2 } from "lucide-react";
+import { Plus, Check, X, Loader2, Pencil, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Subreddit } from "@/types/database";
 
@@ -16,6 +16,7 @@ export default function SubredditsClient({
   const [subreddits, setSubreddits] = useState<Subreddit[]>(initialSubreddits);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const router = useRouter();
 
   // Form State
@@ -27,37 +28,80 @@ export default function SubredditsClient({
 
   const supabase = createClient();
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEditingId(null);
+    setName("");
+    setSlug("");
+    setDescription("");
+    setColor("#3B82F6");
+    setIcon("");
+    setError(null);
+  };
+
+  const startEdit = (sub: Subreddit) => {
+    setEditingId(sub.id);
+    setName(sub.name);
+    setSlug(sub.slug);
+    setDescription(sub.description || "");
+    setColor(sub.color || "#3B82F6");
+    setIcon(sub.icon || "");
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { data, error } = await supabase
-      .from("subreddits")
-      .insert({
-        name,
-        slug,
-        description,
-        color,
-        icon,
-        created_by: userId,
-        is_active: true,
-      })
-      .select()
-      .single();
+    if (editingId) {
+      // UPDATE
+      const { data, error } = await supabase
+        .from("subreddits")
+        .update({
+          name,
+          slug,
+          description,
+          color,
+          icon,
+        })
+        .eq("id", editingId)
+        .select()
+        .single();
 
-    setLoading(false);
+      setLoading(false);
 
-    if (error) {
-      setError(error.message);
-    } else if (data) {
-      setSubreddits([data, ...subreddits]);
-      setName("");
-      setSlug("");
-      setDescription("");
-      setColor("#3B82F6");
-      setIcon("");
-      router.refresh();
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        setSubreddits(subreddits.map((s) => (s.id === editingId ? { ...s, ...data } : s)));
+        resetForm();
+        router.refresh();
+      }
+    } else {
+      // INSERT
+      const { data, error } = await supabase
+        .from("subreddits")
+        .insert({
+          name,
+          slug,
+          description,
+          color,
+          icon,
+          created_by: userId,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      setLoading(false);
+
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        setSubreddits([data, ...subreddits]);
+        resetForm();
+        router.refresh();
+      }
     }
   };
 
@@ -77,10 +121,22 @@ export default function SubredditsClient({
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
-      {/* Yeni Ekleme Formu */}
+      {/* Ekleme / Düzenleme Formu */}
       <div className="lg:col-span-1 space-y-6">
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm">
-          <h2 className="text-lg font-bold text-[var(--color-foreground)] mb-4">Yeni Forum Ekle</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-[var(--color-foreground)]">
+              {editingId ? "Forum Düzenle" : "Yeni Forum Ekle"}
+            </h2>
+            {editingId && (
+              <button
+                onClick={resetForm}
+                className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Vazgeç
+              </button>
+            )}
+          </div>
           
           {error && (
             <div className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-600">
@@ -88,7 +144,7 @@ export default function SubredditsClient({
             </div>
           )}
 
-          <form onSubmit={handleCreate} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[var(--color-foreground)]">Forum Adı</label>
               <input
@@ -97,8 +153,7 @@ export default function SubredditsClient({
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
-                  // Auto-generate slug if slug is empty or user is typing the first time
-                  if (!slug || slug === name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')) {
+                  if (!editingId && (!slug || slug === name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''))) {
                     setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''));
                   }
                 }}
@@ -153,14 +208,28 @@ export default function SubredditsClient({
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg gradient-primary px-4 py-2.5 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 mt-4"
-            >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-              {loading ? "Ekleniyor..." : "Forum Oluştur"}
-            </button>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg gradient-primary px-4 py-2.5 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : editingId ? (
+                  <Pencil className="h-4 w-4" />
+                ) : (
+                  <Plus className="h-5 w-5" />
+                )}
+                {loading
+                  ? editingId
+                    ? "Güncelleniyor..."
+                    : "Ekleniyor..."
+                  : editingId
+                  ? "Güncelle"
+                  : "Forum Oluştur"}
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -185,11 +254,11 @@ export default function SubredditsClient({
                   </tr>
                 ) : (
                   subreddits.map((sub) => (
-                    <tr key={sub.id} className="hover:bg-[var(--color-muted)]/30 transition-colors">
+                    <tr key={sub.id} className={`transition-colors hover:bg-[var(--color-muted)]/30 ${editingId === sub.id ? "bg-[var(--color-primary)]/5" : ""}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div 
-                            className="flex h-10 w-10 items-center justify-center rounded-lg text-white font-bold"
+                            className="flex h-10 w-10 items-center justify-center rounded-lg text-white font-bold shrink-0"
                             style={{ backgroundColor: sub.color }}
                           >
                             {sub.icon || sub.name.charAt(0)}
@@ -209,12 +278,22 @@ export default function SubredditsClient({
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => toggleActive(sub.id, sub.is_active)}
-                          className="inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--color-muted)]"
-                        >
-                          {sub.is_active ? "Pasife Al" : "Aktife Al"}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => startEdit(sub)}
+                            className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--color-muted)] text-[var(--color-foreground)]"
+                            title="Düzenle"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Düzenle
+                          </button>
+                          <button
+                            onClick={() => toggleActive(sub.id, sub.is_active)}
+                            className="inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--color-muted)]"
+                          >
+                            {sub.is_active ? "Pasife Al" : "Aktife Al"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

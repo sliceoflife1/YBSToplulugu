@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { ShieldCheck, KeyRound, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
-import { verifyTOTP } from "@/lib/totp";
 import Navbar from "@/components/layout/navbar";
 
 export default function TwoFactorChallengePage() {
@@ -23,55 +21,42 @@ export default function TwoFactorChallengePage() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      toast.error("Oturum zaman aşımına uğradı. Lütfen tekrar giriş yapın.");
-      router.push("/login");
-      return;
-    }
+    try {
+      // Server-side doğrulama API'sini çağır
+      const response = await fetch("/api/auth/verify-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: cleanCode }),
+      });
 
-    // Kullanıcı profilini ve totp_secret/backup_codes verisini getir
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("totp_secret, backup_codes, role, is_2fa_enabled")
-      .eq("id", user.id)
-      .single();
+      const data = await response.json();
 
-    if (!profile || profile.role !== "admin" || !profile.is_2fa_enabled) {
-      router.push("/admin");
-      return;
-    }
+      if (!response.ok) {
+        if (response.status === 401 && data.error === "Oturum zaman aşımına uğradı") {
+          toast.error("Oturum zaman aşımına uğradı. Lütfen tekrar giriş yapın.");
+          router.push("/login");
+          return;
+        }
+        toast.error(data.error || "Girdiğiniz 2FA doğrulama kodu veya yedek kod geçersiz.");
+        setLoading(false);
+        return;
+      }
 
-    let isValid = false;
+      // Doğrulama başarılı
+      if (data.usedBackupCode) {
+        toast.info("Yedek kurtarma kodu kullanıldı. Kalan yedek kodlarınız güncellendi.");
+      }
 
-    // 1. 6 haneli TOTP kod kontrolü
-    if (cleanCode.length === 6 && profile.totp_secret) {
-      // Server-side action or client verifyTOTP
-      const { verifyAndEnableAdminTOTP } = await import("@/app/actions/totp-actions");
-      // TOTP kodunu doğrulamak için client side TOTP doğrulama
-      const { verifyTOTP } = await import("@/lib/totp");
-      isValid = verifyTOTP(profile.totp_secret, cleanCode);
-    }
+      // Giriş logunu yaz (fire-and-forget)
+      fetch("/api/auth/log-login", { method: "POST" }).catch(() => {});
 
-    // 2. Yedek kod kontrolü (8 haneli hex)
-    if (!isValid && profile.backup_codes && profile.backup_codes.includes(cleanCode.toUpperCase())) {
-      isValid = true;
-      // Kullanılan yedek kodu listeden çıkar
-      const remainingCodes = profile.backup_codes.filter((c: string) => c !== cleanCode.toUpperCase());
-      await supabase.from("profiles").update({ backup_codes: remainingCodes }).eq("id", user.id);
-      toast.info("Yedek kurtarma kodu kullanıldı. Kalan yedek kodlarınız güncellendi.");
-    }
-
-    setLoading(false);
-
-    if (isValid) {
       toast.success("Google Authenticator doğrulaması başarılı! Yönetim paneline aktarılıyorsunuz...");
       router.push("/admin");
       router.refresh();
-    } else {
-      toast.error("Girdiğiniz 2FA doğrulama kodu veya yedek kod geçersiz.");
+    } catch {
+      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
+      setLoading(false);
     }
   }
 

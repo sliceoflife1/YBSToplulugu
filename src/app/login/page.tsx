@@ -87,6 +87,8 @@ export default function LoginPage() {
         .single();
 
       if (loggedProfile?.role === "admin" && loggedProfile?.is_2fa_enabled) {
+        // 2FA pending cookie'sini set et (middleware bu cookie ile admin'i kilitler)
+        await fetch("/api/auth/set-2fa-pending", { method: "POST" });
         toast.info("2FA doğrulaması bekleniyor...");
         router.push("/auth/2fa-challenge");
         return;
