@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { verifyTOTP } from "@/lib/totp";
+import { signCookieValue } from "@/lib/cookie-signature";
 
 /**
  * Admin 2FA TOTP doğrulaması yapar.
- * Başarılıysa admin_2fa_pending cookie'sini temizler.
+ * Başarılıysa:
+ *   1. admin_2fa_pending cookie'sini temizler
+ *   2. HMAC-imzalı admin_2fa_verified cookie'si set eder (pozitif sinyal)
  * Tüm doğrulama sunucu tarafında yapılır (güvenli).
  */
 export async function POST(request: Request) {
@@ -82,19 +85,37 @@ export async function POST(request: Request) {
       );
     }
 
-    // Doğrulama başarılı - admin_2fa_pending cookie'sini temizle
+    // Doğrulama başarılı — HMAC-imzalı pozitif doğrulama cookie'si oluştur
+    const signedValue = await signCookieValue(user.id);
+
     const response = NextResponse.json({
       success: true,
       usedBackupCode,
     });
 
-    // Pending cookie'yi sil
-    response.cookies.set("admin_2fa_pending", "", {
+    const cookieDefaults = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "lax" as const,
       path: "/",
-      maxAge: 0, // Hemen sil
+    };
+
+    // Pending cookie'yi sil
+    response.cookies.set("admin_2fa_pending", "", {
+      ...cookieDefaults,
+      maxAge: 0,
+    });
+
+    // Pozitif doğrulama cookie'si set et (12 saat)
+    response.cookies.set("admin_2fa_verified", signedValue, {
+      ...cookieDefaults,
+      maxAge: 43200, // 12 hours
+    });
+
+    // Önceki _2fa_checked cache cookie'sini temizle
+    response.cookies.set("_2fa_checked", "", {
+      ...cookieDefaults,
+      maxAge: 0,
     });
 
     return response;

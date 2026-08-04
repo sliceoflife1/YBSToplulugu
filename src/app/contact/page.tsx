@@ -1,11 +1,12 @@
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
-import { Mail, MessageSquare, ShieldAlert, Sparkles, Send, Copy, Check } from "lucide-react";
+import { Mail, MessageSquare, ShieldAlert, Sparkles, Send, ExternalLink } from "lucide-react";
+import { InstagramIcon, YoutubeIcon } from "@/components/icons/social-icons";
 import ContactClient from "./contact-client";
 
 export const metadata = {
   title: "İletişim & Destek | YBS Topluluğu",
-  description: "Şikayet, destek talepleri ve önerilerinizi bize mail yoluyla iletebilirsiniz.",
+  description: "Şikayet, destek talepleri, sosyal medya ve önerilerinizi bize ulaştırabilirsiniz.",
 };
 
 export default function ContactPage() {
@@ -23,7 +24,7 @@ export default function ContactPage() {
               İletişim & Destek
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-[var(--color-muted-foreground)]">
-              Platformla ilgili her türlü şikayet, destek talebi, görüş ve önerilerinizi e-posta aracılığıyla tarafımıza iletebilirsiniz.
+              Platformla ilgili her türlü destek talebi, görüş, öneri ve sosyal medya hesaplarımıza buradan ulaşabilirsiniz.
             </p>
           </div>
 
@@ -99,7 +100,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Sağ Kolon: Bilgilendirme */}
+            {/* Sağ Kolon: Bilgilendirme ve Sosyal Medya */}
             <div className="space-y-6">
               <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
                 <h3 className="font-semibold text-[var(--color-foreground)] mb-2">YBS Topluluğu Destek</h3>
@@ -110,6 +111,51 @@ export default function ContactPage() {
                   💡 E-posta gönderirken detaylı açıklama eklemeniz daha hızlı yardımcı olmamızı sağlar.
                 </div>
               </div>
+
+              {/* Sosyal Medya Kartı */}
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
+                <h3 className="font-semibold text-[var(--color-foreground)] mb-3">Sosyal Medya</h3>
+                <p className="text-xs text-[var(--color-muted-foreground)] mb-4">
+                  Sosyal medya hesaplarımızı takip ederek tüm duyuru ve etkinliklerden haberdar olabilirsiniz.
+                </p>
+                <div className="space-y-3">
+                  <a
+                    href="https://www.instagram.com/deuybs/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 transition-all hover:border-pink-500/50 hover:bg-pink-500/5 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400">
+                        <InstagramIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--color-foreground)] group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">Instagram</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">@deuybs</p>
+                      </div>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-[var(--color-muted-foreground)] group-hover:text-pink-600 transition-colors" />
+                  </a>
+
+                  <a
+                    href="https://www.youtube.com/@deuybs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 transition-all hover:border-red-500/50 hover:bg-red-500/5 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
+                        <YoutubeIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--color-foreground)] group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">YouTube</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">@deuybs</p>
+                      </div>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-[var(--color-muted-foreground)] group-hover:text-red-600 transition-colors" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -118,3 +164,4 @@ export default function ContactPage() {
     </div>
   );
 }
+

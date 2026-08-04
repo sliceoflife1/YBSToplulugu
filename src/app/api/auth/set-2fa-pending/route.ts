@@ -4,8 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * Admin giriş yaptıktan sonra 2FA doğrulaması beklerken
  * admin_2fa_pending cookie'sini set eder.
- * Bu cookie middleware tarafından kontrol edilerek admin'in
- * 2FA tamamlamadan başka sayfalara erişmesi engellenir.
+ * Ayrıca önceki doğrulama cookie'lerini temizler (yeni login = yeni 2FA).
  */
 export async function POST() {
   try {
@@ -34,13 +33,26 @@ export async function POST() {
 
     const response = NextResponse.json({ success: true });
 
-    // httpOnly cookie: client-side JS erişemez, sadece middleware kontrol eder
-    response.cookies.set("admin_2fa_pending", "true", {
+    const cookieDefaults = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "lax" as const,
       path: "/",
-      // Session cookie - tarayıcı kapanınca silinir (maxAge yok)
+    };
+
+    // httpOnly cookie: client-side JS erişemez, sadece middleware kontrol eder
+    // Session cookie - tarayıcı kapanınca silinir (maxAge yok)
+    response.cookies.set("admin_2fa_pending", "true", cookieDefaults);
+
+    // Önceki doğrulama cookie'lerini temizle (yeni login = yeni 2FA gerekli)
+    response.cookies.set("admin_2fa_verified", "", {
+      ...cookieDefaults,
+      maxAge: 0,
+    });
+
+    response.cookies.set("_2fa_checked", "", {
+      ...cookieDefaults,
+      maxAge: 0,
     });
 
     return response;

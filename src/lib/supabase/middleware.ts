@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { verifyCookieValue, signCookieValue, CHECKED_MAX_AGE } from '@/lib/cookie-signature';
 
 /**
  * Herkese açık (public) route'lar.
@@ -37,12 +38,14 @@ const AUTH_ONLY_PATHS = ['/login', '/register'];
 
 /**
  * Admin 2FA doğrulaması beklenirken erişime izin verilen route'lar.
+ * Sadece 2FA doğrulaması için gerekli endpoint'ler izinli — tüm /api/ değil.
  */
 const ALLOWED_DURING_2FA_PENDING = [
   '/auth/2fa-challenge',
-  '/api/',
-  '/login',
-  '/',
+  '/api/auth/verify-2fa',
+  '/api/auth/clear-2fa-pending',
+  '/api/auth/log-login',
+  '/api/auth/log-logout',
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -66,11 +69,95 @@ function isPublicPath(pathname: string): boolean {
 
 function isAllowedDuring2FAPending(pathname: string): boolean {
   return ALLOWED_DURING_2FA_PENDING.some((allowed) => {
-    if (allowed.endsWith('/')) {
-      return pathname.startsWith(allowed);
-    }
     return pathname === allowed || pathname.startsWith(allowed + '/');
   });
+}
+
+/**
+ * Admin 2FA durumunu kontrol eder ve gerekli yönlendirmeleri yapar.
+ *
+ * Güvenlik mimarisi: POZİTİF SİNYAL (admin_2fa_verified cookie'si)
+ * Eski yaklaşım negatif sinyale (admin_2fa_pending varlığı/yokluğu) dayanıyordu
+ * ve cookie silinerek bypass edilebiliyordu.
+ *
+ * Yeni akış:
+ * 1. admin_2fa_verified cookie geçerli mi? → GEÇIR
+ * 2. _2fa_checked cache cookie geçerli mi? → GEÇIR (admin değil, DB sorgusu cache)
+ * 3. admin_2fa_pending cookie var mı? → ENGELLE (2FA challenge'a yönlendir)
+ * 4. Hiçbiri yok → DB'den profili kontrol et:
+ *    - Admin + 2FA aktif → pending cookie set et, ENGELLE
+ *    - Değilse → _2fa_checked cache set et, GEÇIR
+ *
+ * Returns: redirect response if 2FA is needed, null if access is allowed
+ */
+async function check2FAStatus(
+  request: NextRequest,
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+  defaultResponse: NextResponse
+): Promise<NextResponse | null> {
+  // 1. Pozitif sinyal: HMAC-imzalı admin_2fa_verified cookie
+  const verifiedCookie = request.cookies.get('admin_2fa_verified')?.value;
+  if (verifiedCookie) {
+    const isValid = await verifyCookieValue(verifiedCookie, userId);
+    if (isValid) return null; // 2FA doğrulanmış, erişime izin ver
+  }
+
+  // 2. Cache: _2fa_checked cookie (admin olmayan kullanıcı cache'i)
+  const checkedCookie = request.cookies.get('_2fa_checked')?.value;
+  if (checkedCookie) {
+    const isValid = await verifyCookieValue(checkedCookie, userId, CHECKED_MAX_AGE);
+    if (isValid) return null; // Admin değil veya 2FA yok, erişime izin ver
+  }
+
+  // 3. Negatif sinyal: admin_2fa_pending cookie
+  const hasPending = request.cookies.get('admin_2fa_pending')?.value === 'true';
+  if (hasPending) {
+    // 2FA doğrulaması henüz tamamlanmamış, challenge sayfasına yönlendir
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/2fa-challenge';
+    return NextResponse.redirect(url);
+  }
+
+  // 4. Hiçbir cookie yok — veritabanından kontrol et
+  //    Bu durum şu senaryolarda oluşur:
+  //    - Admin kullanıcı cookie'leri silmiş (bypass denemesi)
+  //    - Normal kullanıcı (ilk istek)
+  //    - Yeni oturum açılmış ama set-2fa-pending henüz çağrılmamış
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_2fa_enabled')
+    .eq('id', userId)
+    .single();
+
+  if (profile?.role === 'admin' && profile?.is_2fa_enabled) {
+    // Admin + 2FA aktif — pending cookie set et ve 2FA challenge'a yönlendir
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/2fa-challenge';
+    const response = NextResponse.redirect(url);
+    response.cookies.set('admin_2fa_pending', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+    return response;
+  }
+
+  // Admin değil veya 2FA aktif değil — sonucu cache'le
+  try {
+    const signedValue = await signCookieValue(userId);
+    defaultResponse.cookies.set('_2fa_checked', signedValue, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+  } catch {
+    // Secret yapılandırılmamış, cache'siz devam et (güvenli fallback)
+  }
+
+  return null; // Erişime izin ver
 }
 
 export async function updateSession(request: NextRequest) {
@@ -111,14 +198,26 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (user && (AUTH_ONLY_PATHS.includes(path) || path.startsWith('/register'))) {
-      // Admin 2FA pending ise login'den 2FA sayfasına yönlendir
+      // Authenticated kullanıcı login/register'da — yönlendir
+      // Önce 2FA durumunu kontrol et
+      const verifiedCookie = request.cookies.get('admin_2fa_verified')?.value;
+      if (verifiedCookie && await verifyCookieValue(verifiedCookie, user.id)) {
+        // 2FA tamamlanmış, dashboard'a yönlendir
+        const url = request.nextUrl.clone();
+        url.pathname = '/dashboard';
+        return NextResponse.redirect(url);
+      }
+
       const has2FAPending = request.cookies.get('admin_2fa_pending')?.value === 'true';
       if (has2FAPending) {
+        // 2FA pending, challenge sayfasına yönlendir
         const url = request.nextUrl.clone();
         url.pathname = '/auth/2fa-challenge';
         return NextResponse.redirect(url);
       }
 
+      // Cookie yok, dashboard'a yönlendir
+      // (Eğer 2FA gerekliyse, dashboard'a erişimde middleware yakalayacak)
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
@@ -140,13 +239,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 4. Admin 2FA pending kontrolü
-  const has2FAPending = request.cookies.get('admin_2fa_pending')?.value === 'true';
+  // 4. 2FA pending sırasında izin verilen path'lere geçiş
+  if (isAllowedDuring2FAPending(path)) {
+    return supabaseResponse;
+  }
 
-  if (has2FAPending && !isAllowedDuring2FAPending(path)) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth/2fa-challenge';
-    return NextResponse.redirect(url);
+  // 5. Admin 2FA durumu kontrolü (pozitif sinyal doğrulaması)
+  const redirectResponse = await check2FAStatus(request, supabase, user.id, supabaseResponse);
+  if (redirectResponse) {
+    return redirectResponse;
   }
 
   return supabaseResponse;

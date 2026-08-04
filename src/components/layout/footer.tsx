@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Heart } from "lucide-react";
+import { InstagramIcon, YoutubeIcon } from "@/components/icons/social-icons";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -40,7 +41,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--color-primary)] font-medium text-[var(--color-primary)]">
+                <Link href="/contact" className="transition-colors hover:text-[var(--color-primary)] font-medium text-[var(--color-primary)]">
                   İletişim
                 </Link>
               </li>
@@ -52,12 +53,34 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Resources & Social */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-[var(--color-foreground)]">
-              Kaynaklar
+              Sosyal Medya & Kaynaklar
             </h3>
             <ul className="space-y-2 text-sm text-[var(--color-muted-foreground)]">
+              <li>
+                <a
+                  href="https://www.instagram.com/deuybs/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-pink-600 dark:hover:text-pink-400"
+                >
+                  <InstagramIcon className="h-4 w-4 text-pink-500" />
+                  Instagram (@deuybs)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.youtube.com/@deuybs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-red-600 dark:hover:text-red-400"
+                >
+                  <YoutubeIcon className="h-4 w-4 text-red-500" />
+                  YouTube (@deuybs)
+                </a>
+              </li>
               <li>
                 <a
                   href="https://www.deu.edu.tr"
