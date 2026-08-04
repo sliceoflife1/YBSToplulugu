@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, KeyRound, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -11,12 +11,17 @@ export default function TwoFactorChallengePage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const lastAttemptedCodeRef = useRef<string>("");
 
   const verifyCode = useCallback(
     async (targetCode: string) => {
       const cleanCode = targetCode.trim();
       if (cleanCode.length < 6 || loading) return;
 
+      // Aynı kod zaten denenip başarısız olduysa tekrar deneme
+      if (cleanCode === lastAttemptedCodeRef.current) return;
+
+      lastAttemptedCodeRef.current = cleanCode;
       setLoading(true);
 
       try {
@@ -56,21 +61,30 @@ export default function TwoFactorChallengePage() {
     [loading, router]
   );
 
-  // Kod 6 haneli TOTP veya 8 haneli yedek koda ulaştığında otomatik doğrula
+  // Kod 6 haneli TOTP veya 8 haneli yedek koda ulaştığında (ve yeni bir kod yazıldığında) otomatik doğrula
   useEffect(() => {
     const clean = code.trim();
-    if ((clean.length === 6 || clean.length === 8) && !loading) {
+    if (
+      (clean.length === 6 || clean.length === 8) &&
+      clean !== lastAttemptedCodeRef.current &&
+      !loading
+    ) {
       verifyCode(clean);
     }
   }, [code, loading, verifyCode]);
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (code.trim().length < 6) {
+    const clean = code.trim();
+    if (clean.length < 6) {
       toast.error("Lütfen 6 haneli doğrulama kodunu veya 8 karakterli yedek kodu giriniz.");
       return;
     }
-    verifyCode(code);
+    // Manuel butona tıklandığında önceden denenmiş bayrağı sıfırla ki buton çalışabilsin
+    if (clean === lastAttemptedCodeRef.current) {
+      lastAttemptedCodeRef.current = "";
+    }
+    verifyCode(clean);
   }
 
   return (
@@ -109,7 +123,14 @@ export default function TwoFactorChallengePage() {
                   <input
                     type="text"
                     value={code}
-                    onChange={(e) => setCode(e.target.value.trim())}
+                    onChange={(e) => {
+                      const val = e.target.value.trim();
+                      setCode(val);
+                      // Kullanıcı kodu değiştirmeye/silmeye başladığında eski başarısız denemeyi temizle
+                      if (val !== lastAttemptedCodeRef.current) {
+                        // Yeni kod denenebilir hale gelir
+                      }
+                    }}
                     placeholder="123456"
                     maxLength={8}
                     className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-3 pl-10 pr-4 text-center text-lg font-mono tracking-widest text-[var(--color-foreground)] focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
