@@ -29,13 +29,34 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
 
+const getCachedProfile = (): Profile | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const cached = sessionStorage.getItem("ybs_user_profile");
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getCached2FAVerified = (profile: Profile | null): boolean => {
+  if (typeof window === "undefined") return false;
+  if (!profile) return false;
+  if (profile.role !== "admin" || !profile.is_2fa_enabled) return true;
+  try {
+    return sessionStorage.getItem("ybs_2fa_verified") === "true";
+  } catch {
+    return false;
+  }
+};
+
 export default function Navbar() {
   const t = useTranslations();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<Profile | null>(() => getCachedProfile());
+  const [loading, setLoading] = useState<boolean>(() => !getCachedProfile());
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -54,7 +75,18 @@ export default function Navbar() {
           .eq("id", authUser.id)
           .single();
 
-        setUser(profile);
+        if (profile) {
+          setUser(profile);
+          try {
+            sessionStorage.setItem("ybs_user_profile", JSON.stringify(profile));
+          } catch {}
+        }
+      } else {
+        setUser(null);
+        try {
+          sessionStorage.removeItem("ybs_user_profile");
+          sessionStorage.removeItem("ybs_2fa_verified");
+        } catch {}
       }
       setLoading(false);
     }
@@ -70,9 +102,18 @@ export default function Navbar() {
           .select("*")
           .eq("id", session.user.id)
           .single();
-        setUser(profile);
+        if (profile) {
+          setUser(profile);
+          try {
+            sessionStorage.setItem("ybs_user_profile", JSON.stringify(profile));
+          } catch {}
+        }
       } else if (event === "SIGNED_OUT") {
         setUser(null);
+        try {
+          sessionStorage.removeItem("ybs_user_profile");
+          sessionStorage.removeItem("ybs_2fa_verified");
+        } catch {}
       }
     });
 
@@ -81,6 +122,10 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     const supabase = createClient();
+    try {
+      sessionStorage.removeItem("ybs_user_profile");
+      sessionStorage.removeItem("ybs_2fa_verified");
+    } catch {}
     await fetch("/api/auth/log-logout", { method: "POST" }).catch(() => {});
     // Admin 2FA pending cookie'sini temizle
     await fetch("/api/auth/clear-2fa-pending", { method: "POST" }).catch(() => {});
@@ -98,20 +143,36 @@ export default function Navbar() {
     window.location.reload();
   };
 
-  const [is2FAVerified, setIs2FAVerified] = useState<boolean>(false);
+  const [is2FAVerified, setIs2FAVerified] = useState<boolean>(() =>
+    getCached2FAVerified(getCachedProfile())
+  );
   const [isChecking2FA, setIsChecking2FA] = useState<boolean>(false);
 
   useEffect(() => {
     if (user?.role === "admin" && user?.is_2fa_enabled) {
-      setIsChecking2FA(true);
-      setIs2FAVerified(false);
+      const isAlreadyVerified = sessionStorage.getItem("ybs_2fa_verified") === "true";
+      if (isAlreadyVerified) {
+        setIs2FAVerified(true);
+        setIsChecking2FA(false);
+      } else {
+        setIsChecking2FA(true);
+        setIs2FAVerified(false);
+      }
+
       fetch("/api/auth/check-2fa")
         .then((res) => res.json())
         .then((data) => {
-          setIs2FAVerified(data.isVerified === true);
+          const verified = data.isVerified === true;
+          setIs2FAVerified(verified);
+          try {
+            sessionStorage.setItem("ybs_2fa_verified", verified ? "true" : "false");
+          } catch {}
         })
         .catch(() => {
           setIs2FAVerified(false);
+          try {
+            sessionStorage.setItem("ybs_2fa_verified", "false");
+          } catch {}
         })
         .finally(() => {
           setIsChecking2FA(false);
