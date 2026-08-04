@@ -634,7 +634,7 @@ export default async function ExplorePage({
                               {p.first_name} {p.last_name}
                             </h3>
                             {isManager && (
-                              <ShieldCheck className="h-4 w-4 text-amber-500 shrink-0" title="Yönetici/Moderatör" />
+                              <ShieldCheck className="h-4 w-4 text-amber-500 shrink-0" />
                             )}
                           </div>
                           <p className="text-xs text-[var(--color-muted-foreground)] truncate">
