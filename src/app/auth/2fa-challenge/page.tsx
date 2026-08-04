@@ -7,11 +7,22 @@ import Link from "next/link";
 import { toast } from "sonner";
 import Navbar from "@/components/layout/navbar";
 
+import { createClient } from "@/lib/supabase/client";
+
 export default function TwoFactorChallengePage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const lastAttemptedCodeRef = useRef<string>("");
+
+  const handleBackToLogin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const supabase = createClient();
+    await fetch("/api/auth/clear-2fa-pending", { method: "POST" }).catch(() => {});
+    await fetch("/api/auth/log-logout", { method: "POST" }).catch(() => {});
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  };
 
   const verifyCode = useCallback(
     async (targetCode: string) => {
@@ -92,13 +103,14 @@ export default function TwoFactorChallengePage() {
       <Navbar />
       <main className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md animate-fade-in">
-          <Link
-            href="/login"
+          <button
+            type="button"
+            onClick={handleBackToLogin}
             className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)]"
           >
             <ArrowLeft className="h-4 w-4" />
             Giriş Ekranına Dön
-          </Link>
+          </button>
 
           <div className="rounded-2xl border border-red-500/20 bg-[var(--color-card)] p-8 shadow-xl">
             <div className="mb-6 text-center">

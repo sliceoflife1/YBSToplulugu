@@ -201,7 +201,10 @@ export async function updateSession(request: NextRequest) {
   if (user && !isAllowedDuring2FAPending(path)) {
     const redirectResponse = await check2FAStatus(request, supabase, user.id, supabaseResponse);
     if (redirectResponse) {
-      return redirectResponse;
+      // Kamuya açık rotalarda 2FA yönlendirmesi yapma, sadece korumalı rotalarda 2FA zorla
+      if (!isPublicPath(path)) {
+        return redirectResponse;
+      }
     }
   }
 
