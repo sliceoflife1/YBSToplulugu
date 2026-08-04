@@ -238,7 +238,7 @@ export default function YearbookDetailPage({ params }: Props) {
 
       <main className="flex-1 mx-auto w-full max-w-4xl px-4 py-8">
         <Link href="/yearbook" className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
-          <ArrowLeft className="h-4 w-4" /> {isEn ? "Back to Yearbook" : "Andıç Listesine Dön"}
+          <ArrowLeft className="h-4 w-4" /> {isEn ? "Back to Yearbook" : "Yıllık Listesine Dön"}
         </Link>
 
         {/* Profil Detay Kartı (Glassmorphism & High Aesthetic) */}
