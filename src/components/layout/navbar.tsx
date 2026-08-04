@@ -98,10 +98,13 @@ export default function Navbar() {
     window.location.reload();
   };
 
-  const [is2FAVerified, setIs2FAVerified] = useState<boolean>(true);
+  const [is2FAVerified, setIs2FAVerified] = useState<boolean>(false);
+  const [isChecking2FA, setIsChecking2FA] = useState<boolean>(false);
 
   useEffect(() => {
     if (user?.role === "admin" && user?.is_2fa_enabled) {
+      setIsChecking2FA(true);
+      setIs2FAVerified(false);
       fetch("/api/auth/check-2fa")
         .then((res) => res.json())
         .then((data) => {
@@ -109,9 +112,13 @@ export default function Navbar() {
         })
         .catch(() => {
           setIs2FAVerified(false);
+        })
+        .finally(() => {
+          setIsChecking2FA(false);
         });
     } else {
       setIs2FAVerified(true);
+      setIsChecking2FA(false);
     }
   }, [user]);
 
@@ -123,7 +130,7 @@ export default function Navbar() {
     pathname === "/forgot-password" ||
     pathname === "/reset-password";
 
-  const displayUser = isAuthPage || !is2FAVerified ? null : user;
+  const displayUser = isAuthPage || !is2FAVerified || isChecking2FA ? null : user;
 
   const navLinks = displayUser
     ? [
