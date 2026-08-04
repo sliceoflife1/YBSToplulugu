@@ -4,9 +4,105 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Search, MapPin, GraduationCap, FileStack, ArrowRight, User } from "lucide-react";
+import {
+  Search,
+  GraduationCap,
+  FileStack,
+  ArrowRight,
+  User,
+  Star,
+  ShieldCheck,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Navbar from "@/components/layout/navbar";
 import { useLocale } from "next-intl";
+
+const PAGE_SIZE = 20;
+
+/**
+ * Yıllık (Yearbook) Hiyerarşik Öncelik Puanı Hesaplama:
+ * 1. Derece Öncelik: Yönetici (admin) & Moderatör (moderator) & Ünvanlı Akademisyenler (Prof. Dr. > Doç. Dr. > Dr. Öğr. Üyesi > Öğr. Gör. > Arş. Gör.)
+ * 2. Derece Öncelik: Karma Puanı Yüksek Olanlar (karma_points DESC)
+ * 3. Derece Öncelik: Alfabetik İsim / Soyisim (first_name ASC, last_name ASC)
+ */
+function getYearbookProfileRank(ybProfile: any): number {
+  const p = ybProfile.profiles || {};
+  const role = p.role;
+  if (role === "admin") return 10;
+  if (role === "moderator") return 20;
+
+  const headline = (p.headline || "").toLowerCase();
+
+  if (
+    role === "faculty" ||
+    headline.includes("prof") ||
+    headline.includes("doç") ||
+    headline.includes("öğr. üyesi") ||
+    headline.includes("öğr. gör") ||
+    headline.includes("arş. gör")
+  ) {
+    if (
+      headline.includes("prof. dr.") ||
+      headline.includes("prof.dr") ||
+      headline.includes("profesor") ||
+      headline.includes("profesör")
+    )
+      return 30;
+    if (
+      headline.includes("doç. dr.") ||
+      headline.includes("doç.dr") ||
+      headline.includes("doc. dr") ||
+      headline.includes("doçent")
+    )
+      return 40;
+    if (
+      headline.includes("dr. öğretim üyesi") ||
+      headline.includes("dr. öğr. üyesi") ||
+      headline.includes("dr. ogr. uyesi") ||
+      headline.includes("yardımcı doçent")
+    )
+      return 50;
+    if (
+      headline.includes("öğr. gör") ||
+      headline.includes("öğretim görevlisi") ||
+      headline.includes("arş. gör") ||
+      headline.includes("araştırma görevlisi") ||
+      headline.includes("dr.")
+    )
+      return 60;
+    if (role === "faculty") return 70;
+  }
+
+  if (role === "alumni") return 80;
+  if (role === "student") return 90;
+  if (role === "employer") return 100;
+  return 110;
+}
+
+function sortYearbookProfilesHierarchically(list: any[]): any[] {
+  return [...list].sort((a, b) => {
+    // 1. Derece Öncelik: Yönetici, Moderatör, Ünvanlı Akademisyenler
+    const rankA = getYearbookProfileRank(a);
+    const rankB = getYearbookProfileRank(b);
+
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+
+    // 2. Derece Öncelik: Karma Puanı yüksek olanlar (karma_points DESC)
+    const karmaA = a.profiles?.karma_points || 0;
+    const karmaB = b.profiles?.karma_points || 0;
+    if (karmaA !== karmaB) {
+      return karmaB - karmaA;
+    }
+
+    // 3. Derece Öncelik: Alfabetik İsim / Soyisim (first_name ASC, last_name ASC)
+    const nameA = `${a.profiles?.first_name || ""} ${a.profiles?.last_name || ""}`.toLowerCase();
+    const nameB = `${b.profiles?.first_name || ""} ${b.profiles?.last_name || ""}`.toLowerCase();
+    return nameA.localeCompare(nameB, "tr");
+  });
+}
 
 export default function YearbookPage() {
   const router = useRouter();
@@ -15,7 +111,7 @@ export default function YearbookPage() {
 
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  
+
   // Veri State'leri
   const [faculties, setFaculties] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
@@ -29,11 +125,21 @@ export default function YearbookPage() {
   const [selectedEduType, setSelectedEduType] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
+  // Sayfalama State'i
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Filtre değiştiğinde 1. sayfaya sıfırla
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFaculty, selectedDept, selectedYear, selectedEduType, searchQuery]);
+
   useEffect(() => {
     const supabase = createClient();
     async function init() {
       // 1. Giriş kontrolü (Auth)
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
         return;
@@ -61,7 +167,7 @@ export default function YearbookPage() {
         .from("yearbook_profiles")
         .select(`
           *,
-          profiles:profiles!yearbook_profiles_user_id_fkey (id, first_name, last_name, avatar_url, headline),
+          profiles:profiles!yearbook_profiles_user_id_fkey (id, first_name, last_name, avatar_url, headline, role, karma_points),
           yearbook_departments:department_id (id, name, yearbook_faculties(id, name))
         `)
         .eq("is_visible", true)
@@ -94,23 +200,18 @@ export default function YearbookPage() {
 
   // Filtrelenmiş Andıç Profilleri
   const filteredProfiles = profiles.filter((p) => {
-    // 1. Fakülte Filtresi
     if (selectedFaculty && p.yearbook_departments?.yearbook_faculties?.id !== selectedFaculty) {
       return false;
     }
-    // 2. Bölüm Filtresi
     if (selectedDept && p.department_id !== selectedDept) {
       return false;
     }
-    // 3. Mezuniyet Yılı Filtresi
     if (selectedYear && p.graduation_year.toString() !== selectedYear) {
       return false;
     }
-    // 4. Öğretim Türü Filtresi
     if (selectedEduType && p.education_type !== selectedEduType) {
       return false;
     }
-    // 5. Arama Sorgusu (Ad, soyad veya kişisel mesaj içeriği)
     if (searchQuery) {
       const fullName = `${p.profiles?.first_name} ${p.profiles?.last_name}`.toLowerCase();
       const messageText = (p.message || "").toLowerCase();
@@ -121,6 +222,14 @@ export default function YearbookPage() {
     }
     return true;
   });
+
+  // Hiyerarşik Sıralama ve 20'şerli Sayfalama
+  const sortedProfiles = sortYearbookProfilesHierarchically(filteredProfiles);
+  const totalCount = sortedProfiles.length;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * PAGE_SIZE;
+  const paginatedProfiles = sortedProfiles.slice(startIndex, startIndex + PAGE_SIZE);
 
   if (loading) {
     return (
@@ -164,7 +273,9 @@ export default function YearbookPage() {
               >
                 <option value="">{isEn ? "All Faculties" : "Tüm Fakülteler"}</option>
                 {faculties.map((fac) => (
-                  <option key={fac.id} value={fac.id}>{fac.name}</option>
+                  <option key={fac.id} value={fac.id}>
+                    {fac.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -180,7 +291,9 @@ export default function YearbookPage() {
               >
                 <option value="">{isEn ? "All Departments" : "Tüm Bölümler"}</option>
                 {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -195,7 +308,9 @@ export default function YearbookPage() {
               >
                 <option value="">{isEn ? "All Years" : "Tüm Yıllar"}</option>
                 {periods.map((p) => (
-                  <option key={p.id} value={p.year}>{p.year}</option>
+                  <option key={p.id} value={p.year}>
+                    {p.year}
+                  </option>
                 ))}
               </select>
             </div>
@@ -230,15 +345,34 @@ export default function YearbookPage() {
           </div>
         </div>
 
+        {/* Sayfalama Bilgisi Özet Satırı */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-muted-foreground)]">
+          <span>
+            Toplam <strong className="text-[var(--color-foreground)]">{totalCount}</strong> mezun kayıtlı. (Her sayfada 20 gösteriliyor)
+          </span>
+          <span>
+            Sayfa <strong className="text-[var(--color-foreground)]">{safePage}</strong> / {totalPages}
+          </span>
+        </div>
+
         {/* Sonuçların Listelenmesi */}
-        {filteredProfiles.length > 0 ? (
+        {paginatedProfiles.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {filteredProfiles.map((p) => {
+            {paginatedProfiles.map((p) => {
               const fullName = `${p.profiles?.first_name} ${p.profiles?.last_name}`;
+              const isManager = p.profiles?.role === "admin" || p.profiles?.role === "moderator";
+              const rank = getYearbookProfileRank(p);
+
               return (
                 <div
                   key={p.user_id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-[var(--color-card)] p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${
+                    isManager
+                      ? "border-amber-500/30 ring-1 ring-amber-500/20 bg-amber-500/5"
+                      : rank <= 60
+                      ? "border-teal-500/30 ring-1 ring-teal-500/10"
+                      : "border-[var(--color-border)]"
+                  }`}
                 >
                   <div className="flex flex-col items-center text-center">
                     {/* Profil Resmi */}
@@ -254,10 +388,24 @@ export default function YearbookPage() {
                       </div>
                     )}
 
-                    <h3 className="mt-4 text-md font-bold text-[var(--color-foreground)] line-clamp-1">{fullName}</h3>
+                    <div className="mt-4 flex items-center justify-center gap-1.5">
+                      <h3 className="text-md font-bold text-[var(--color-foreground)] line-clamp-1">{fullName}</h3>
+                      {isManager && (
+                        <ShieldCheck className="h-4 w-4 text-amber-500 shrink-0" />
+                      )}
+                    </div>
+
                     <p className="text-xs text-[var(--color-muted-foreground)] min-h-[16px] line-clamp-1">
                       {p.profiles?.headline || p.yearbook_departments?.name}
                     </p>
+
+                    {/* Karma Puanı & Rozet */}
+                    {p.profiles?.karma_points > 0 && (
+                      <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-amber-500">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        <span>{p.profiles.karma_points} Karma</span>
+                      </div>
+                    )}
 
                     {/* Departman ve Yıl Bilgileri */}
                     <div className="mt-3.5 flex flex-col gap-1 w-full text-left bg-[var(--color-muted)]/20 rounded-xl p-3 text-xs border border-[var(--color-border)]/50">
@@ -299,6 +447,70 @@ export default function YearbookPage() {
             <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
               {isEn ? "Try adjusting your filters or search query." : "Filtrelerinizi değiştirmeyi veya farklı aramalar yapmayı deneyin."}
             </p>
+          </div>
+        )}
+
+        {/* Sayfalama (Pagination) Numaralandırılmış Kontrol Çubuğu */}
+        {totalPages > 1 && (
+          <div className="mt-10 flex items-center justify-center gap-2">
+            {/* Önceki Sayfa */}
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={safePage <= 1}
+              className={`inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-xs font-semibold transition-colors ${
+                safePage <= 1
+                  ? "pointer-events-none opacity-40"
+                  : "hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {isEn ? "Previous" : "Önceki"}
+            </button>
+
+            {/* Sayfa Numaraları */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((pNum) => pNum === 1 || pNum === totalPages || Math.abs(pNum - safePage) <= 2)
+                .map((pNum, index, array) => {
+                  const prevNum = array[index - 1];
+                  const isEllipsis = prevNum && pNum - prevNum > 1;
+
+                  return (
+                    <div key={pNum} className="flex items-center gap-1">
+                      {isEllipsis && (
+                        <span className="px-1 text-xs text-[var(--color-muted-foreground)]">...</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(pNum)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold transition-all ${
+                          pNum === safePage
+                            ? "gradient-primary text-white shadow-md shadow-indigo-500/20"
+                            : "border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* Sonraki Sayfa */}
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={safePage >= totalPages}
+              className={`inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-xs font-semibold transition-colors ${
+                safePage >= totalPages
+                  ? "pointer-events-none opacity-40"
+                  : "hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+              }`}
+            >
+              {isEn ? "Next" : "Sonraki"}
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         )}
       </main>
