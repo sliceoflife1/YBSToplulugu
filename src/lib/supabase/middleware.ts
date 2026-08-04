@@ -190,34 +190,25 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // 1. Public route'lara herkesi geçir (session yenileme hariç)
+  // 1. Session yenileme ve kullanıcıyı al
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // 2. 2FA zorunluluğu kontrolü (ÖNCELİKLİ):
+  //    Kullanıcı oturum açmışsa ve 2FA izni verilen rotalar dışında bir yere erişmeye çalışıyorsa,
+  //    public rota (anasayfa / dahil) fark etmeksizin 2FA doğrulama durumunu zorla denetle.
+  if (user && !isAllowedDuring2FAPending(path)) {
+    const redirectResponse = await check2FAStatus(request, supabase, user.id, supabaseResponse);
+    if (redirectResponse) {
+      return redirectResponse;
+    }
+  }
+
+  // 3. Public route'lara herkesi geçir (AUTH_ONLY rotalarda yönlendirme yap)
   if (isPublicPath(path)) {
-    // Session'ı yenile ve kullanıcıyı kontrol et
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     if (user && (AUTH_ONLY_PATHS.includes(path) || path.startsWith('/register'))) {
-      // Authenticated kullanıcı login/register'da — yönlendir
-      // Önce 2FA durumunu kontrol et
-      const verifiedCookie = request.cookies.get('admin_2fa_verified')?.value;
-      if (verifiedCookie && await verifyCookieValue(verifiedCookie, user.id)) {
-        // 2FA tamamlanmış, dashboard'a yönlendir
-        const url = request.nextUrl.clone();
-        url.pathname = '/dashboard';
-        return NextResponse.redirect(url);
-      }
-
-      const has2FAPending = request.cookies.get('admin_2fa_pending')?.value === 'true';
-      if (has2FAPending) {
-        // 2FA pending, challenge sayfasına yönlendir
-        const url = request.nextUrl.clone();
-        url.pathname = '/auth/2fa-challenge';
-        return NextResponse.redirect(url);
-      }
-
-      // Cookie yok, dashboard'a yönlendir
-      // (Eğer 2FA gerekliyse, dashboard'a erişimde middleware yakalayacak)
+      // 2FA doğrulanmış kullanıcılarda login/register erişimini /dashboard'a yönlendir
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
@@ -226,28 +217,12 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // 2. Protected route'lar için session kontrolü
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // 3. Oturum yoksa login'e yönlendir
+  // 4. Protected route'lar için oturum yoksa login'e yönlendir
   if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirectTo', path);
     return NextResponse.redirect(url);
-  }
-
-  // 4. 2FA pending sırasında izin verilen path'lere geçiş
-  if (isAllowedDuring2FAPending(path)) {
-    return supabaseResponse;
-  }
-
-  // 5. Admin 2FA durumu kontrolü (pozitif sinyal doğrulaması)
-  const redirectResponse = await check2FAStatus(request, supabase, user.id, supabaseResponse);
-  if (redirectResponse) {
-    return redirectResponse;
   }
 
   return supabaseResponse;
