@@ -4,6 +4,7 @@ import { Search, MapPin, Briefcase, GraduationCap, Award, ExternalLink, ShieldCh
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import { DEU_FACULTIES } from "@/constants/deu-departments";
+import { formatClassYear, CLASS_YEAR_OPTIONS } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -244,8 +245,8 @@ export default async function TalentHubPage({
 
                 <select name="classYear" defaultValue={filterClassYear} className="rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                   <option value="">Tüm Sınıflar</option>
-                  {[1, 2, 3, 4, 5, 6].map((y) => (
-                    <option key={y} value={y}>{y}. Sınıf</option>
+                  {CLASS_YEAR_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.labelTr}</option>
                   ))}
                 </select>
 

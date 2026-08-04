@@ -7,6 +7,7 @@ export const profileUpdateSchema = z.object({
   bio: z.string().max(1000, 'Biyografi en fazla 1000 karakter olabilir').optional(),
   phone: z.string().regex(/^\+?[0-9]{10,13}$/, 'Geçerli bir telefon numarası giriniz').optional().or(z.literal('')),
   department: z.string().optional(),
+  classYear: z.string().optional().or(z.literal('')),
   location: z.string().max(120, 'Konum en fazla 120 karakter olabilir').optional().or(z.literal('')),
   linkedinUrl: z.string().url('Geçerli bir LinkedIn URL giriniz').optional().or(z.literal('')),
   githubUrl: z.string().url('Geçerli bir GitHub URL giriniz').optional().or(z.literal('')),

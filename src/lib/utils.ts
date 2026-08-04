@@ -56,3 +56,26 @@ export function formatDate(date: string | Date, locale: string = 'tr'): string {
     day: 'numeric',
   });
 }
+
+export const CLASS_YEAR_OPTIONS = [
+  { value: 1, labelTr: "1. Sınıf", labelEn: "1st Year" },
+  { value: 2, labelTr: "2. Sınıf", labelEn: "2nd Year" },
+  { value: 3, labelTr: "3. Sınıf", labelEn: "3rd Year" },
+  { value: 4, labelTr: "4. Sınıf", labelEn: "4th Year" },
+  { value: 5, labelTr: "Yüksek Lisans", labelEn: "Master's" },
+  { value: 6, labelTr: "Doktora", labelEn: "PhD" },
+];
+
+export function formatClassYear(
+  classYear: number | string | null | undefined,
+  isEn: boolean = false
+): string {
+  if (!classYear) return "";
+  const num = typeof classYear === "string" ? parseInt(classYear, 10) : classYear;
+  const option = CLASS_YEAR_OPTIONS.find((o) => o.value === num);
+  if (option) {
+    return isEn ? option.labelEn : option.labelTr;
+  }
+  return `${num}. Sınıf`;
+}
+

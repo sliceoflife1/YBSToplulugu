@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
 import CvDownloadButton from "./cv-download";
 import InterviewRequestButton from "./interview-request-button";
+import { formatClassYear } from "@/lib/utils";
 
 export default async function UserProfilePage({
   params,
@@ -155,7 +156,7 @@ export default async function UserProfilePage({
                 {profile.class_year && (
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4" />
-                    <span>{profile.class_year}. Sınıf</span>
+                    <span>{formatClassYear(profile.class_year)}</span>
                   </div>
                 )}
                 {profile.karma_points !== undefined && (

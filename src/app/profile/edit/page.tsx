@@ -20,6 +20,7 @@ import { useLocale } from "next-intl";
 import { normalizeEducationList, normalizeExperienceList, parseJsonArray } from "@/lib/cv/normalize";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "@/lib/cv/crop";
+import { CLASS_YEAR_OPTIONS } from "@/lib/utils";
 import { Admin2FASettings } from "@/components/profile/admin-2fa-settings";
 import { LoginHistory } from "@/components/profile/login-history";
 import { EmployerOrganizationSettings } from "@/components/profile/employer-organization-settings";
@@ -120,6 +121,7 @@ export default function ProfileEditPage() {
           bio: profileRes.data.bio || "",
           phone: profileRes.data.phone || "",
           department: profileRes.data.department || "",
+          classYear: profileRes.data.class_year ? String(profileRes.data.class_year) : "",
           location: profileRes.data.location || "",
           linkedinUrl: profileRes.data.linkedin_url || "",
           githubUrl: profileRes.data.github_url || "",
@@ -458,6 +460,7 @@ export default function ProfileEditPage() {
         bio: data.bio || null,
         phone: data.phone || null,
         department: data.department || null,
+        class_year: data.classYear ? parseInt(data.classYear, 10) : null,
         location: data.location || null,
         linkedin_url: data.linkedinUrl || null,
         github_url: data.githubUrl || null,
@@ -708,8 +711,8 @@ export default function ProfileEditPage() {
                 {errors.bio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.bio.message}</p>}
               </div>
 
-              {/* Fakülte & Bölüm Seçimi (İki Aşamalı) */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              {/* Fakülte, Bölüm ve Sınıf/Eğitim Düzeyi Seçimi */}
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium">
                     {isEn ? "Faculty" : "Fakülte"}
@@ -760,6 +763,26 @@ export default function ProfileEditPage() {
                       {errors.department.message}
                     </p>
                   )}
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium">
+                    {isEn ? "Class / Academic Level" : "Sınıf / Eğitim Düzeyi"}
+                  </label>
+                  <div className="relative">
+                    <GraduationCap className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                    <select
+                      {...register("classYear")}
+                      className="w-full appearance-none rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--color-ring)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]/20"
+                    >
+                      <option value="">{isEn ? "Select Class / Level" : "Sınıf / Seviye Seçiniz"}</option>
+                      {CLASS_YEAR_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {isEn ? opt.labelEn : opt.labelTr}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
