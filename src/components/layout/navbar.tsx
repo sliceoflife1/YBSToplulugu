@@ -98,8 +98,15 @@ export default function Navbar() {
     window.location.reload();
   };
 
-  const is2FAPending = pathname === "/auth/2fa-challenge";
-  const displayUser = is2FAPending ? null : user;
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/auth/2fa-challenge" ||
+    pathname.startsWith("/auth/") ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password";
+
+  const displayUser = isAuthPage ? null : user;
 
   const navLinks = displayUser
     ? [
