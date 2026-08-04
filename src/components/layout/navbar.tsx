@@ -98,7 +98,10 @@ export default function Navbar() {
     window.location.reload();
   };
 
-  const navLinks = user
+  const is2FAPending = pathname === "/auth/2fa-challenge";
+  const displayUser = is2FAPending ? null : user;
+
+  const navLinks = displayUser
     ? [
         { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
         { href: "/projects", label: t("nav.projects"), icon: FolderKanban },
@@ -112,10 +115,10 @@ export default function Navbar() {
       ]
     : [];
 
-  const isAdmin = user?.role === "admin" || user?.role === "moderator";
-  const isFaculty = user?.role === "faculty";
-  const isEmployer = user?.role === "employer";
-  const canAccessAdmin = user?.role === "admin";
+  const isAdmin = displayUser?.role === "admin" || displayUser?.role === "moderator";
+  const isFaculty = displayUser?.role === "faculty";
+  const isEmployer = displayUser?.role === "employer";
+  const canAccessAdmin = displayUser?.role === "admin";
 
   if (isAdmin || isEmployer) {
     navLinks.push({ href: "/talent", label: "Yetenek Havuzu", icon: Compass });
@@ -125,7 +128,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-[var(--color-border)] bg-[var(--color-background)]/80 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+        <Link href={displayUser ? "/dashboard" : "/"} className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
             <span className="text-lg font-bold text-white">Y</span>
           </div>
@@ -198,7 +201,7 @@ export default function Navbar() {
           {/* User menu or auth buttons */}
           {loading ? (
             <div className="h-9 w-20 animate-pulse rounded-lg bg-[var(--color-muted)]" />
-          ) : user ? (
+          ) : displayUser ? (
             <div className="flex items-center gap-2">
               <NotificationBell />
               <Link
@@ -206,7 +209,7 @@ export default function Navbar() {
                 className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-muted)] hover:text-[var(--color-foreground)] sm:flex"
               >
                 <User className="h-4 w-4" />
-                {user.first_name || t("nav.profile")}
+                {displayUser.first_name || t("nav.profile")}
               </Link>
               <Link
                 href="/profile/edit"
@@ -272,7 +275,7 @@ export default function Navbar() {
                 </Link>
               );
             })}
-            {user && (
+            {displayUser && (
               <>
                 <Link
                   href="/profile"

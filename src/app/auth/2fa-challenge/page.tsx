@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, KeyRound, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -12,52 +12,65 @@ export default function TwoFactorChallengePage() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const verifyCode = useCallback(
+    async (targetCode: string) => {
+      const cleanCode = targetCode.trim();
+      if (cleanCode.length < 6 || loading) return;
+
+      setLoading(true);
+
+      try {
+        const response = await fetch("/api/auth/verify-2fa", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: cleanCode }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (response.status === 401 && data.error === "Oturum zaman aşımına uğradı") {
+            toast.error("Oturum zaman aşımına uğradı. Lütfen tekrar giriş yapın.");
+            router.push("/login");
+            return;
+          }
+          toast.error(data.error || "Girdiğiniz 2FA doğrulama kodu veya yedek kod geçersiz.");
+          setLoading(false);
+          return;
+        }
+
+        if (data.usedBackupCode) {
+          toast.info("Yedek kurtarma kodu kullanıldı. Kalan yedek kodlarınız güncellendi.");
+        }
+
+        fetch("/api/auth/log-login", { method: "POST" }).catch(() => {});
+
+        toast.success("Google Authenticator doğrulaması başarılı! Yönetim paneline aktarılıyorsunuz...");
+        router.push("/admin");
+        router.refresh();
+      } catch {
+        toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
+        setLoading(false);
+      }
+    },
+    [loading, router]
+  );
+
+  // Kod 6 haneli TOTP veya 8 haneli yedek koda ulaştığında otomatik doğrula
+  useEffect(() => {
+    const clean = code.trim();
+    if ((clean.length === 6 || clean.length === 8) && !loading) {
+      verifyCode(clean);
+    }
+  }, [code, loading, verifyCode]);
+
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    const cleanCode = code.trim();
-    if (cleanCode.length < 6) {
+    if (code.trim().length < 6) {
       toast.error("Lütfen 6 haneli doğrulama kodunu veya 8 karakterli yedek kodu giriniz.");
       return;
     }
-
-    setLoading(true);
-
-    try {
-      // Server-side doğrulama API'sini çağır
-      const response = await fetch("/api/auth/verify-2fa", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: cleanCode }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401 && data.error === "Oturum zaman aşımına uğradı") {
-          toast.error("Oturum zaman aşımına uğradı. Lütfen tekrar giriş yapın.");
-          router.push("/login");
-          return;
-        }
-        toast.error(data.error || "Girdiğiniz 2FA doğrulama kodu veya yedek kod geçersiz.");
-        setLoading(false);
-        return;
-      }
-
-      // Doğrulama başarılı
-      if (data.usedBackupCode) {
-        toast.info("Yedek kurtarma kodu kullanıldı. Kalan yedek kodlarınız güncellendi.");
-      }
-
-      // Giriş logunu yaz (fire-and-forget)
-      fetch("/api/auth/log-login", { method: "POST" }).catch(() => {});
-
-      toast.success("Google Authenticator doğrulaması başarılı! Yönetim paneline aktarılıyorsunuz...");
-      router.push("/admin");
-      router.refresh();
-    } catch {
-      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
-      setLoading(false);
-    }
+    verifyCode(code);
   }
 
   return (
@@ -98,8 +111,10 @@ export default function TwoFactorChallengePage() {
                     value={code}
                     onChange={(e) => setCode(e.target.value.trim())}
                     placeholder="123456"
+                    maxLength={8}
                     className="w-full rounded-xl border border-[var(--color-input)] bg-[var(--color-background)] py-3 pl-10 pr-4 text-center text-lg font-mono tracking-widest text-[var(--color-foreground)] focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/20"
                     autoFocus
+                    disabled={loading}
                     required
                   />
                 </div>

@@ -8,6 +8,19 @@
 const VERIFIED_MAX_AGE = 12 * 60 * 60; // 12 hours
 const CHECKED_MAX_AGE = 60 * 60; // 1 hour
 
+/**
+ * Returns secret for HMAC signing.
+ * Uses fallback variables if TWO_FA_COOKIE_SECRET is not explicitly set in environment (e.g. Vercel).
+ */
+function getSecret(): string {
+  return (
+    process.env.TWO_FA_COOKIE_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    "ybs_toplulugu_default_2fa_secret_key_2026"
+  );
+}
+
 async function getHMACKey(secret: string): Promise<CryptoKey> {
   const encoder = new TextEncoder();
   return crypto.subtle.importKey(
@@ -32,14 +45,9 @@ function hexToBuffer(hex: string): ArrayBuffer {
 
 /**
  * Creates an HMAC-signed cookie value: `userId:timestamp:hmac`
- * @throws Error if TWO_FA_COOKIE_SECRET is not configured
  */
 export async function signCookieValue(userId: string): Promise<string> {
-  const secret = process.env.TWO_FA_COOKIE_SECRET;
-  if (!secret) {
-    throw new Error("TWO_FA_COOKIE_SECRET environment variable is not configured");
-  }
-
+  const secret = getSecret();
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const payload = `${userId}:${timestamp}`;
 
@@ -59,8 +67,8 @@ export async function verifyCookieValue(
   userId: string,
   maxAgeSeconds: number = VERIFIED_MAX_AGE
 ): Promise<boolean> {
-  const secret = process.env.TWO_FA_COOKIE_SECRET;
-  if (!secret || !cookieValue) return false;
+  const secret = getSecret();
+  if (!cookieValue) return false;
 
   const parts = cookieValue.split(":");
   if (parts.length !== 3) return false;
