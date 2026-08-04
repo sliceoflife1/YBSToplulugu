@@ -19,6 +19,7 @@ import {
   Code,
   Undo,
   Redo,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const MenuButton = ({
@@ -210,6 +211,18 @@ export default function RichTextEditor({
           title="Kod Bloğu"
         >
           <Code className="h-4 w-4" />
+        </MenuButton>
+
+        <MenuButton
+          onClick={() => {
+            const url = window.prompt("Eklenecek harici görsel URL adresini giriniz (http:// veya https://):");
+            if (url && (url.startsWith("http://") || url.startsWith("https://"))) {
+              editor.chain().focus().insertContent(`<p><img src="${url}" alt="Harici Görsel" referrerpolicy="no-referrer" class="rounded-xl max-h-96 my-3 mx-auto shadow-md block" /></p>`).run();
+            }
+          }}
+          title="Harici Görsel URL'si Ekle"
+        >
+          <ImageIcon className="h-4 w-4 text-indigo-500" />
         </MenuButton>
 
         <div className="w-px h-4 bg-[var(--color-border)] mx-1 ml-auto" />

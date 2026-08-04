@@ -25,6 +25,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { projectSchema, type ProjectInput } from "@/lib/validations/profile";
 import RichTextEditor from "@/components/community/RichTextEditor";
+import ExternalImageInput from "@/components/common/external-image-input";
 import type { Profile } from "@/types/database";
 
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"];
@@ -68,6 +69,7 @@ export default function NewProjectPage() {
   const [techInput, setTechInput] = useState("");
   const [techs, setTechs] = useState<string[]>([]);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [externalImageUrls, setExternalImageUrls] = useState<string[]>([]);
   
   // Takım Arkadaşları Seçimi State'leri
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
@@ -225,7 +227,7 @@ export default function NewProjectPage() {
 
       setAttachedFiles(latest => {
         const urls = latest.filter(f => f.status === "success" && f.blobUrl).map(f => f.blobUrl!);
-        setValue("mediaUrls", urls);
+        setValue("mediaUrls", [...urls, ...externalImageUrls]);
         return latest;
       });
 
@@ -236,6 +238,12 @@ export default function NewProjectPage() {
       );
       toast.error(`${file.name} yüklenirken hata oluştu: ${err.message || ""}`);
     }
+  };
+
+  const handleExternalImageUrlsChange = (newExternalUrls: string[]) => {
+    setExternalImageUrls(newExternalUrls);
+    const blobUrls = attachedFiles.filter(f => f.status === "success" && f.blobUrl).map(f => f.blobUrl!);
+    setValue("mediaUrls", [...blobUrls, ...newExternalUrls]);
   };
 
   const handleFileSelection = (files: FileList | null) => {
@@ -278,7 +286,7 @@ export default function NewProjectPage() {
     setAttachedFiles(prev => {
       const filtered = prev.filter(f => f.id !== fileId);
       const urls = filtered.filter(f => f.status === "success" && f.blobUrl).map(f => f.blobUrl!);
-      setValue("mediaUrls", urls);
+      setValue("mediaUrls", [...urls, ...externalImageUrls]);
       return filtered;
     });
   };
@@ -657,6 +665,15 @@ export default function NewProjectPage() {
                 className="hidden" 
                 onChange={(e) => handleFileSelection(e.target.files)}
                 accept={ALL_ALLOWED_EXTENSIONS.join(",")}
+              />
+            </div>
+
+            {/* Harici Görsel URL Ekleme */}
+            <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+              <ExternalImageInput
+                urls={externalImageUrls}
+                onChange={handleExternalImageUrlsChange}
+                maxCount={10}
               />
             </div>
 

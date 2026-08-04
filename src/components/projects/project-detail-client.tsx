@@ -137,7 +137,8 @@ export default function ProjectDetailClient({
       const filename = decodedUrl.substring(decodedUrl.lastIndexOf("/") + 1).split("?")[0];
       const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase();
       
-      const isImg = IMAGE_EXTENSIONS.includes(ext);
+      const isDocExt = DOCUMENT_EXTENSIONS.includes(ext);
+      const isImg = IMAGE_EXTENSIONS.includes(ext) || (!isDocExt && (url.startsWith("http://") || url.startsWith("https://")));
       
       let icon = <FileText className="h-4 w-4 text-indigo-500" />;
       if ([".zip", ".rar"].includes(ext)) {
@@ -146,7 +147,7 @@ export default function ProjectDetailClient({
         icon = <ImageIcon className="h-4 w-4 text-emerald-500" />;
       }
       
-      return { filename, isImg, icon };
+      return { filename: filename || "Harici Görsel", isImg, icon };
     } catch {
       return { filename: "dosya-eki", isImg: false, icon: <Paperclip className="h-4 w-4" /> };
     }
@@ -802,6 +803,7 @@ export default function ProjectDetailClient({
                             <img
                               src={url}
                               alt="Proje görseli"
+                              referrerPolicy="no-referrer"
                               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">

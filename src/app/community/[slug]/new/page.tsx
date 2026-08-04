@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase/client";
 import { postSchema, type PostInput } from "@/lib/validations/community";
 import { createPost } from "@/app/community/actions";
 import RichTextEditor from "@/components/community/RichTextEditor";
+import ExternalImageInput from "@/components/common/external-image-input";
 
 const MAX_TITLE = 200;
 const MAX_CONTENT = 10000;
@@ -62,6 +63,7 @@ export default function NewPostPage({ params }: { params: Promise<{ slug: string
 
   // Dosya Yükleme Durumları
   const [attachedFiles, setAttachedFiles] = useState<UploadingFile[]>([]);
+  const [externalImageUrls, setExternalImageUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // YouTube URL State
@@ -212,7 +214,7 @@ export default function NewPostPage({ params }: { params: Promise<{ slug: string
       // React Hook Form payload'ını güncelle
       setAttachedFiles(latest => {
         const urls = latest.filter(f => f.status === "success" && f.blobUrl).map(f => f.blobUrl!);
-        setValue("mediaUrls", urls);
+        setValue("mediaUrls", [...urls, ...externalImageUrls]);
         return latest;
       });
 
@@ -223,6 +225,12 @@ export default function NewPostPage({ params }: { params: Promise<{ slug: string
         prev.map(f => f.id === fileId ? { ...f, status: "error", progress: 0 } : f)
       );
     }
+  };
+
+  const handleExternalImageUrlsChange = (newExternalUrls: string[]) => {
+    setExternalImageUrls(newExternalUrls);
+    const blobUrls = attachedFiles.filter(f => f.status === "success" && f.blobUrl).map(f => f.blobUrl!);
+    setValue("mediaUrls", [...blobUrls, ...newExternalUrls]);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -260,7 +268,7 @@ export default function NewPostPage({ params }: { params: Promise<{ slug: string
     setAttachedFiles(prev => {
       const updated = prev.filter(f => f.id !== fileId);
       const urls = updated.filter(f => f.status === "success" && f.blobUrl).map(f => f.blobUrl!);
-      setValue("mediaUrls", urls);
+      setValue("mediaUrls", [...urls, ...externalImageUrls]);
       return updated;
     });
   };
@@ -524,6 +532,15 @@ export default function NewPostPage({ params }: { params: Promise<{ slug: string
                     })}
                   </div>
                 )}
+
+                {/* Harici Görsel URL Ekleme */}
+                <div className="border-t border-[var(--color-border)] pt-4">
+                  <ExternalImageInput
+                    urls={externalImageUrls}
+                    onChange={handleExternalImageUrlsChange}
+                    maxCount={10}
+                  />
+                </div>
 
                 {/* YouTube Video URL Input */}
                 <div className="border-t border-[var(--color-border)] pt-4">
