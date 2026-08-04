@@ -14,6 +14,7 @@ import {
   ChevronRight,
   RotateCcw,
   ShieldCheck,
+  ArrowRight,
 } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
 import Navbar from "@/components/layout/navbar";
@@ -32,6 +33,7 @@ interface Organization {
   website_url: string | null;
   logo_url: string | null;
   approval_status: string;
+  owner_id?: string | null;
 }
 
 /**
@@ -492,59 +494,97 @@ export default async function ExplorePage({
                         Kayıtlı Şirketler & Kurumlar
                       </h2>
                       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredOrgs.map((org) => (
-                          <div
-                            key={org.id}
-                            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-lg"
-                          >
-                            <div>
-                              <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--color-muted)]/50 p-1.5 border border-[var(--color-border)]">
-                                  {org.logo_url ? (
-                                    <img
-                                      src={org.logo_url}
-                                      alt={org.name}
-                                      className="h-full w-full object-contain rounded-lg"
-                                    />
+                        {filteredOrgs.map((org) => {
+                          const profileUrl = org.owner_id ? `/u/${org.owner_id}` : null;
+
+                          return (
+                            <div
+                              key={org.id}
+                              className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5"
+                            >
+                              <div>
+                                <div className="flex items-center gap-4">
+                                  {profileUrl ? (
+                                    <Link
+                                      href={profileUrl}
+                                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--color-muted)]/50 p-1.5 border border-[var(--color-border)] hover:border-indigo-500 transition-colors"
+                                    >
+                                      {org.logo_url ? (
+                                        <img
+                                          src={org.logo_url}
+                                          alt={org.name}
+                                          className="h-full w-full object-contain rounded-lg"
+                                        />
+                                      ) : (
+                                        <Building2 className="h-6 w-6 text-[var(--color-primary)]" />
+                                      )}
+                                    </Link>
                                   ) : (
-                                    <Building2 className="h-6 w-6 text-[var(--color-primary)]" />
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--color-muted)]/50 p-1.5 border border-[var(--color-border)]">
+                                      {org.logo_url ? (
+                                        <img
+                                          src={org.logo_url}
+                                          alt={org.name}
+                                          className="h-full w-full object-contain rounded-lg"
+                                        />
+                                      ) : (
+                                        <Building2 className="h-6 w-6 text-[var(--color-primary)]" />
+                                      )}
+                                    </div>
                                   )}
+                                  <div className="min-w-0 flex-1">
+                                    {profileUrl ? (
+                                      <Link href={profileUrl}>
+                                        <h3 className="font-bold text-sm text-[var(--color-foreground)] truncate hover:text-[var(--color-primary)] transition-colors">
+                                          {org.name}
+                                        </h3>
+                                      </Link>
+                                    ) : (
+                                      <h3 className="font-bold text-sm text-[var(--color-foreground)] truncate">
+                                        {org.name}
+                                      </h3>
+                                    )}
+                                    <span className="rounded bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)] uppercase inline-block mt-0.5">
+                                      {org.type === "employer" && "İşveren"}
+                                      {org.type === "foundation" && "Vakıf"}
+                                      {org.type === "association" && "Dernek"}
+                                      {org.type === "other" && "Diğer Kurum"}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                  <h3 className="font-bold text-sm text-[var(--color-foreground)] truncate group-hover:text-[var(--color-primary)] transition-colors">
-                                    {org.name}
-                                  </h3>
-                                  <span className="rounded bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-primary)] uppercase">
-                                    {org.type === "employer" && "İşveren"}
-                                    {org.type === "foundation" && "Vakıf"}
-                                    {org.type === "association" && "Dernek"}
-                                    {org.type === "other" && "Diğer Kurum"}
-                                  </span>
-                                </div>
+
+                                {org.description && (
+                                  <p className="mt-4 text-xs text-[var(--color-muted-foreground)] line-clamp-3 leading-relaxed whitespace-pre-wrap">
+                                    {org.description}
+                                  </p>
+                                )}
                               </div>
 
-                              {org.description && (
-                                <p className="mt-4 text-xs text-[var(--color-muted-foreground)] line-clamp-3 leading-relaxed whitespace-pre-wrap">
-                                  {org.description}
-                                </p>
-                              )}
+                              <div className="mt-4 border-t border-[var(--color-border)]/50 pt-3 flex items-center justify-between gap-2">
+                                {profileUrl && (
+                                  <Link
+                                    href={profileUrl}
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                  >
+                                    Hesap Profilini Gör
+                                    <ArrowRight className="h-3 w-3" />
+                                  </Link>
+                                )}
+                                {org.website_url && (
+                                  <a
+                                    href={org.website_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:underline ml-auto"
+                                  >
+                                    Web Sitesi
+                                    <Globe className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                              </div>
                             </div>
-
-                            {org.website_url && (
-                              <div className="mt-4 border-t border-[var(--color-border)]/50 pt-3 flex items-center justify-end">
-                                <a
-                                  href={org.website_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-primary)] hover:underline"
-                                >
-                                  Web Sitesini Ziyaret Et
-                                  <Globe className="h-3.5 w-3.5" />
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}

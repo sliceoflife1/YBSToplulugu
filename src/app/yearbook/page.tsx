@@ -375,21 +375,34 @@ export default function YearbookPage() {
                   }`}
                 >
                   <div className="flex flex-col items-center text-center">
-                    {/* Profil Resmi */}
-                    {p.profiles?.avatar_url ? (
-                      <img
-                        src={p.profiles.avatar_url}
-                        alt={fullName}
-                        className="h-24 w-24 rounded-full object-cover border-2 border-indigo-500/20 group-hover:border-indigo-500 transition-colors"
-                      />
-                    ) : (
-                      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-3xl font-extrabold text-white">
-                        {p.profiles?.first_name?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    {/* Tıklanabilir Profil Resmi -> /u/[user_id] */}
+                    <Link
+                      href={`/u/${p.user_id}`}
+                      className="hover:opacity-95 transition-opacity cursor-pointer block"
+                    >
+                      {p.profiles?.avatar_url ? (
+                        <img
+                          src={p.profiles.avatar_url}
+                          alt={fullName}
+                          className="h-24 w-24 rounded-full object-cover border-2 border-indigo-500/20 group-hover:border-indigo-500 transition-colors"
+                        />
+                      ) : (
+                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-3xl font-extrabold text-white">
+                          {p.profiles?.first_name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </Link>
 
+                    {/* Tıklanabilir Kullanıcı Adı -> /u/[user_id] */}
                     <div className="mt-4 flex items-center justify-center gap-1.5">
-                      <h3 className="text-md font-bold text-[var(--color-foreground)] line-clamp-1">{fullName}</h3>
+                      <Link
+                        href={`/u/${p.user_id}`}
+                        className="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
+                      >
+                        <h3 className="text-md font-bold text-[var(--color-foreground)] line-clamp-1">
+                          {fullName}
+                        </h3>
+                      </Link>
                       {isManager && (
                         <ShieldCheck className="h-4 w-4 text-amber-500 shrink-0" />
                       )}
