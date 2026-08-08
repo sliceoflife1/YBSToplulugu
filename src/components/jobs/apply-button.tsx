@@ -73,7 +73,7 @@ export default function ApplyButton({ listingId, deadline, isActive }: ApplyButt
         const { data: application } = await supabase
           .from('job_applications')
           .select('id')
-          .eq('listing_id', listingId)
+          .eq('job_listing_id', listingId)
           .eq('applicant_id', session.user.id)
           .single();
 
@@ -119,7 +119,10 @@ export default function ApplyButton({ listingId, deadline, isActive }: ApplyButt
         method: 'POST',
       });
       
-      if (!res.ok) throw new Error('Başvuru sırasında bir hata oluştu');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Başvuru sırasında bir hata oluştu');
+      }
       
       toast.success('Başvurunuz başarıyla tamamlandı! CV içeriğinizde yer alan iletişim bilgilerinden işverenler sizinle iletişime geçebilecektir.');
       setStatus('applied');

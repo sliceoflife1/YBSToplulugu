@@ -98,25 +98,29 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     // Bildirimler (adminClient ile RLS bypass)
-    const adminSupabase = createAdminClient()
+    try {
+      const adminSupabase = createAdminClient()
 
-    // 1. İşverene bildirim
-    await adminSupabase.from('notifications').insert({
-      type: 'job_application',
-      recipient_id: job.employer_id,
-      title: `Yeni Başvuru: ${job.title}`,
-      message: `${applicant_name} adlı kullanıcı "${job.title}" ilanınıza başvurdu.`,
-      metadata: { job_listing_id: job_id, applicant_id: user.id, applicant_name }
-    })
+      // 1. İşverene bildirim
+      await adminSupabase.from('notifications').insert({
+        type: 'job_application',
+        recipient_id: job.employer_id,
+        title: `Yeni Başvuru: ${job.title}`,
+        message: `${applicant_name} adlı kullanıcı "${job.title}" ilanınıza başvurdu.`,
+        metadata: { job_listing_id: job_id, applicant_id: user.id, applicant_name }
+      })
 
-    // 2. Öğrenciye bildirim
-    await adminSupabase.from('notifications').insert({
-      type: 'application_success',
-      recipient_id: user.id,
-      title: 'Başvurunuz Alındı',
-      message: `"${job.title}" ilanına başvurunuz başarıyla tamamlandı. CV içeriğinizde yer alan iletişim bilgilerinden işverenler sizinle iletişime geçebilecektir.`,
-      metadata: { job_listing_id: job_id }
-    })
+      // 2. Öğrenciye bildirim
+      await adminSupabase.from('notifications').insert({
+        type: 'application_success',
+        recipient_id: user.id,
+        title: 'Başvurunuz Alındı',
+        message: `"${job.title}" ilanına başvurunuz başarıyla tamamlandı. CV içeriğinizde yer alan iletişim bilgilerinden işverenler sizinle iletişime geçebilecektir.`,
+        metadata: { job_listing_id: job_id }
+      })
+    } catch (notifErr) {
+      console.error('Notification dispatch error:', notifErr)
+    }
 
     logActivity({
       userId: user.id,
