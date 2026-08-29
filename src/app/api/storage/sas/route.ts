@@ -19,10 +19,21 @@ export async function POST(request: Request) {
 
     // 2. Parse request body
     const body = await request.json();
-    const { filename, contentType } = body;
+    const { filename } = body;
+    let { contentType } = body;
 
-    if (!filename || !contentType) {
-      return NextResponse.json({ error: "Filename and contentType are required" }, { status: 400 });
+    if (!filename) {
+      return NextResponse.json({ error: "Filename is required" }, { status: 400 });
+    }
+
+    if (!contentType || contentType === "application/octet-stream") {
+      const ext = filename.includes(".") ? filename.substring(filename.lastIndexOf(".")).toLowerCase() : "";
+      if (ext === ".png") contentType = "image/png";
+      else if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
+      else if (ext === ".webp") contentType = "image/webp";
+      else if (ext === ".gif") contentType = "image/gif";
+      else if (ext === ".pdf") contentType = "application/pdf";
+      else contentType = "application/octet-stream";
     }
 
     // 3. Connection string parsing
@@ -45,12 +56,12 @@ export async function POST(request: Request) {
     const uniqueId = crypto.randomUUID();
     const blobName = `posts/${uniqueId}-${cleanFilename}`;
 
-    // 5. Generate SAS token
+    // 5. Generate SAS token (Create, Write, Add, Read permissions)
     const credential = new StorageSharedKeyCredential(accountName, accountKey);
     const sasToken = generateBlobSASQueryParameters({
       containerName,
       blobName,
-      permissions: BlobSASPermissions.parse("w"), // write only
+      permissions: BlobSASPermissions.parse("racwd"),
       startsOn: new Date(new Date().valueOf() - 5 * 60 * 1000), // 5 minutes in the past for clock drift
       expiresOn: new Date(new Date().valueOf() + 30 * 60 * 1000), // 30 minutes in the future
       contentType: contentType,

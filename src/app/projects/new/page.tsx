@@ -179,24 +179,11 @@ export default function NewProjectPage() {
     );
 
     try {
-      const sasRes = await fetch("/api/storage/sas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-        }),
-      });
-
-      const sasData = await sasRes.json();
-      if (!sasRes.ok) throw new Error(sasData.error || "SAS token alınamadı");
-
-      const { uploadUrl, blobUrl } = sasData;
+      const formData = new FormData();
+      formData.append("file", file);
 
       const xhr = new XMLHttpRequest();
-      xhr.open("PUT", uploadUrl, true);
-      xhr.setRequestHeader("Content-Type", file.type);
-      xhr.setRequestHeader("x-ms-blob-type", "BlockBlob");
+      xhr.open("POST", "/api/storage/upload", true);
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
@@ -207,19 +194,24 @@ export default function NewProjectPage() {
         }
       };
 
-      const uploadPromise = new Promise<void>((resolve, reject) => {
+      const uploadPromise = new Promise<string>((resolve, reject) => {
         xhr.onload = () => {
-          if (xhr.status === 201 || xhr.status === 200) {
-            resolve();
-          } else {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300 && data.blobUrl) {
+              resolve(data.blobUrl);
+            } else {
+              reject(new Error(data.error || `Yükleme hatası (Status: ${xhr.status})`));
+            }
+          } catch {
             reject(new Error(`Yükleme hatası (Status: ${xhr.status})`));
           }
         };
         xhr.onerror = () => reject(new Error("Ağ hatası oluştu"));
       });
 
-      xhr.send(file);
-      await uploadPromise;
+      xhr.send(formData);
+      const blobUrl = await uploadPromise;
 
       setAttachedFiles(prev => 
         prev.map(f => f.id === fileId ? { ...f, status: "success", progress: 100, blobUrl } : f)
