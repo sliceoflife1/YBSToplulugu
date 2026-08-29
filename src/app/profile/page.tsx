@@ -55,8 +55,18 @@ export default async function ProfilePage() {
           <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm sm:p-8">
             <div className="flex flex-col items-start gap-6 sm:flex-row">
               {/* Avatar */}
-              <div className="flex h-24 w-24 items-center justify-center rounded-2xl gradient-primary text-3xl font-bold text-white shadow-lg">
-                {fullName.charAt(0).toUpperCase()}
+              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-lg bg-[var(--color-background)]">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={fullName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center gradient-primary text-3xl font-bold text-white">
+                    {fullName.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
 
               <div className="flex-1">
