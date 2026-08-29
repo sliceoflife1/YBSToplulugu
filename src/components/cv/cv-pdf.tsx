@@ -346,6 +346,21 @@ const corporateStyles = StyleSheet.create({
     borderBottomColor: '#1e3a8a',
     paddingBottom: 10,
     marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  avatar: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    borderWidth: 1.5,
+    borderColor: '#1e3a8a',
+    objectFit: 'cover',
   },
   name: {
     fontSize: 22,
@@ -449,13 +464,18 @@ function CorporateTemplate({ profile, skills, education, experience, certificati
     <Document>
       <Page size="A4" style={corporateStyles.page} wrap={true}>
         <View style={dynamicHeader}>
-          <Text style={dynamicName}>{profile.first_name} {profile.last_name}</Text>
-          {profile.headline ? <Text style={corporateStyles.headline}>{profile.headline}</Text> : null}
-          <View style={corporateStyles.contactBar}>
-            {contactParts.map((part, i) => (
-              <Text key={i} style={corporateStyles.contactItem}>{i > 0 ? '•  ' : ''}{part}</Text>
-            ))}
+          <View style={corporateStyles.headerLeft}>
+            <Text style={dynamicName}>{profile.first_name} {profile.last_name}</Text>
+            {profile.headline ? <Text style={corporateStyles.headline}>{profile.headline}</Text> : null}
+            <View style={corporateStyles.contactBar}>
+              {contactParts.map((part, i) => (
+                <Text key={i} style={corporateStyles.contactItem}>{i > 0 ? '•  ' : ''}{part}</Text>
+              ))}
+            </View>
           </View>
+          {profile.avatar_url ? (
+            <Image src={profile.avatar_url} style={[corporateStyles.avatar, { borderColor: primaryColor }]} />
+          ) : null}
         </View>
 
         {profile.bio ? (
@@ -582,7 +602,7 @@ function CorporateTemplate({ profile, skills, education, experience, certificati
 //  - Sertifikalar, Referanslar ve Özel Bölümler hiç gösterilmiyordu; eklendi.
 //  - Sayfa numarası yoktu; Standart şablonla tutarlı hale getirildi.
 // ----------------------------------------------------
-const MODERN_SIDEBAR_WIDTH = 172;
+const MODERN_SIDEBAR_WIDTH = 175;
 
 const modernStyles = StyleSheet.create({
   page: {
@@ -592,7 +612,7 @@ const modernStyles = StyleSheet.create({
     paddingBottom: 50,
     fontFamily: 'Roboto',
     fontSize: 8.5,
-    color: '#1f2937',
+    color: '#1e293b',
     backgroundColor: '#ffffff',
   },
   sidebar: {
@@ -601,33 +621,47 @@ const modernStyles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: MODERN_SIDEBAR_WIDTH,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#0b1329',
     color: '#ffffff',
-    paddingHorizontal: 18,
-    paddingTop: 28,
-    paddingBottom: 28,
+    paddingHorizontal: 16,
+    paddingTop: 26,
+    paddingBottom: 26,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    borderWidth: 2,
+    borderColor: '#38bdf8',
+    objectFit: 'cover',
   },
   name: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#ffffff',
-    marginBottom: 4,
+    marginBottom: 3,
     lineHeight: 1.25,
+    textAlign: 'center',
   },
   title: {
-    fontSize: 9.5,
+    fontSize: 9,
     color: '#38bdf8',
-    marginBottom: 14,
+    marginBottom: 12,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   sideTitle: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: 'bold',
     color: '#f8fafc',
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: '#1e293b',
     paddingBottom: 3,
-    marginTop: 12,
+    marginTop: 10,
     marginBottom: 6,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -642,27 +676,32 @@ const modernStyles = StyleSheet.create({
   sideText: {
     fontSize: 7.5,
     color: '#cbd5e1',
-    marginBottom: 6,
+    marginBottom: 5,
+    lineHeight: 1.3,
   },
   sideSkillText: {
     fontSize: 7.5,
     color: '#94a3b8',
-    marginBottom: 3,
+    marginBottom: 2.5,
   },
   mainSectionTitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: 'bold',
     color: '#0f172a',
-    marginBottom: 8,
+    marginBottom: 6,
     marginTop: 10,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   card: {
     backgroundColor: '#f8fafc',
     borderRadius: 4,
     padding: 8,
-    marginBottom: 8,
-    borderLeftWidth: 3,
+    marginBottom: 7,
+    borderLeftWidth: 3.5,
     borderLeftColor: '#0ea5e9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   cardTitle: {
     fontSize: 9,
@@ -682,11 +721,12 @@ const modernStyles = StyleSheet.create({
   cardDesc: {
     fontSize: 8,
     color: '#334155',
+    lineHeight: 1.35,
   },
   simpleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   pageNumber: {
     position: 'absolute',
@@ -706,6 +746,12 @@ function ModernTemplate({ profile, skills, education, experience, certifications
       <Page size="A4" style={modernStyles.page} wrap={true}>
         {/* Sol Sabit Kenar Çubuğu (tüm sayfalarda tekrarlanır) */}
         <View style={modernStyles.sidebar} fixed>
+          {profile.avatar_url ? (
+            <View style={modernStyles.avatarContainer}>
+              <Image src={profile.avatar_url} style={[modernStyles.avatar, { borderColor: primaryColor }]} />
+            </View>
+          ) : null}
+
           <Text style={modernStyles.name}>{profile.first_name} {profile.last_name}</Text>
           {profile.headline ? <Text style={dynamicTitle}>{profile.headline}</Text> : null}
 
@@ -871,11 +917,26 @@ const academicStyles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#000000',
     paddingBottom: 10,
+  },
+  avatar: {
+    width: 58,
+    height: 58,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#000000',
+    marginRight: 14,
+    objectFit: 'cover',
+  },
+  headerContent: {
+    flex: 1,
+    alignItems: 'center',
   },
   name: {
     fontSize: 20,
@@ -891,6 +952,8 @@ const academicStyles = StyleSheet.create({
   },
   contact: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 10,
     marginTop: 4,
     fontSize: 8,
@@ -952,12 +1015,17 @@ function AcademicTemplate({ profile, skills, education, experience, certificatio
     <Document>
       <Page size="A4" style={academicStyles.page} wrap={true}>
         <View style={academicStyles.header}>
-          <Text style={academicStyles.name}>{profile.first_name} {profile.last_name}</Text>
-          {profile.headline ? <Text style={academicStyles.title}>{profile.headline}</Text> : null}
-          <View style={academicStyles.contact}>
-            {contactParts.map((part, i) => (
-              <Text key={i}>{i > 0 ? '|  ' : ''}{part}</Text>
-            ))}
+          {profile.avatar_url ? (
+            <Image src={profile.avatar_url} style={academicStyles.avatar} />
+          ) : null}
+          <View style={academicStyles.headerContent}>
+            <Text style={academicStyles.name}>{profile.first_name} {profile.last_name}</Text>
+            {profile.headline ? <Text style={academicStyles.title}>{profile.headline}</Text> : null}
+            <View style={academicStyles.contact}>
+              {contactParts.map((part, i) => (
+                <Text key={i}>{i > 0 ? '|  ' : ''}{part}</Text>
+              ))}
+            </View>
           </View>
         </View>
 
