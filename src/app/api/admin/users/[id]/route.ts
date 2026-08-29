@@ -160,20 +160,46 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { first_name, last_name, edu_email, role, department, phone, student_no, is_active } = body;
+    const { first_name, last_name, edu_email, role, department, phone, student_no, is_active, admin_gmail } = body;
 
-    // Admin rolü verilmek isteniyorsa @gmail.com zorunluluğu kontrolü
-    if (role === "admin") {
-      const { data: targetProfile } = await adminSupabase
-        .from("profiles")
-        .select("admin_gmail")
-        .eq("id", targetUserId)
-        .single();
+    // Hedef profilin mevcut bilgilerini çek
+    const { data: targetProfile } = await adminSupabase
+      .from("profiles")
+      .select("admin_gmail, personal_email, edu_email, role")
+      .eq("id", targetUserId)
+      .single();
 
-      const adminGmail = targetProfile?.admin_gmail;
-      if (!adminGmail || !adminGmail.toLowerCase().endsWith("@gmail.com")) {
+    // Admin Gmail çözümlemesi
+    let resolvedAdminGmail: string | null = null;
+    if (admin_gmail !== undefined) {
+      resolvedAdminGmail = (typeof admin_gmail === "string" && admin_gmail.trim() !== "")
+        ? admin_gmail.trim().toLowerCase()
+        : null;
+      if (resolvedAdminGmail && !resolvedAdminGmail.endsWith("@gmail.com")) {
         return NextResponse.json(
-          { error: "Bu kullanıcı henüz ikincil @gmail.com adresini profilinde tanımlamadığı için Admin rolüne yükseltilemez." },
+          { error: "Admin güvenlik e-postası geçerli bir @gmail.com adresi olmalıdır." },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Admin rolü verilmek isteniyorsa @gmail.com zorunluluğu kontrolü ve otomatik eşleme
+    if (role === "admin") {
+      if (!resolvedAdminGmail) {
+        if (targetProfile?.admin_gmail && targetProfile.admin_gmail.toLowerCase().endsWith("@gmail.com")) {
+          resolvedAdminGmail = targetProfile.admin_gmail.toLowerCase();
+        } else if (targetProfile?.personal_email && targetProfile.personal_email.toLowerCase().endsWith("@gmail.com")) {
+          resolvedAdminGmail = targetProfile.personal_email.toLowerCase();
+        } else if (edu_email && edu_email.toLowerCase().endsWith("@gmail.com")) {
+          resolvedAdminGmail = edu_email.toLowerCase();
+        } else if (targetProfile?.edu_email && targetProfile.edu_email.toLowerCase().endsWith("@gmail.com")) {
+          resolvedAdminGmail = targetProfile.edu_email.toLowerCase();
+        }
+      }
+
+      if (!resolvedAdminGmail || !resolvedAdminGmail.endsWith("@gmail.com")) {
+        return NextResponse.json(
+          { error: "Bu kullanıcının Admin olabilmesi için geçerli bir @gmail.com adresi (Kişisel E-posta veya Admin Gmail olarak) tanımlanmalıdır." },
           { status: 400 }
         );
       }
@@ -209,6 +235,11 @@ export async function PATCH(
           : null;
     }
     if (is_active !== undefined) updateData.is_active = is_active;
+    if (resolvedAdminGmail !== null) {
+      updateData.admin_gmail = resolvedAdminGmail;
+    } else if (admin_gmail === "" || admin_gmail === null) {
+      updateData.admin_gmail = null;
+    }
 
     const { data: updatedProfile, error: profileUpdateError } = await adminSupabase
       .from("profiles")

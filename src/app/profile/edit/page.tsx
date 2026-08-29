@@ -466,6 +466,9 @@ export default function ProfileEditPage() {
         github_url: data.githubUrl || null,
         website_url: data.websiteUrl || null,
         personal_email: data.personalEmail || null,
+        ...(data.personalEmail && data.personalEmail.toLowerCase().endsWith("@gmail.com") && !profile.admin_gmail
+          ? { admin_gmail: data.personalEmail.toLowerCase().trim() }
+          : {}),
         is_cv_public: data.isCvPublic ?? false,
         is_open_to_work: data.isOpenToWork ?? false,
         meeting_url: data.meetingUrl || null,

@@ -28,6 +28,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
     phone: string;
     student_no: string;
     is_active: boolean;
+    admin_gmail: string;
   }>({
     first_name: "",
     last_name: "",
@@ -37,6 +38,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
     phone: "",
     student_no: "",
     is_active: true,
+    admin_gmail: "",
   });
 
   const supabase = createClient();
@@ -83,6 +85,11 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
       phone: user.phone || "",
       student_no: user.student_no || "",
       is_active: user.is_active ?? true,
+      admin_gmail:
+        user.admin_gmail ||
+        (user.personal_email?.toLowerCase().endsWith("@gmail.com")
+          ? user.personal_email
+          : ""),
     });
   };
 
@@ -94,6 +101,10 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
     try {
       const payload = {
         ...editFormData,
+        admin_gmail:
+          editFormData.admin_gmail && editFormData.admin_gmail.trim() !== ""
+            ? editFormData.admin_gmail.trim().toLowerCase()
+            : null,
         student_no:
           editFormData.student_no && editFormData.student_no.trim() !== ""
             ? editFormData.student_no.trim()
@@ -114,7 +125,11 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
 
       toast.success("Kullanıcı bilgileri başarıyla güncellendi.");
       setUsers((prev) =>
-        prev.map((u) => (u.id === userToEdit.id ? { ...u, ...editFormData } : u))
+        prev.map((u) =>
+          u.id === userToEdit.id
+            ? { ...u, ...editFormData, admin_gmail: payload.admin_gmail }
+            : u
+        )
       );
       setUserToEdit(null);
       router.refresh();
@@ -409,6 +424,29 @@ export default function UsersClient({ initialUsers }: { initialUsers: Profile[] 
                   onChange={(e) => setEditFormData({ ...editFormData, edu_email: e.target.value })}
                   className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-foreground)] focus:border-[var(--color-primary)] focus:outline-none"
                 />
+              </div>
+
+              <div>
+                <label className="mb-1 flex items-center justify-between text-xs font-medium text-[var(--color-muted-foreground)]">
+                  <span>İkincil / Admin E-Postası (@gmail.com)</span>
+                  {editFormData.role === "admin" && (
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold">* Admin için Zorunlu</span>
+                  )}
+                </label>
+                <input
+                  type="email"
+                  placeholder="ornek@gmail.com"
+                  value={editFormData.admin_gmail}
+                  onChange={(e) => setEditFormData({ ...editFormData, admin_gmail: e.target.value })}
+                  className={`w-full rounded-lg border bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none ${
+                    editFormData.role === "admin" && (!editFormData.admin_gmail || !editFormData.admin_gmail.toLowerCase().endsWith("@gmail.com"))
+                      ? "border-amber-500 ring-1 ring-amber-500/30 focus:border-amber-500"
+                      : "border-[var(--color-border)] focus:border-[var(--color-primary)]"
+                  }`}
+                />
+                <p className="mt-1 text-[11px] text-[var(--color-muted-foreground)]">
+                  Admin 2FA ve güvenlik ayarları için @gmail.com uzantılı olmalıdır.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
