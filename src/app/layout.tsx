@@ -5,6 +5,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import "./globals.css";
+import LegalConsentModal from "@/components/layout/legal-consent-modal";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -14,33 +15,95 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr"),
   title: {
-    default: "YBS Topluluğu | DEÜ Öğrenci Platformu",
-    template: "%s | YBS Topluluğu",
+    default: "DEÜ YBS Topluluğu | Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri",
+    template: "%s | DEÜ YBS Topluluğu",
   },
   description:
-    "Dokuz Eylül Üniversitesi öğrencileri için profesyonel ağ ve topluluk platformu. Projelerini paylaş, CV oluştur, toplulukla bağlan.",
+    "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri (YBS) Topluluğu resmi platformu. Öğrenci projeleri, etkinlikler, duyurular, CV havuzu ve iş/staj fırsatları.",
   keywords: [
     "DEÜ",
     "Dokuz Eylül",
+    "Dokuz Eylül Üniversitesi",
+    "DEÜ YBS",
     "YBS",
-    "öğrenci",
-    "üniversite",
+    "Yönetim Bilişim Sistemleri",
+    "DEÜ YBS Topluluğu",
+    "deuybs",
+    "deuybs.org.tr",
+    "öğrenci topluluğu",
+    "yazılım",
+    "bilişim",
     "proje",
     "CV",
-    "topluluk",
+    "staj",
+    "kariyer",
   ],
-  authors: [{ name: "YBS Topluluğu" }],
+  authors: [{ name: "DEÜ YBS Topluluğu", url: "https://deuybs.org.tr" }],
+  creator: "DEÜ YBS Topluluğu",
+  publisher: "DEÜ YBS Topluluğu",
+  alternates: {
+    canonical: "https://deuybs.org.tr",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "KJb8aJQTOsWAp_K6v99pfhfVID7lxH-hwVSX4HDSKGo",
+  },
   openGraph: {
-    title: "YBS Topluluğu | DEÜ Öğrenci Platformu",
+    title: "DEÜ YBS Topluluğu | Dokuz Eylül Üniversitesi",
     description:
-      "Dokuz Eylül Üniversitesi öğrencileri için profesyonel ağ ve topluluk platformu.",
+      "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Topluluğu resmi ağı. Projelerini sergile, etkinliklere katıl, ağını büyüt.",
+    url: "https://deuybs.org.tr",
     type: "website",
     locale: "tr_TR",
-    siteName: "YBS Topluluğu",
+    siteName: "DEÜ YBS Topluluğu",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DEÜ YBS Topluluğu | Dokuz Eylül Üniversitesi",
+    description:
+      "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Topluluğu resmi ağı.",
   },
 };
 
-import LegalConsentModal from "@/components/layout/legal-consent-modal";
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "EducationalOrganization",
+      "@id": "https://deuybs.org.tr/#organization",
+      name: "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Topluluğu",
+      alternateName: "DEÜ YBS Topluluğu",
+      url: "https://deuybs.org.tr",
+      description:
+        "Dokuz Eylül Üniversitesi öğrencileri için profesyonel ağ ve topluluk platformu.",
+      parentOrganization: {
+        "@type": "CollegeOrUniversity",
+        name: "Dokuz Eylül Üniversitesi",
+        url: "https://deu.edu.tr",
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://deuybs.org.tr/#website",
+      url: "https://deuybs.org.tr",
+      name: "DEÜ YBS Topluluğu",
+      publisher: {
+        "@id": "https://deuybs.org.tr/#organization",
+      },
+      inLanguage: "tr-TR",
+    },
+  ],
+};
 
 export default async function RootLayout({
   children,
@@ -52,6 +115,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={`${inter.variable} h-full`} suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col font-sans antialiased">
         <ThemeProvider
           attribute="class"
