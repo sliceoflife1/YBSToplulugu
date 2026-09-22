@@ -72,9 +72,10 @@ export default function FacultyRegisterPage() {
       return;
     }
 
-    const redirectUrl = typeof window !== "undefined"
-      ? `${window.location.origin}/auth/callback`
-      : "https://ybs-toplulugu.vercel.app/auth/callback";
+    const baseUrl = typeof window !== "undefined"
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr");
+    const redirectUrl = `${baseUrl}/auth/callback`;
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,

@@ -23,7 +23,7 @@ async function sendEmailHelper({
 }) {
   const cleanEmail = (toEmail || "").trim().toLowerCase();
   const adminSupabase = createAdminClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ybstoplulugu.ozgurcanaka.me";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr";
   const resendApiKey = process.env.RESEND_API_KEY;
 
   if (resendApiKey) {
@@ -31,7 +31,7 @@ async function sendEmailHelper({
     const resend = new Resend(resendApiKey);
 
     const { error: resendError } = await resend.emails.send({
-      from: "DEÜ YBS Topluluğu <noreply@ybstoplulugu.ozgurcanaka.me>",
+      from: "DEÜ YBS Topluluğu <noreply@deuybs.org.tr>",
       to: [cleanEmail],
       subject,
       html: htmlContent,
@@ -78,7 +78,7 @@ export async function sendCustomPasswordResetEmail(targetEmail: string) {
       .maybeSingle();
 
     const authEmail = profile?.edu_email || cleanEmail;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ybstoplulugu.ozgurcanaka.me";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr";
     const recipientName = profile ? `${profile.first_name} ${profile.last_name}` : "Değerli Üyemiz";
 
     const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
@@ -118,7 +118,7 @@ export async function sendCustomSignupConfirmationEmail(targetEmail: string) {
       .eq("edu_email", cleanEmail)
       .maybeSingle();
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ybstoplulugu.ozgurcanaka.me";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr";
     const recipientName = profile ? `${profile.first_name} ${profile.last_name}` : "Aramıza Hoş Geldin";
 
     const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
@@ -152,7 +152,7 @@ export async function sendCustomMagicLinkEmail(targetEmail: string) {
     if (!cleanEmail) return { success: false, error: "Geçerli e-posta giriniz." };
 
     const adminSupabase = createAdminClient();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ybstoplulugu.ozgurcanaka.me";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr";
 
     const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
       type: "magiclink",

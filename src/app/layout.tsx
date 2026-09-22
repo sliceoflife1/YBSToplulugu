@@ -12,6 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr"),
   title: {
     default: "YBS Topluluğu | DEÜ Öğrenci Platformu",
     template: "%s | YBS Topluluğu",

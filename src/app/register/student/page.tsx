@@ -64,9 +64,10 @@ export default function StudentRegisterPage() {
       return;
     }
 
-    const redirectUrl = typeof window !== "undefined"
-      ? `${window.location.origin}/auth/callback`
-      : "https://ybs-toplulugu.vercel.app/auth/callback";
+    const baseUrl = typeof window !== "undefined"
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr");
+    const redirectUrl = `${baseUrl}/auth/callback`;
 
     // Sign up with Supabase Auth
     const { error: authError } = await supabase.auth.signUp({

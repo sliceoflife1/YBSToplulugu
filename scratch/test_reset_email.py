@@ -11,7 +11,7 @@ def test_generate_link(email):
         "type": "recovery",
         "email": email,
         "options": {
-            "redirect_to": "https://ybstoplulugu.ozgurcanaka.me/auth/callback?next=/reset-password"
+            "redirect_to": "https://deuybs.org.tr/auth/callback?next=/reset-password"
         }
     }).encode('utf-8')
     headers = {

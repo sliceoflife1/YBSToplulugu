@@ -1,8 +1,8 @@
 project_id = "dhowfdzppzcfhoobidbe"
 
 [auth]
-site_url = "https://ybstoplulugu.ozgurcanaka.me"
-additional_redirect_urls = ["https://ybstoplulugu.ozgurcanaka.me/auth/callback", "https://ybstoplulugu.ozgurcanaka.me/auth/callback?next=/reset-password"]
+site_url = "https://deuybs.org.tr"
+additional_redirect_urls = ["https://deuybs.org.tr/auth/callback", "https://deuybs.org.tr/auth/callback?next=/reset-password"]
 
 [auth.email]
 enable_signup = true
