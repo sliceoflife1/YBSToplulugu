@@ -19,6 +19,8 @@ const PUBLIC_PATHS = [
   '/kvkk',
   '/cookies',
   '/contact',
+  '/sitemap.xml',
+  '/robots.txt',
 ];
 
 /**
