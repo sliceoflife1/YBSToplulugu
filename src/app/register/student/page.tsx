@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   BookOpen,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +27,10 @@ import {
 
 import { DEU_FACULTIES } from "@/constants/deu-departments";
 import { useLocale } from "next-intl";
+import {
+  resendStudentVerificationEmail,
+  checkAccountVerificationStatus,
+} from "@/app/actions/email-actions";
 
 export default function StudentRegisterPage() {
   const t = useTranslations();
@@ -35,6 +40,8 @@ export default function StudentRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [selectedFaculty, setSelectedFaculty] = useState<string>("");
+  const [unconfirmedAccountEmail, setUnconfirmedAccountEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   const {
     register,
@@ -59,10 +66,19 @@ export default function StudentRegisterPage() {
       .maybeSingle();
 
     if (existingProfile) {
-      toast.error("Bu e-posta adresi ile zaten kayıtlı bir hesap bulunmaktadır.");
+      const status = await checkAccountVerificationStatus(data.email);
+      if (status.exists && !status.isConfirmed) {
+        setUnconfirmedAccountEmail(data.email);
+        toast.info("Bu e-posta adresiyle oluşturulmuş ancak henüz onaylanmamış bir hesap bulunmaktadır.");
+      } else {
+        setUnconfirmedAccountEmail(null);
+        toast.error("Bu e-posta adresi ile zaten kayıtlı ve aktif bir hesap bulunmaktadır. Giriş yapabilirsiniz.");
+      }
       setLoading(false);
       return;
     }
+
+    setUnconfirmedAccountEmail(null);
 
     const baseUrl = typeof window !== "undefined"
       ? window.location.origin
@@ -145,6 +161,44 @@ export default function StudentRegisterPage() {
               DEÜ öğrenci e-posta adresiniz ile kayıt olun
             </p>
           </div>
+
+          {unconfirmedAccountEmail && (
+            <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-amber-800 dark:text-amber-300 space-y-2.5 animate-fade-in">
+              <div className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>Onay Bekleyen Kayıt Tespit Edildi</span>
+              </div>
+              <p className="text-[var(--color-muted-foreground)] leading-relaxed">
+                <strong>{unconfirmedAccountEmail}</strong> adresinizle daha önce bir kayıt oluşturulmuş ancak e-posta doğrulaması tamamlanmamış. Yeni bir doğrulama e-postası alarak hesabınızı aktifleştirebilirsiniz.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  disabled={resending}
+                  onClick={async () => {
+                    setResending(true);
+                    const res = await resendStudentVerificationEmail(unconfirmedAccountEmail);
+                    if (res.success) {
+                      toast.success(res.message || "Doğrulama e-postası gönderildi!");
+                      setEmailSent(true);
+                    } else {
+                      toast.error(res.error || res.message || "E-posta gönderilemedi.");
+                    }
+                    setResending(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-3.5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer shadow-sm"
+                >
+                  {resending ? "Gönderiliyor..." : "Doğrulama E-postasını Tekrar Gönder"}
+                </button>
+                <Link
+                  href="/login"
+                  className="font-medium text-[var(--color-primary)] hover:underline ml-1"
+                >
+                  Giriş Yap →
+                </Link>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Name fields */}

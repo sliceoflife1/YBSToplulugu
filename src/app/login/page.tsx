@@ -6,16 +6,19 @@ import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { LogIn, Mail, Lock, ArrowLeft } from "lucide-react";
+import { LogIn, Mail, Lock, ArrowLeft, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import Navbar from "@/components/layout/navbar";
+import { resendStudentVerificationEmail } from "@/app/actions/email-actions";
 
 export default function LoginPage() {
   const t = useTranslations();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   const {
     register,
@@ -69,14 +72,24 @@ export default function LoginPage() {
     }
 
     if (authRes.error) {
-      toast.error(
-        authRes.error.message === "Invalid login credentials"
-          ? "E-posta veya şifre hatalı"
-          : authRes.error.message
-      );
+      const isUnconfirmed = authRes.error.message.toLowerCase().includes("email not confirmed");
+      if (isUnconfirmed) {
+        const targetEduEmail = primaryEmail || inputEmail;
+        setUnconfirmedEmail(targetEduEmail);
+        toast.error("E-posta adresiniz henüz doğrulanmamıştır.");
+      } else {
+        setUnconfirmedEmail(null);
+        toast.error(
+          authRes.error.message === "Invalid login credentials"
+            ? "E-posta veya şifre hatalı"
+            : authRes.error.message
+        );
+      }
       setLoading(false);
       return;
     }
+
+    setUnconfirmedEmail(null);
 
     // 3. Giriş yapan kullanıcının 2FA zorunluluğu var mı?
     if (authRes.data.user) {
@@ -175,6 +188,36 @@ export default function LoginPage() {
                   </p>
                 )}
               </div>
+
+              {/* Unconfirmed Email Alert Box */}
+              {unconfirmedEmail && (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-amber-800 dark:text-amber-300 space-y-2 animate-fade-in">
+                  <div className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span>E-posta Doğrulaması Bekleniyor</span>
+                  </div>
+                  <p className="text-[var(--color-muted-foreground)] leading-relaxed">
+                    <strong>{unconfirmedEmail}</strong> adresinize gönderilen doğrulama e-postasını onaylamanız gerekmektedir. E-posta gelmediyse veya bağlantının süresi dolduysa yeniden gönderebilirsiniz.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={resending}
+                    onClick={async () => {
+                      setResending(true);
+                      const res = await resendStudentVerificationEmail(unconfirmedEmail);
+                      if (res.success) {
+                        toast.success(res.message || "Doğrulama e-postası gönderildi!");
+                      } else {
+                        toast.error(res.error || res.message || "E-posta gönderilemedi.");
+                      }
+                      setResending(false);
+                    }}
+                    className="inline-flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400 hover:underline pt-1 cursor-pointer disabled:opacity-50"
+                  >
+                    {resending ? "Gönderiliyor..." : "Doğrulama E-postasını Tekrar Gönder →"}
+                  </button>
+                </div>
+              )}
 
               {/* Submit */}
               <button

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
@@ -6,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import "./globals.css";
 import LegalConsentModal from "@/components/layout/legal-consent-modal";
+import AuthErrorListener from "@/components/auth/auth-error-listener";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -131,6 +133,9 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             {children}
             <LegalConsentModal />
+            <Suspense fallback={null}>
+              <AuthErrorListener />
+            </Suspense>
             <Toaster
               position="bottom-right"
               richColors

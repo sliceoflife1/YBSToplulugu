@@ -7,6 +7,18 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
+  const error = searchParams.get("error");
+  const errorCode = searchParams.get("error_code");
+  const errorDescription = searchParams.get("error_description");
+
+  // Supabase'den gelen hata parametreleri varsa koruyarak yönlendir
+  if (error || errorCode) {
+    const params = new URLSearchParams();
+    if (error) params.set("error", error);
+    if (errorCode) params.set("error_code", errorCode);
+    if (errorDescription) params.set("error_description", errorDescription);
+    return NextResponse.redirect(`${origin}/?${params.toString()}`);
+  }
 
   if (code) {
     const supabase = await createClient();
