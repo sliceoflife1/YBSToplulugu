@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import {
   getPasswordResetTemplate,
   getSignupConfirmationTemplate,
@@ -26,23 +26,32 @@ async function sendEmailHelper({
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr";
   const resendApiKey = process.env.RESEND_API_KEY;
 
+  let sentViaResend = false;
+
   if (resendApiKey) {
-    const { Resend } = await import("resend");
-    const resend = new Resend(resendApiKey);
+    try {
+      const { Resend } = await import("resend");
+      const resend = new Resend(resendApiKey);
 
-    const { error: resendError } = await resend.emails.send({
-      from: "DEÜ YBS Topluluğu <noreply@deuybs.org.tr>",
-      to: [cleanEmail],
-      subject,
-      html: htmlContent,
-    });
+      const { error: resendError } = await resend.emails.send({
+        from: "DEÜ YBS Topluluğu <deuybs@deuybs.org.tr>",
+        to: [cleanEmail],
+        subject,
+        html: htmlContent,
+      });
 
-    if (resendError) {
-      console.error("Resend e-posta gönderme hatası:", resendError);
-      return { success: false, error: "Resend hatası: " + resendError.message };
+      if (!resendError) {
+        sentViaResend = true;
+      } else {
+        console.warn("Resend API hatası, Supabase SMTP servisine yönlendiriliyor:", resendError.message);
+      }
+    } catch (err: any) {
+      console.warn("Resend istemci hatası, Supabase SMTP servisine yönlendiriliyor:", err.message);
     }
-  } else {
-    // Resend API Key tanımlı değilse Supabase Auth'un yerel servisini tetikle
+  }
+
+  if (!sentViaResend) {
+    // Resend başarısız olursa veya anahtar yoksa Supabase Auth'un yerel servisini tetikle
     let resetError: any = null;
     if (fallbackAuthType === "recovery") {
       const res = await adminSupabase.auth.resetPasswordForEmail(cleanEmail, {
@@ -55,7 +64,7 @@ async function sendEmailHelper({
       console.error("Supabase Auth e-posta hatası:", resetError);
       let errorMsg = resetError.message;
       if (errorMsg.includes("security purposes") || errorMsg.includes("rate limit") || errorMsg.includes("request this after")) {
-        errorMsg = "Güvenlik nedeniyle ardı ardına e-posta gönderilemez. Lütfen 15-30 saniye bekleyip tekrar deneyiniz.";
+        errorMsg = "Güvenlik nedeniyle ardı ardına e-posta gönderilemez. Lütfen 30 saniye bekleyip tekrar deneyiniz.";
       }
       return { success: false, error: errorMsg };
     }
@@ -174,52 +183,31 @@ export async function resendStudentVerificationEmail(targetEmail: string): Promi
       };
     }
 
-    // 3. Spam / Rate Limit Koruması (30 saniye bekleme)
-    if (authUser.confirmation_sent_at) {
-      const lastSentTime = new Date(authUser.confirmation_sent_at).getTime();
-      const now = Date.now();
-      const diffSeconds = Math.floor((now - lastSentTime) / 1000);
-      if (diffSeconds < 30) {
-        return {
-          success: false,
-          error: `Çok sık e-posta talebinde bulunuldu. Lütfen ${30 - diffSeconds} saniye bekledikten sonra tekrar deneyiniz.`,
-        };
-      }
-    }
-
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://deuybs.org.tr";
-    const recipientName = profile
-      ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Aramıza Hoş Geldin"
-      : (authUser.user_metadata?.first_name || "Aramıza Hoş Geldin");
+    const supabase = await createClient();
 
-    // 4. Supabase Admin API ile taze signup token'ı üret (redirect_to: /auth/callback)
-    const { data: linkData, error: linkError } = await (adminSupabase.auth.admin.generateLink as any)({
+    // 3. Supabase Auth yerleşik resend servisini tetikle (Bu işlem Supabase Custom SMTP -> Resend üzerinden gönderir)
+    const { error: resendError } = await supabase.auth.resend({
       type: "signup",
       email: cleanEmail,
-      options: { redirectTo: `${siteUrl}/auth/callback` },
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+      },
     });
 
-    if (linkError || !linkData.properties) {
-      console.error("[resendStudentVerificationEmail] Link oluşturma hatası:", linkError);
-      return { success: false, error: linkError?.message || "Doğrulama bağlantısı üretilemedi." };
-    }
-
-    const hashedToken = linkData.properties?.hashed_token;
-    const actionUrl = hashedToken
-      ? `${siteUrl}/auth/confirm?token_hash=${hashedToken}&type=signup`
-      : (linkData.properties?.action_link || `${siteUrl}/auth/callback`);
-    const htmlContent = getSignupConfirmationTemplate({ recipientName, actionUrl });
-
-    // 5. Resend ile YALNIZCA resmi .edu.tr adresine ilet
-    const sendResult = await sendEmailHelper({
-      toEmail: cleanEmail,
-      subject: "DEÜ YBS Topluluğu - Hesabınızı Doğrulayın 🎉",
-      htmlContent,
-      fallbackAuthType: "magiclink",
-    });
-
-    if (!sendResult.success) {
-      return sendResult;
+    if (resendError) {
+      console.error("[resendStudentVerificationEmail] Supabase auth.resend hatası:", resendError);
+      let errorMsg = resendError.message;
+      if (
+        errorMsg.includes("security purposes") ||
+        errorMsg.includes("rate limit") ||
+        (resendError as any).code === "over_email_send_rate_limit"
+      ) {
+        const match = errorMsg.match(/after (\d+) seconds/);
+        const seconds = match ? match[1] : "60";
+        errorMsg = `Güvenlik kuralı gereğince çok sık e-posta talebinde bulunamazsınız. Lütfen ${seconds} saniye bekledikten sonra tekrar deneyiniz.`;
+      }
+      return { success: false, error: errorMsg };
     }
 
     return {
