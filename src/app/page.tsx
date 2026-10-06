@@ -123,7 +123,7 @@ export default async function HomePage() {
               {/* Badge */}
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 px-4 py-1.5 text-sm font-medium text-[var(--color-primary)]">
                 <img src="/logo.png" alt="DEÜ YBS (DEU YBS) Logosu" className="h-4 w-4 object-contain rounded" />
-                Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri (DEÜ YBS)
+                Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı (DEÜ YBS)
               </div>
 
               {/* Title */}

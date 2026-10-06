@@ -52,12 +52,13 @@ export const metadata: Metadata = {
   publisher: "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı",
   icons: {
     icon: [
-      { url: "/icon.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico?v=2", sizes: "any" },
+      { url: "/icon.png?v=2", sizes: "32x32", type: "image/png" },
+      { url: "/logo.png?v=2", sizes: "192x192", type: "image/png" },
     ],
-    shortcut: "/icon.png",
+    shortcut: "/favicon.ico?v=2",
     apple: [
-      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/logo.png?v=2", sizes: "180x180", type: "image/png" },
     ],
   },
   alternates: {
@@ -152,6 +153,9 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${inter.variable} h-full`} suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon.png?v=2" />
+        <link rel="apple-touch-icon" href="/logo.png?v=2" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
