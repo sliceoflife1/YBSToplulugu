@@ -36,7 +36,7 @@ export default async function HomePage() {
     projectsRes,
     employersRes,
     organizationsRes,
-    cvsRes,
+    jobListingsRes,
     announcementsRes
   ] = await Promise.all([
     adminSupabase.from("profiles").select("id", { count: "exact", head: true }).in("role", ["student", "alumni", "user"]),
@@ -44,7 +44,7 @@ export default async function HomePage() {
     adminSupabase.from("projects").select("id", { count: "exact", head: true }),
     adminSupabase.from("organizations").select("id", { count: "exact", head: true }).eq("type", "employer"),
     adminSupabase.from("organizations").select("id", { count: "exact", head: true }).in("type", ["foundation", "association", "other"]),
-    adminSupabase.from("cv_data").select("certifications"),
+    adminSupabase.from("job_listings").select("id", { count: "exact", head: true }).eq("is_active", true),
     adminSupabase.from("announcements").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(3),
   ]);
 
@@ -55,14 +55,7 @@ export default async function HomePage() {
   const projectCount = projectsRes.count || 0;
   const employerCount = employersRes.count || 0;
   const organizationCount = organizationsRes.count || 0;
-
-  const certificateCount = (cvsRes.data || []).reduce((acc, curr) => {
-    const certs = curr.certifications;
-    if (Array.isArray(certs)) {
-      return acc + certs.length;
-    }
-    return acc;
-  }, 0);
+  const jobCount = jobListingsRes.count || 0;
 
   const features = [
     {
@@ -101,7 +94,7 @@ export default async function HomePage() {
     { icon: FolderKanban, label: t("project"), value: projectCount, suffix: "" },
     { icon: Briefcase, label: t("employer"), value: employerCount, suffix: "" },
     { icon: Building2, label: t("organization"), value: organizationCount, suffix: "" },
-    { icon: Award, label: t("certificate"), value: certificateCount, suffix: "" },
+    { icon: Sparkles, label: t("jobListings"), value: jobCount, suffix: "" },
   ];
 
   return (
