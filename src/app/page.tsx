@@ -130,8 +130,8 @@ export default async function HomePage() {
               <h1 className="mx-auto max-w-5xl text-4xl font-extrabold tracking-tight text-[var(--color-foreground)] sm:text-5xl lg:text-6xl">
                 {t("heroTitle").includes(":") ? (
                   <>
-                    <span className="block">{t("heroTitle").split(":")[0]}:</span>
-                    <span className="gradient-text block mt-2">
+                    <span className="block leading-tight">{t("heroTitle").split(":")[0]}:</span>
+                    <span className="gradient-text block mt-2 py-1 leading-normal">
                       {t("heroTitle").split(":")[1].trim()}
                     </span>
                   </>
