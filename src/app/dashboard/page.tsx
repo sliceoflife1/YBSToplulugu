@@ -230,13 +230,23 @@ export default async function DashboardPage() {
       <main className="flex-1 bg-[var(--color-muted)]/30 pb-16">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Welcome section */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-[var(--color-foreground)] sm:text-3xl">
-              Merhaba, {profile?.first_name || "Kullanıcı"} 👋
-            </h1>
-            <p className="mt-1 text-[var(--color-muted-foreground)]">
-              YBS Topluluğu paneline hoş geldin. Topluluktaki en son iş ilanları, tartışmalar, liderlik sıralamaları ve fırsatlar aşağıda seni bekliyor.
-            </p>
+          <div className="mb-8 rounded-2xl border border-[var(--color-border)] bg-gradient-to-r from-[var(--color-primary)]/10 via-[var(--color-card)] to-[var(--color-secondary)]/10 p-6 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-primary)] mb-2">
+                  Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı
+                </div>
+                <h1 className="text-2xl font-bold text-[var(--color-foreground)] sm:text-3xl">
+                  Merhaba, {profile?.first_name || "Kullanıcı"} 👋
+                </h1>
+                <p className="mt-2 text-sm sm:text-base font-semibold text-[var(--color-foreground)]">
+                  DEÜ YBS&apos;nin Gücü Tek Çatıda: Öğrenci, Mezun ve Sektör El Ele
+                </p>
+                <p className="mt-1 text-xs sm:text-sm text-[var(--color-muted-foreground)] leading-relaxed">
+                  Kampüsten profesyonel dünyaya uzanan en güçlü bağ. Profilini oluştur, yeteneklerini sergile, staj ve kariyer fırsatlarını doğrudan ekosistemin içinden yakala.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Profile completion banner */}
@@ -677,7 +687,7 @@ export default async function DashboardPage() {
                               </span>
                             </div>
                             <p className="text-[11px] text-[var(--color-muted-foreground)] truncate">
-                              {userItem.department || userItem.headline || "YBS Topluluğu Üyesi"}
+                              {userItem.department || userItem.headline || "DEÜ YBS Ağı Üyesi"}
                             </p>
                           </div>
 
@@ -748,7 +758,7 @@ export default async function DashboardPage() {
                               </span>
                             </div>
                             <p className="text-[11px] text-[var(--color-muted-foreground)] truncate">
-                              {userItem.department || userItem.headline || "YBS Topluluğu Üyesi"}
+                              {userItem.department || userItem.headline || "DEÜ YBS Ağı Üyesi"}
                             </p>
                           </div>
 

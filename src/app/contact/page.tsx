@@ -5,7 +5,7 @@ import { InstagramIcon, YoutubeIcon } from "@/components/icons/social-icons";
 import ContactClient from "./contact-client";
 
 export const metadata = {
-  title: "İletişim & Destek | YBS Topluluğu",
+  title: "İletişim & Destek | DEÜ YBS Ağı",
   description: "Şikayet, destek talepleri, sosyal medya ve önerilerinizi bize ulaştırabilirsiniz.",
 };
 
@@ -103,9 +103,9 @@ export default function ContactPage() {
             {/* Sağ Kolon: Bilgilendirme ve Sosyal Medya */}
             <div className="space-y-6">
               <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
-                <h3 className="font-semibold text-[var(--color-foreground)] mb-2">YBS Topluluğu Destek</h3>
+                <h3 className="font-semibold text-[var(--color-foreground)] mb-2">DEÜ YBS Ağı Destek</h3>
                 <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed mb-4">
-                  Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri öğrencileri ve mezunları için geliştirilen topluluk platformudur.
+                  Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı — Kampüsten profesyonel dünyaya uzanan en güçlü bağ.
                 </p>
                 <div className="rounded-lg bg-[var(--color-primary)]/10 p-3 text-xs text-[var(--color-primary)] font-medium">
                   💡 E-posta gönderirken detaylı açıklama eklemeniz daha hızlı yardımcı olmamızı sağlar.

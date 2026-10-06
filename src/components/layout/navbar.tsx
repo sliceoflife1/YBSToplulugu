@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
@@ -220,13 +221,20 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-[var(--color-border)] bg-[var(--color-background)]/80 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href={displayUser ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-            <span className="text-lg font-bold text-white">Y</span>
+        <Link href={displayUser ? "/dashboard" : "/"} className="flex items-center gap-2.5 group">
+          <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)]/50 bg-[var(--color-card)] shadow-sm transition-transform group-hover:scale-105">
+            <Image
+              src="/logo.png"
+              alt="DEÜ YBS (DEU YBS) Ağı Logosu"
+              width={36}
+              height={36}
+              className="h-full w-full object-contain p-0.5"
+              priority
+            />
           </div>
-          <span className="hidden text-lg font-bold sm:block">
-            <span className="gradient-text">YBS</span>{" "}
-            <span className="text-[var(--color-foreground)]">Topluluğu</span>
+          <span className="hidden text-lg font-bold tracking-tight sm:block">
+            <span className="gradient-text">DEÜ YBS</span>{" "}
+            <span className="text-[var(--color-foreground)]">Ağı</span>
           </span>
         </Link>
 

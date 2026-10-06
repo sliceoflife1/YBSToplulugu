@@ -4,8 +4,8 @@ import { Shield, FileText, CheckCircle, ArrowRight, Mail } from "lucide-react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "KVKK Aydınlatma Metni | YBS Topluluğu",
-  description: "6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında YBS Topluluğu aydınlatma metni.",
+  title: "KVKK Aydınlatma Metni | DEÜ YBS Ağı",
+  description: "6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı aydınlatma metni.",
 };
 
 export default function KVKKPage() {
@@ -31,7 +31,7 @@ export default function KVKKPage() {
               1. Veri Sorumlusunun Kimliği
             </h2>
             <p className="text-zinc-600 dark:text-zinc-300">
-              6698 sayılı Kişisel Verilerin Korunması Kanunu ("Kanun") uyarınca, kişisel verileriniz veri sorumlusu sıfatıyla <strong>YBS Topluluğu</strong> tarafından aşağıda açıklanan kapsamda işlenebilecektir. Topluluğumuz, üyelerimizin ve platform ziyaretçilerimizin gizliliğine, temel hak ve özgürlüklerine ve kişisel verilerinin güvenliğine azami özen göstermektedir.
+              6698 sayılı Kişisel Verilerin Korunması Kanunu ("Kanun") uyarınca, kişisel verileriniz veri sorumlusu sıfatıyla <strong>Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı (DEÜ YBS Ağı)</strong> tarafından aşağıda açıklanan kapsamda işlenebilecektir. Ağımız, üyelerimizin ve platform ziyaretçilerimizin gizliliğine, temel hak ve özgürlüklerine ve kişisel verilerinin güvenliğine azami özen göstermektedir.
             </p>
           </div>
 

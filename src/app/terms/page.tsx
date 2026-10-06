@@ -4,8 +4,8 @@ import { Scale, Users, FileWarning, Copyright, Mail } from "lucide-react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Kullanım Koşulları | YBS Topluluğu",
-  description: "YBS Topluluğu platformu kullanım koşulları, forum etiği ve yasal bildirimler.",
+  title: "Kullanım Koşulları | DEÜ YBS Ağı",
+  description: "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı platformu kullanım koşulları, forum etiği ve yasal bildirimler.",
 };
 
 export default function TermsPage() {
@@ -29,7 +29,7 @@ export default function TermsPage() {
               1. Genel Kullanım ve Forum Etiği
             </h2>
             <p className="text-zinc-600 dark:text-zinc-300">
-              YBS Topluluğu platformuna hoş geldiniz. Bu platform, Yönetim Bilişim Sistemleri (YBS) profesyonelleri, öğrencileri ve işverenleri bir araya getiren dijital bir ağdır. Platformun sağlıklı ve yapıcı kalabilmesi için üyelerimizin şu kurallara uyması zorunludur:
+              Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı (DEÜ YBS Ağı) platformuna hoş geldiniz. Bu platform, Yönetim Bilişim Sistemleri (YBS) profesyonelleri, öğrencileri ve işverenleri bir araya getiren dijital bir ekosistem ağıdır. Platformun sağlıklı ve yapıcı kalabilmesi için üyelerimizin şu kurallara uyması zorunludur:
             </p>
             <ul className="list-disc pl-6 space-y-2 mt-4 text-zinc-600 dark:text-zinc-300">
               <li>Diğer üyelere karşı saygılı ve profesyonel bir dil kullanmak.</li>
@@ -47,7 +47,7 @@ export default function TermsPage() {
               İşveren hesapları üzerinden yayımlanan staj ve iş ilanlarının güncel, gerçeğe uygun ve ayrımcılık içermeyen yapıda olması şirketlerin sorumluluğundadır. 
             </p>
             <p className="text-zinc-600 dark:text-zinc-300 mt-4">
-              Öğrenciler veya adaylar ilanlara başvururken paylaştıkları portfolyo, özgeçmiş ve bilgilerin doğruluğundan bizzat sorumludur. YBS Topluluğu, işveren ile aday arasındaki iletişimin sadece bir köprüsüdür; taraflar arasındaki doğabilecek hukuki veya ticari sorunlarda bir sorumluluk üstlenmez.
+              Öğrenciler veya adaylar ilanlara başvururken paylaştıkları portfolyo, özgeçmiş ve bilgilerin doğruluğundan bizzat sorumludur. DEÜ YBS Ağı, işveren ile aday arasındaki iletişimin sadece bir köprüsüdür; taraflar arasındaki doğabilecek hukuki veya ticari sorunlarda bir sorumluluk üstlenmez.
             </p>
           </div>
 
@@ -57,7 +57,7 @@ export default function TermsPage() {
               3. Fikri Mülkiyet ve Telif Hakları
             </h2>
             <p className="text-zinc-600 dark:text-zinc-300">
-              Site üzerinde yer alan yazılım, tasarım, arayüz, logolar ve platform tarafından üretilmiş orijinal içerikler YBS Topluluğu'na aittir. İzinsiz kopyalanamaz, çoğaltılamaz veya farklı bir projede kullanılamaz. Kullanıcıların platforma yüklediği forum metinleri, görselleri ve kod parçacıkları kendilerine ait olmakla beraber, platform bu içerikleri platform içinde yayımlama ve gösterme hakkına lisanslı şekilde sahiptir.
+              Site üzerinde yer alan yazılım, tasarım, arayüz, logolar ve platform tarafından üretilmiş orijinal içerikler DEÜ YBS Ağı&apos;na aittir. İzinsiz kopyalanamaz, çoğaltılamaz veya farklı bir projede kullanılamaz. Kullanıcıların platforma yüklediği forum metinleri, görselleri ve kod parçacıkları kendilerine ait olmakla beraber, platform bu içerikleri platform içinde yayımlama ve gösterme hakkına lisanslı şekilde sahiptir.
             </p>
           </div>
           
@@ -67,7 +67,7 @@ export default function TermsPage() {
               4. Sorumluluk Sınırı
             </h2>
             <p className="text-zinc-600 dark:text-zinc-300">
-              Platformumuzda kullanıcılar tarafından sağlanan veya üçüncü parti linklere yönlendirilen hiçbir bilginin mutlak doğruluğunu veya güvenilirliğini garanti etmiyoruz. Platformun kullanımından doğabilecek dolaylı, arızi veya özel hiçbir maddi/manevi zarardan YBS Topluluğu sorumlu tutulamaz.
+              Platformumuzda kullanıcılar tarafından sağlanan veya üçüncü parti linklere yönlendirilen hiçbir bilginin mutlak doğruluğunu veya güvenilirliğini garanti etmiyoruz. Platformun kullanımından doğabilecek dolaylı, arızi veya özel hiçbir maddi/manevi zarardan DEÜ YBS Ağı sorumlu tutulamaz.
             </p>
           </div>
 

@@ -122,25 +122,26 @@ export default async function HomePage() {
             <div className="text-center">
               {/* Badge */}
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 px-4 py-1.5 text-sm font-medium text-[var(--color-primary)]">
-                <Sparkles className="h-4 w-4" />
-                Dokuz Eylül Üniversitesi
+                <img src="/logo.png" alt="DEÜ YBS (DEU YBS) Logosu" className="h-4 w-4 object-contain rounded" />
+                Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri (DEÜ YBS)
               </div>
 
               {/* Title */}
-              <h1 className="mx-auto max-w-4xl text-4xl font-bold tracking-tight text-[var(--color-foreground)] sm:text-5xl lg:text-6xl">
-                {t("heroTitle").split(" ").map((word, i) =>
-                  word === "Topluluğu" || word === "Community" ? (
-                    <span key={i} className="gradient-text">
-                      {" "}{word}
+              <h1 className="mx-auto max-w-5xl text-4xl font-extrabold tracking-tight text-[var(--color-foreground)] sm:text-5xl lg:text-6xl">
+                {t("heroTitle").includes(":") ? (
+                  <>
+                    <span className="block">{t("heroTitle").split(":")[0]}:</span>
+                    <span className="gradient-text block mt-2">
+                      {t("heroTitle").split(":")[1].trim()}
                     </span>
-                  ) : (
-                    <span key={i}> {word}</span>
-                  )
+                  </>
+                ) : (
+                  t("heroTitle")
                 )}
               </h1>
 
               {/* Subtitle */}
-              <p className="mx-auto mt-6 max-w-2xl text-lg text-[var(--color-muted-foreground)] sm:text-xl">
+              <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-[var(--color-muted-foreground)] sm:text-xl">
                 {t("heroSubtitle")}
               </p>
 
@@ -194,7 +195,7 @@ export default async function HomePage() {
                 Neler <span className="gradient-text">Yapabilirsin?</span>
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-muted-foreground)]">
-                Projelerini paylaş, CV&apos;ni oluştur, toplulukla etkileşime geç ve
+                Projelerini paylaş, CV&apos;ni oluştur, DEÜ YBS Ağı ile etkileşime geç ve
                 kariyerini şekillendir.
               </p>
             </div>
@@ -234,7 +235,7 @@ export default async function HomePage() {
                   Etkinlikler & <span className="gradient-text">Duyurular</span>
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-muted-foreground)]">
-                  Topluluğumuzdaki en güncel etkinliklerden, eğitimlerden ve önemli duyurulardan haberdar olun.
+                  DEÜ YBS Ağı ekosistemindeki en güncel etkinliklerden, eğitimlerden ve önemli duyurulardan haberdar olun.
                 </p>
               </div>
 
@@ -305,19 +306,19 @@ export default async function HomePage() {
                   step: "01",
                   title: "Kayıt Ol",
                   description:
-                    "DEÜ e-posta adresinle kayıt ol ve profilini oluştur. Bilgilerini doldur ve topluluğa katıl.",
+                    "DEÜ e-posta adresinle kayıt ol ve profilini oluştur. Bilgilerini doldur ve ağa katıl.",
                 },
                 {
                   step: "02",
                   title: "Profilini Zenginleştir",
                   description:
-                    "Projelerini ekle, CV bilgilerini doldur, yeteneklerini listele. Andıç'ında tüm gelişimini sergile.",
+                    "Projelerini ekle, CV bilgilerini doldur, yeteneklerini sergile. Andıç'ında tüm gelişimini sergile.",
                 },
                 {
                   step: "03",
                   title: "Bağlan ve Büyü",
                   description:
-                    "Topluluk forumlarında paylaşım yap, işverenlerle bağlantı kur ve kariyerinde bir adım öne geç.",
+                    "DEÜ YBS Ağı forumlarında paylaşım yap, işverenlerle bağlantı kur, staj ve kariyer fırsatlarını doğrudan ekosistemin içinden yakala.",
                 },
               ].map((item, index) => (
                 <div key={index} className="relative text-center">
@@ -340,11 +341,10 @@ export default async function HomePage() {
         <section className="border-t border-[var(--color-border)] bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] py-16">
           <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-white sm:text-4xl">
-              DEÜ Topluluğuna Katıl
+              DEÜ YBS Ağına Katıl
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-white/80">
-              Geleceğini bugünden inşa et. Projelerini paylaş, profesyonel ağını
-              genişlet ve fırsatları yakala.
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90 leading-relaxed">
+              Kampüsten profesyonel dünyaya uzanan en güçlü bağ. Profilini oluştur, yeteneklerini sergile, staj ve kariyer fırsatlarını doğrudan ekosistemin içinden yakala.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link

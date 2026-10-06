@@ -1,7 +1,7 @@
 {
   "common": {
-    "appName": "YBS Topluluğu",
-    "tagline": "Dokuz Eylül Üniversitesi Öğrenci Platformu",
+    "appName": "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı",
+    "tagline": "Kampüsten profesyonel dünyaya uzanan en güçlü bağ.",
     "login": "Giriş Yap",
     "register": "Kayıt Ol",
     "logout": "Çıkış Yap",
@@ -40,7 +40,7 @@
     "loginTitle": "Hesabınıza Giriş Yapın",
     "loginSubtitle": "DEÜ e-posta adresiniz ile giriş yapın",
     "registerTitle": "Hesap Oluşturun",
-    "registerSubtitle": "DEÜ topluluğuna katılın",
+    "registerSubtitle": "DEÜ YBS Ağına katılın",
     "email": "E-posta Adresi",
     "password": "Şifre",
     "confirmPassword": "Şifre Tekrar",
@@ -173,8 +173,8 @@
     "announcementsManagement": "Duyuru Yönetimi"
   },
   "landing": {
-    "heroTitle": "DEÜ Öğrenci Topluluğu",
-    "heroSubtitle": "Projelerini paylaş, CV'ni oluştur, topluluğa katıl",
+    "heroTitle": "DEÜ YBS'nin Gücü Tek Çatıda: Öğrenci, Mezun ve Sektör El Ele",
+    "heroSubtitle": "Kampüsten profesyonel dünyaya uzanan en güçlü bağ. Profilini oluştur, yeteneklerini sergile, staj ve kariyer fırsatlarını doğrudan ekosistemin içinden yakala.",
     "ctaRegister": "Hemen Katıl",
     "ctaExplore": "Keşfet",
     "featureProjects": "Proje Vitrini",

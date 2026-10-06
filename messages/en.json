@@ -1,7 +1,7 @@
 {
   "common": {
-    "appName": "YBS Community",
-    "tagline": "Dokuz Eylül University Student Platform",
+    "appName": "Dokuz Eylul University Management Information Systems Network",
+    "tagline": "The strongest bridge from campus to the professional world.",
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
@@ -40,7 +40,7 @@
     "loginTitle": "Sign In to Your Account",
     "loginSubtitle": "Login with your DEÜ email address",
     "registerTitle": "Create an Account",
-    "registerSubtitle": "Join the DEÜ community",
+    "registerSubtitle": "Join the DEÜ MIS Network",
     "email": "Email Address",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -173,8 +173,8 @@
     "announcementsManagement": "Announcements Management"
   },
   "landing": {
-    "heroTitle": "DEÜ Student Community",
-    "heroSubtitle": "Share your projects, build your CV, join the community",
+    "heroTitle": "The Power of DEU MIS Under One Roof: Students, Alumni & Industry Together",
+    "heroSubtitle": "The strongest bridge extending from campus to the professional world. Create your profile, showcase your skills, seize internship and career opportunities directly within the ecosystem.",
     "ctaRegister": "Join Now",
     "ctaExplore": "Explore",
     "featureProjects": "Project Showcase",

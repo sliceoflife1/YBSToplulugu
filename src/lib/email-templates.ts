@@ -35,12 +35,12 @@ export function getPasswordResetTemplate({ recipientName, actionUrl }: EmailTemp
   <div class="wrapper">
     <div class="header">
       <h1 class="brand-title">Dokuz Eylül Üniversitesi</h1>
-      <p class="brand-sub">Yönetim Bilişim Sistemleri Topluluğu</p>
+      <p class="brand-sub">Yönetim Bilişim Sistemleri Ağı</p>
     </div>
     <div class="content">
       <span class="badge">Güvenlik Bildirimi</span>
       <h2 class="greeting">Merhaba ${name},</h2>
-      <p>DEÜ YBS Topluluğu platform hesabınız için bir <strong>şifre sıfırlama talebi</strong> aldık.</p>
+      <p>DEÜ YBS Ağı platform hesabınız için bir <strong>şifre sıfırlama talebi</strong> aldık.</p>
       <p>Yeni ve güvenli bir şifre oluşturarak hesabınıza erişmek için lütfen aşağıdaki düğmeye tıklayın:</p>
       
       <div class="btn-container">
@@ -57,7 +57,7 @@ export function getPasswordResetTemplate({ recipientName, actionUrl }: EmailTemp
       </p>
     </div>
     <div class="footer">
-      <p>&copy; 2026 DEÜ YBS Topluluğu. Tüm hakları saklıdır.</p>
+      <p>&copy; 2026 DEÜ YBS Ağı. Tüm hakları saklıdır.</p>
     </div>
   </div>
 </body>
@@ -80,12 +80,12 @@ export function getSignupConfirmationTemplate({ recipientName, actionUrl }: Emai
   <div class="wrapper">
     <div class="header">
       <h1 class="brand-title">Dokuz Eylül Üniversitesi</h1>
-      <p class="brand-sub">Yönetim Bilişim Sistemleri Topluluğu</p>
+      <p class="brand-sub">Yönetim Bilişim Sistemleri Ağı</p>
     </div>
     <div class="content">
       <span class="badge" style="background:#ecfdf5; color:#065f46; border-color:#a7f3d0;">Aramıza Hoş Geldin</span>
       <h2 class="greeting">Merhaba ${name}, 🎉</h2>
-      <p>DEÜ YBS Topluluğu ailesine katıldığın için çok heyecanlıyız! Hesabını aktifleştirmek ve topluluk platformumuza tam erişim sağlamak için e-posta adresini doğrulaman gerekiyor.</p>
+      <p>DEÜ YBS Ağı ailesine katıldığın için çok heyecanlıyız! Hesabını aktifleştirmek ve topluluk platformumuza tam erişim sağlamak için e-posta adresini doğrulaman gerekiyor.</p>
       
       <div class="btn-container">
         <a href="${actionUrl}" target="_blank" class="btn" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);">E-Posta Adresimi Doğrula</a>
@@ -97,7 +97,7 @@ export function getSignupConfirmationTemplate({ recipientName, actionUrl }: Emai
       </p>
     </div>
     <div class="footer">
-      <p>&copy; 2026 DEÜ YBS Topluluğu. Tüm hakları saklıdır.</p>
+      <p>&copy; 2026 DEÜ YBS Ağı. Tüm hakları saklıdır.</p>
     </div>
   </div>
 </body>
@@ -120,7 +120,7 @@ export function getMagicLinkTemplate({ recipientName, actionUrl }: EmailTemplate
   <div class="wrapper">
     <div class="header">
       <h1 class="brand-title">Dokuz Eylül Üniversitesi</h1>
-      <p class="brand-sub">Yönetim Bilişim Sistemleri Topluluğu</p>
+      <p class="brand-sub">Yönetim Bilişim Sistemleri Ağı</p>
     </div>
     <div class="content">
       <span class="badge" style="background:#eff6ff; color:#1e40af; border-color:#bfdbfe;">Hızlı Oturum Açma</span>
@@ -136,7 +136,7 @@ export function getMagicLinkTemplate({ recipientName, actionUrl }: EmailTemplate
       </div>
     </div>
     <div class="footer">
-      <p>&copy; 2026 DEÜ YBS Topluluğu. Tüm hakları saklıdır.</p>
+      <p>&copy; 2026 DEÜ YBS Ağı. Tüm hakları saklıdır.</p>
     </div>
   </div>
 </body>
@@ -159,12 +159,12 @@ export function getEmailChangeTemplate({ recipientName, actionUrl }: EmailTempla
   <div class="wrapper">
     <div class="header">
       <h1 class="brand-title">Dokuz Eylül Üniversitesi</h1>
-      <p class="brand-sub">Yönetim Bilişim Sistemleri Topluluğu</p>
+      <p class="brand-sub">Yönetim Bilişim Sistemleri Ağı</p>
     </div>
     <div class="content">
       <span class="badge" style="background:#fef3c7; color:#92400e; border-color:#fde68a;">E-Posta Güncelleme</span>
       <h2 class="greeting">Merhaba ${name},</h2>
-      <p>DEÜ YBS Topluluğu hesabınızın e-posta adresini değiştirme talebi aldık. Yeni e-posta adresinizi onaylamak için lütfen aşağıdaki butona tıklayın:</p>
+      <p>DEÜ YBS Ağı hesabınızın e-posta adresini değiştirme talebi aldık. Yeni e-posta adresinizi onaylamak için lütfen aşağıdaki butona tıklayın:</p>
       
       <div class="btn-container">
         <a href="${actionUrl}" target="_blank" class="btn" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);">Yeni E-Postayı Onayla</a>
@@ -175,7 +175,7 @@ export function getEmailChangeTemplate({ recipientName, actionUrl }: EmailTempla
       </div>
     </div>
     <div class="footer">
-      <p>&copy; 2026 DEÜ YBS Topluluğu. Tüm hakları saklıdır.</p>
+      <p>&copy; 2026 DEÜ YBS Ağı. Tüm hakları saklıdır.</p>
     </div>
   </div>
 </body>
@@ -191,26 +191,26 @@ export function getUserInviteTemplate({ recipientName, actionUrl }: EmailTemplat
 <html lang="tr">
 <head>
   <meta charset="utf-8">
-  <title>DEÜ YBS Topluluğu Daveti</title>
+  <title>DEÜ YBS Ağı Daveti</title>
   <style>${BASE_STYLES}</style>
 </head>
 <body>
   <div class="wrapper">
     <div class="header">
       <h1 class="brand-title">Dokuz Eylül Üniversitesi</h1>
-      <p class="brand-sub">Yönetim Bilişim Sistemleri Topluluğu</p>
+      <p class="brand-sub">Yönetim Bilişim Sistemleri Ağı</p>
     </div>
     <div class="content">
       <span class="badge" style="background:#f3e8ff; color:#6b21a8; border-color:#e9d5ff;">Özel Davet</span>
       <h2 class="greeting">Merhaba ${name}, ✨</h2>
-      <p>DEÜ YBS Topluluğu dijital platformuna katılarak etkinliklere kaydolmanız, projelerinizi paylaşmanız ve mezunlarımızla iletişim kurmanız için davet edildiniz!</p>
+      <p>DEÜ YBS Ağı dijital platformuna katılarak etkinliklere kaydolmanız, projelerinizi paylaşmanız ve mezunlarımızla iletişim kurmanız için davet edildiniz!</p>
       
       <div class="btn-container">
         <a href="${actionUrl}" target="_blank" class="btn" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);">Daveti Kabul Et & Katıl</a>
       </div>
     </div>
     <div class="footer">
-      <p>&copy; 2026 DEÜ YBS Topluluğu. Tüm hakları saklıdır.</p>
+      <p>&copy; 2026 DEÜ YBS Ağı. Tüm hakları saklıdır.</p>
     </div>
   </div>
 </body>

@@ -153,7 +153,7 @@ export default function OrganizationRegisterPage() {
               Kuruluş / İşveren Başvurusu
             </h1>
             <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-              YBS Topluluğu platformuna işveren, vakıf veya dernek olarak katılın
+              Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı platformuna işveren, vakıf veya dernek olarak katılın
             </p>
           </div>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Heart } from "lucide-react";
 import { InstagramIcon, YoutubeIcon } from "@/components/icons/social-icons";
 
@@ -11,16 +12,22 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-                <span className="text-sm font-bold text-white">Y</span>
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-card)] shadow-sm">
+                <Image
+                  src="/logo.png"
+                  alt="DEÜ YBS (DEU YBS) Ağı Logosu"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-contain p-0.5"
+                />
               </div>
-              <span className="text-lg font-bold">
-                <span className="gradient-text">YBS</span> Topluluğu
+              <span className="text-lg font-bold tracking-tight">
+                <span className="gradient-text">DEÜ YBS</span> Ağı
               </span>
             </div>
-            <p className="text-sm text-[var(--color-muted-foreground)]">
-              Dokuz Eylül Üniversitesi öğrencileri için profesyonel ağ ve topluluk platformu.
+            <p className="text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+              Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı — Kampüsten profesyonel dünyaya uzanan en güçlü bağ.
             </p>
           </div>
 
@@ -136,7 +143,7 @@ export default function Footer() {
 
         <div className="mt-8 border-t border-[var(--color-border)] pt-6 text-center">
           <p className="flex items-center justify-center gap-1 text-sm text-[var(--color-muted-foreground)]">
-            © {currentYear} YBS Topluluğu. Made with
+            © {currentYear} Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı (DEÜ YBS Ağı). Made with
             <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
             at DEÜ
           </p>

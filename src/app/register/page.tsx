@@ -55,8 +55,11 @@ export default async function RegisterPage() {
               <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
                 {t("registerTitle")}
               </h1>
-              <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-                {t("registerAs")}
+              <p className="mt-2 text-xs font-semibold text-[var(--color-primary)]">
+                DEÜ YBS&apos;nin Gücü Tek Çatıda: Öğrenci, Mezun ve Sektör El Ele
+              </p>
+              <p className="mt-1.5 text-xs text-[var(--color-muted-foreground)] leading-relaxed">
+                Kampüsten profesyonel dünyaya uzanan en güçlü bağ. Profilini oluştur, yeteneklerini sergile, staj ve kariyer fırsatlarını doğrudan ekosistemin içinden yakala.
               </p>
             </div>
 

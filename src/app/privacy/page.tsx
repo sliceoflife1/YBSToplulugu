@@ -4,8 +4,8 @@ import { Lock, Server, UserCheck, ShieldCheck, Mail } from "lucide-react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Gizlilik Politikası | YBS Topluluğu",
-  description: "YBS Topluluğu platformunun verilerinizi nasıl topladığı ve koruduğu hakkında gizlilik politikası.",
+  title: "Gizlilik Politikası | DEÜ YBS Ağı",
+  description: "Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı platformunun verilerinizi nasıl topladığı ve koruduğu hakkında gizlilik politikası.",
 };
 
 export default function PrivacyPage() {
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
               1. Toplanan Veriler
             </h2>
             <p className="text-zinc-600 dark:text-zinc-300">
-              YBS Topluluğu'na kayıt olurken ve platformu kullanırken tarafınızdan şu bilgileri toplamaktayız:
+              Dokuz Eylül Üniversitesi Yönetim Bilişim Sistemleri Ağı&apos;na kayıt olurken ve platformu kullanırken tarafınızdan şu bilgileri toplamaktayız:
             </p>
             <ul className="list-disc pl-6 space-y-2 mt-4 text-zinc-600 dark:text-zinc-300">
               <li><strong>Kimlik ve İletişim:</strong> Adınız, soyadınız, e-posta adresiniz.</li>
